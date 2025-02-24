@@ -8,11 +8,12 @@ interface ITouchableOpacity extends TouchableOpacityProps {
     children: ReactNode
     className?: string
     variant: "custom" | "blue"
+    onPress?: () => void
 }
 
-export const Button = ({ children, variant, className, ...props }: ITouchableOpacity) => {
+export const Button = ({ children, variant, className, onPress, ...props }: ITouchableOpacity) => {
     return (
-        <TouchableOpacity activeOpacity={0.7} className={className + ' ' + StyleSwitchCase({
+        <TouchableOpacity onPress={onPress} activeOpacity={0.7} className={className + ' ' + StyleSwitchCase({
             variant, cases: {
                 blue: ' h-[63px] bg-[#57AEF1] rounded-[12px]',
                 custom: '',
