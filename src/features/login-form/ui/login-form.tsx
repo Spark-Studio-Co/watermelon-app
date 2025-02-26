@@ -24,15 +24,15 @@ export const LoginForm = () => {
 
     return (
         <View className='flex items-center justify-center w-full mt-20'>
-            <Text className="text-[48px] text-[#FFFFFF] font-poppins-medium">Login</Text>
-            <Text className='text-[16px] text-[#FFFFFF] mt-8 font-poppins-regular'>Login to your account</Text>
+            <Text weight='medium' className="text-[48px] text-[#FFFFFF]">Login</Text>
+            <Text weight='regular' className='text-[16px] text-[#FFFFFF] mt-6'>Login to your account</Text>
             <Input placeholder='Username' variant='auth' className='mt-16' value={username} onChangeText={setUsername} />
             <Input placeholder='Password' variant='auth' className='mt-14' type='password' value={password} onChangeText={setPassword} />
-            <Button variant='custom' className='mt-2 w-full flex items-end'><Text className='text-[15px] text-[#FFFFFF] font-poppins-regular flex'>Forgot password</Text></Button>
-            <Button onPress={handleSubmit} variant='blue' className='w-full flex items-center justify-center' style={{ marginTop: hp(30) }}><Text className='text-[22px] text-[#FFFFFF] font-poppins-regular flex'>Login</Text></Button>
+            <Button variant='custom' className='mt-2 w-full flex items-end'><Text weight='regular' className='text-[15px] text-[#FFFFFF] flex'>Forgot password</Text></Button>
+            <Button onPress={handleSubmit} variant='blue' className='w-full flex items-center justify-center' style={{ marginTop: hp(30) }}><Text weight='regular' className='text-[22px] text-[#FFFFFF] flex'>Login</Text></Button>
             <View className='flex flex-row mt-5 items-center gap-x-2'>
                 <Text className='text-[14px] text-[#FFFFFF] font-poppins-regular'>Don’t have an account?</Text>
-                <Button variant='custom'><Text className='text-[14px] font-[700] text-[#000AFF]'>Sign up</Text></Button>
+                <Button onPress={() => navigation.navigate('Registration' as never)} variant='custom'><Text weight='bold' className='text-[14px] underline text-[#57AEF1]'>Sign up</Text></Button>
             </View>
         </View>
     )

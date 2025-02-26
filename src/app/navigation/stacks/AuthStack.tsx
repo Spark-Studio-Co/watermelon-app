@@ -6,12 +6,14 @@ const Stack = createNativeStackNavigator();
 // screens
 import { LoginScreen } from '../../screens/login-screen';
 import { SuccessSignUpScreen } from '../../screens/success-sign-up-screen';
+import { RegistrationScreen } from '../../screens/registration-screen';
 
 export const AuthStack = () => {
     return (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="SuccessScreen" component={SuccessSignUpScreen} />
+            <Stack.Screen name="Registration" component={RegistrationScreen} />
         </Stack.Navigator>
     );
 };
