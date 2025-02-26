@@ -19,7 +19,7 @@ export const LoginForm = () => {
             console.log('sername and password cannot be empty.')
             return;
         }
-        navigation.navigate("SuccessScreen" as never)
+        navigation.navigate("SuccessSignUp" as never)
     }
 
     return (

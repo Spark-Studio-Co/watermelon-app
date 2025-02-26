@@ -28,7 +28,7 @@ export const CodeConfirmationForm = () => {
         }
     };
 
-    const handleComplete = () => {
+    const handleSubmit = () => {
         const code = values.join("");
         if (code.length === 5) {
             console.log("✅ Complete code:", code);
@@ -61,7 +61,6 @@ export const CodeConfirmationForm = () => {
                         key={index}
                         index={index}
                         inputRef={(el) => (inputRefs.current[index] = el)}
-                        onComplete={handleComplete}
                         value={values[index] || ""}
                         onChangeText={(text) => handleSetValue(index, text)}
                     />
@@ -75,8 +74,8 @@ export const CodeConfirmationForm = () => {
                     </Text>
                 </Button>
             </View>
-            <Button variant='blue' className='w-full flex items-center justify-center' style={{ marginTop: hp(30) }}>
-                <Text weight='regular' className='text-[22px] text-[#FFFFFF] flex'>Login</Text>
+            <Button onPress={handleSubmit} variant='blue' className='w-full flex items-center justify-center' style={{ marginTop: hp(30) }}>
+                <Text weight='regular' className='text-[22px] text-[#FFFFFF] flex'>Next</Text>
             </Button>
         </View>
     );
