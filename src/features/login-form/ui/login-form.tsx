@@ -31,7 +31,7 @@ export const LoginForm = () => {
             <Button variant='custom' className='mt-2 w-full flex items-end'><Text weight='regular' className='text-[15px] text-[#FFFFFF] flex'>Forgot password</Text></Button>
             <Button onPress={handleSubmit} variant='blue' className='w-full flex items-center justify-center' style={{ marginTop: hp(30) }}><Text weight='regular' className='text-[22px] text-[#FFFFFF] flex'>Login</Text></Button>
             <View className='flex flex-row mt-5 items-center gap-x-2'>
-                <Text className='text-[14px] text-[#FFFFFF] font-poppins-regular'>Don’t have an account?</Text>
+                <Text weight='regular' className='text-[14px] text-[#FFFFFF]'>Don’t have an account?</Text>
                 <Button onPress={() => navigation.navigate('Registration' as never)} variant='custom'><Text weight='bold' className='text-[14px] underline text-[#57AEF1]'>Sign up</Text></Button>
             </View>
         </View>
