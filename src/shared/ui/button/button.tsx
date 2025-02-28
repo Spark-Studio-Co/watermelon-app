@@ -15,7 +15,7 @@ const baseStyles = 'flex items-center justify-center'
 
 export const Button = ({ children, variant, className, onPress, ...props }: ITouchableOpacity) => {
     return (
-        <TouchableOpacity onPress={onPress} activeOpacity={0.7} className={`${className || ''} ${baseStyles} ${StyleSwitchCase({
+        <TouchableOpacity onPress={onPress} activeOpacity={0.7} className={`${className || ''} ${variant === "custom" ? '' : baseStyles} ${StyleSwitchCase({
             variant, cases: {
                 blue: 'h-[63px] bg-[#57AEF1] rounded-[12px]',
                 paywall: 'border-2 border-[#31A6FF] h-[46px] rounded-[8px] bg-[#343434]',

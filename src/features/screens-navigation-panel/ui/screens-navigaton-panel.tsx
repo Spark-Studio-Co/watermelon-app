@@ -25,9 +25,9 @@ const navigationItems = [
 
 export const ScreensNavigationPanel = () => {
     return (
-        <View className="bg-[#252626] mt-8 pt-5 px-5 rounded-[20px] flex flex-row flex-wrap justify-between">
+        <View className="bg-[#252626] mt-8 pt-5 rounded-[20px] flex flex-row flex-wrap justify-center">
             {navigationItems.map((item, index) => (
-                <View key={index} className="w-[48%]">
+                <View key={index} className="w-[48%] flex items-center">
                     <ScreenNavigationTab uri={item.uri} width={item.width} margin={item.margin} />
                 </View>
             ))}

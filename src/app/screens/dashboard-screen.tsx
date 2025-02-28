@@ -9,9 +9,9 @@ import { ScreensNavigationPanel } from "@/src/features/screens-navigation-panel/
 export const DashboardScreen = () => {
     return (
         <MainLayout>
-            <View className="mt-8 flex items-center justify-center w-full">
+            <View className="mt-10 flex items-center justify-center w-full">
                 <UserTab />
-                <View className="w-[90%] flex items-start flex-col mt-10">
+                <View className="w-[90%] flex items-start flex-col mt-4">
                     <Text weight="bold" className="text-white text-[24px]">Weekly Challenge</Text>
                     <WeeklyChallengeTab />
                     <ScreensNavigationPanel />
