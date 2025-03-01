@@ -9,10 +9,8 @@ import { Input } from "@/src/shared/ui/input/input";
 
 import { useRegister } from "@/src/entities/registration/api/use-register";
 import { useSendVerificationStore } from "@/src/entities/registration/model/send-verification-store";
-import { useAuthToken } from "@/src/entities/registration/api/use-auth-token";
 
 export const PasswordForm = () => {
-    const { saveToken } = useAuthToken()
     const { mutate, isPending } = useRegister()
     const { email } = useSendVerificationStore()
     const [password, setPassword] = useState<string>('');
@@ -31,14 +29,7 @@ export const PasswordForm = () => {
 
 
         mutate({ email, password }, {
-            onSuccess: async (data: any) => {
-                if (data?.token) {
-                    console.log("Token saved")
-                    await saveToken(data.token);
-                } else {
-                    console.warn("No token received!");
-                }
-
+            onSuccess: () => {
                 console.log("Registered succsesfully")
                 navigation.navigate('SuccessSignIn' as never)
             },
