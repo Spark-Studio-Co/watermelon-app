@@ -10,26 +10,20 @@ import { hp } from '@/src/shared/utils/resize-dimensions';
 
 import { useLoginStore } from '../../../entities/login/model/login-store';
 import { useLogin } from '@/src/entities/login/api/use-login';
-import { useAuthToken } from '@/src/entities/registration/api/use-auth-token';
+import { useAuthStore } from '@/src/entities/registration/api/use-auth-token';
 
 export const LoginForm = () => {
-    const { saveToken } = useAuthToken()
-    const { mutate, isPending } = useLogin()
+    const { mutate, isPending, isError } = useLogin()
     const navigation = useNavigation()
     const { password, email, setPassword, setEmail } = useLoginStore()
 
     const handleSubmit = () => {
         if (!email.trim() || !password.trim()) {
-            console.log('sername and password cannot be empty.')
+            console.log('Username and password cannot be empty.')
             return;
         }
         mutate({ email, password }, {
-            onSuccess: async (data: any) => {
-                if (data?.token) {
-                    await saveToken(data.token)
-                } else {
-                    console.log("There is an error with token")
-                }
+            onSuccess: () => {
                 navigation.navigate("SuccessSignUp" as never)
             },
             onError: (error: any) => {
@@ -45,7 +39,8 @@ export const LoginForm = () => {
             <Input placeholder='Email' variant='auth' className='mt-16' value={email} onChangeText={setEmail} />
             <Input placeholder='Password' variant='auth' className='mt-14' type='password' value={password} onChangeText={setPassword} />
             <Button variant='custom' className='mt-2 w-full flex items-end'><Text weight='regular' className='text-[15px] text-[#FFFFFF] flex'>Forgot password</Text></Button>
-            <Button onPress={handleSubmit} variant='blue' className='w-full flex items-center justify-center' style={{ marginTop: hp(30) }}><Text weight='regular' className='text-[22px] text-[#FFFFFF] flex'>{isPending ? 'Sending...' : 'Next'}</Text></Button>
+            <Text className='text-[16px] text-red-500 mt-6'>{isError && 'There is an error with password or email'}</Text>
+            <Button onPress={handleSubmit} variant='blue' className='w-full flex items-center justify-center' style={{ marginTop: hp(29) }}><Text weight='regular' className='text-[22px] text-[#FFFFFF] flex'>{isPending ? 'Sending...' : 'Next'}</Text></Button>
             <View className='flex flex-row mt-5 items-center gap-x-2'>
                 <Text weight='regular' className='text-[14px] text-[#FFFFFF]'>Don’t have an account?</Text>
                 <Button onPress={() => navigation.navigate('Registration' as never)} variant='custom'><Text weight='bold' className='text-[14px] underline text-[#57AEF1]'>Sign up</Text></Button>

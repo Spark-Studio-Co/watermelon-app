@@ -3,21 +3,21 @@ import { AuthLayout } from '../../layouts/auth-layout'
 import { View, Alert } from 'react-native'
 import Text from '@/src/shared/ui/text/text'
 import { Button } from '@/src/shared/ui/button/button'
-import { useAuthToken } from '@/src/entities/registration/api/use-auth-token'
+import { useAuthStore } from '@/src/entities/registration/api/use-auth-token'
 import { hp } from '@/src/shared/utils/resize-dimensions'
 import PremiumIcon from '@/src/shared/icons/premium-icon'
+import { useNavigation } from '@react-navigation/native'
 
 export const HardPaywall = () => {
-    const { saveToken, setIsAuthenticated } = useAuthToken()
+    const { setToken } = useAuthStore()
+    const { navigate } = useNavigation()
 
     const handleSubscribe = async () => {
         try {
             console.log('Subscribing...');
             const newToken = 'subscription-token-' + Date.now();
-            await saveToken(newToken);
+            setToken(newToken);
             console.log('Token saved:', newToken);
-
-            setIsAuthenticated(true);
             console.log('Authentication state updated');
 
             Alert.alert(
