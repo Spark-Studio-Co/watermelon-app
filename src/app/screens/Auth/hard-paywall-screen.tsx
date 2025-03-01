@@ -13,18 +13,15 @@ export const HardPaywall = () => {
     const handleSubscribe = async () => {
         try {
             console.log('Subscribing...');
-            // Save a new token
             const newToken = 'subscription-token-' + Date.now();
             await saveToken(newToken);
             console.log('Token saved:', newToken);
-            
-            // Update authentication state - this should trigger RootNavigator to switch stacks
+
             setIsAuthenticated(true);
             console.log('Authentication state updated');
-            
-            // Show alert to confirm subscription
+
             Alert.alert(
-                'Subscription Successful', 
+                'Subscription Successful',
                 'You are now subscribed! The app will switch to the dashboard.'
             );
         } catch (error) {
