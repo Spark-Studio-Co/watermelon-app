@@ -1,17 +1,17 @@
 import { create } from 'zustand'
 
 interface ILoginStore {
-    username: string
+    email: string
     password: string
-    setUsername: (username: string) => void
+    setEmail: (email: string) => void
     setPassword: (password: string) => void
 }
 
 export const useLoginStore = create<ILoginStore>(
     (set) => ({
-        username: '',
+        email: '',
         password: '',
-        setUsername: (username: string) => set({ username: username }),
+        setEmail: (email: string) => set({ email: email }),
         setPassword: (password: string) => set({ password: password }),
     })
 )

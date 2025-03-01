@@ -7,7 +7,14 @@ import { StepsIndicator } from "@/src/shared/ui/steps-indicator/steps-indicator"
 import { hp } from "@/src/shared/utils/resize-dimensions";
 import { Input } from "@/src/shared/ui/input/input";
 
+import { useRegister } from "@/src/entities/registration/api/use-register";
+import { useSendVerificationStore } from "@/src/entities/registration/model/send-verification-store";
+import { useAuthToken } from "@/src/entities/registration/api/use-auth-token";
+
 export const PasswordForm = () => {
+    const { saveToken } = useAuthToken()
+    const { mutate, isPending } = useRegister()
+    const { email } = useSendVerificationStore()
     const [password, setPassword] = useState<string>('');
     const navigation = useNavigation();
 
@@ -17,8 +24,28 @@ export const PasswordForm = () => {
 
     const progress = [minLength, hasNumber, hasSymbol].filter(Boolean).length / 3;
 
+    console.log(email, password)
+
+
     const handleSubmit = () => {
-        navigation.navigate('SuccessSignIn' as never)
+
+
+        mutate({ email, password }, {
+            onSuccess: async (data: any) => {
+                if (data?.token) {
+                    console.log("Token saved")
+                    await saveToken(data.token);
+                } else {
+                    console.warn("No token received!");
+                }
+
+                console.log("Registered succsesfully")
+                navigation.navigate('SuccessSignIn' as never)
+            },
+            onError: (error: any) => {
+                console.log("Error", error)
+            }
+        })
     }
 
     return (
@@ -61,7 +88,7 @@ export const PasswordForm = () => {
                 style={{ marginTop: hp(30) }}
                 disabled={!minLength || !hasNumber || !hasSymbol}
             >
-                <Text weight='regular' className='text-[22px] text-[#FFFFFF] flex'>Next</Text>
+                <Text weight='regular' className='text-[22px] text-[#FFFFFF] flex'>{isPending ? 'Sending...' : 'Next'}</Text>
             </Button>
         </View>
     );

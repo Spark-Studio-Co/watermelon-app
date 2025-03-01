@@ -5,6 +5,8 @@ import { View } from 'react-native';
 import { useFonts } from "expo-font";
 import { useEffect, useState } from 'react';
 import { SplashScreen } from 'expo-router';
+import { QueryClientProvider } from '@tanstack/react-query';
+import reactQueryClient from './src/app/config/queryClient';
 
 import './global.css';
 
@@ -45,13 +47,15 @@ export default function App() {
 
 
     return (
-        <GestureHandlerRootView>
-            <SafeAreaProvider>
-                <View className="flex-1 w-full m-auto bg-transparent">
-                    <RootNavigator />
-                </View>
-            </SafeAreaProvider>
-        </GestureHandlerRootView>
+        <QueryClientProvider client={reactQueryClient}>
+            <GestureHandlerRootView>
+                <SafeAreaProvider>
+                    <View className="flex-1 w-full m-auto bg-transparent">
+                        <RootNavigator />
+                    </View>
+                </SafeAreaProvider>
+            </GestureHandlerRootView>
+        </QueryClientProvider>
     );
 }
 

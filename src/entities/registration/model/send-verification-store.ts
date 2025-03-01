@@ -1,17 +1,17 @@
 import { create } from "zustand";
 
-interface IRegistrationStore {
+interface ISendVerificationStore {
     email: string
     secretKey: string
     setEmail: (email: string) => void
     setSecretKey: (secretKey: string) => void
 }
 
-export const useRegistrationStore = create<IRegistrationStore>(
+export const useSendVerificationStore = create<ISendVerificationStore>(
     (set) => ({
         email: '',
         secretKey: '',
         setEmail: (email: string) => set({ email: email }),
-        setSecretKey: (secretKey: string) => set({ secretKey: secretKey })
+        setSecretKey: (secretKey: string) => set({ secretKey: secretKey }),
     })
 )

@@ -1,29 +1,39 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { View } from "react-native";
 import Text from "@/src/shared/ui/text/text";
 import { Input } from "@/src/shared/ui/input/input";
 import { Button } from "@/src/shared/ui/button/button";
 import { useNavigation } from "@react-navigation/native";
-import { useRegistrationStore } from "@/src/entities/registration/model/registration-store";
+import { useSendVerificationStore } from "@/src/entities/registration/model/send-verification-store";
 import { StepsIndicator } from "@/src/shared/ui/steps-indicator/steps-indicator";
 import { useActiveStore } from "@/src/shared/model/use-active-store";
 import { hp } from "@/src/shared/utils/resize-dimensions";
 
+import { useSendVerification } from "@/src/entities/registration/api/use-send-verification";
 
 
 export const RegistrationForm = () => {
     const navigation = useNavigation();
     const { setActive } = useActiveStore("steps", "Registration");
-    const { email, secretKey, setEmail, setSecretKey } = useRegistrationStore();
+    const { email, secretKey, setEmail, setSecretKey } = useSendVerificationStore();
+    const { mutate, isPending } = useSendVerification()
 
 
     const handleSubmit = () => {
-        if (!email.trim() || !secretKey.trim()) {
+        if (!email.trim()) {
             console.log("Username and password cannot be empty.");
             return;
         }
-        navigation.navigate("CodeConfirmation" as never);
-        setActive('CodeConfirmation')
+
+        mutate({ email, secretKey }, {
+            onSuccess: () => {
+                navigation.navigate("CodeConfirmation" as never);
+                setActive('CodeConfirmation');
+            },
+            onError: (error) => {
+                console.log('Verification error:', error.message);
+            }
+        });
     };
 
     return (
@@ -34,7 +44,7 @@ export const RegistrationForm = () => {
             <Input placeholder="Email" variant="auth" className="mt-16" value={email} onChangeText={setEmail} />
             <Input placeholder="Secret key" variant="auth" className="mt-14" value={secretKey} onChangeText={setSecretKey} />
             <Button variant='custom' className='mt-2 w-full flex items-end'><Text weight='regular' className='text-[15px] text-[#FFFFFF] flex'>your invite code</Text></Button>
-            <Button onPress={handleSubmit} variant='blue' className='w-full flex items-center justify-center' style={{ marginTop: hp(30) }}><Text weight='regular' className='text-[22px] text-[#FFFFFF] flex'>Next</Text></Button>
+            <Button onPress={handleSubmit} variant='blue' className='w-full flex items-center justify-center' style={{ marginTop: hp(30) }}><Text weight='regular' className='text-[22px] text-[#FFFFFF] flex'>{isPending ? 'Sending...' : 'Next'}</Text></Button>
         </View >
     );
 };

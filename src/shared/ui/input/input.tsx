@@ -23,7 +23,7 @@ export const Input = ({ placeholder, className, variant = "default", type, ...pr
             <TextInput
                 className={className + ' ' + StyleSwitchCase({
                     variant, cases: {
-                        auth: ' h-[62px] pr-14 pl-4 bg-[#E3E3E3] rounded-[12px] opacity-[90%] placeholder:text-[#17171780] text-[#17171780] font-[400] text-[20px] font-poppins-regular',
+                        auth: 'flex items-center justify-center h-[62px] pr-14 pl-4 bg-[#E3E3E3] rounded-[12px] opacity-[90%] placeholder:text-[#17171780] text-[#17171780] font-[400] text-[20px] font-poppins-regular',
                         default: 'h-12',
                     }
                 })}

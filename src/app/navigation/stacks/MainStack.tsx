@@ -3,7 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 const Stack = createNativeStackNavigator();
 
-import { DashboardScreen } from '../../screens/dashboard-screen';
+import { DashboardScreen } from '../../screens/Main/dashboard-screen';
 
 export const MainStack = () => {
     return (

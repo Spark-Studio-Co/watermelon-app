@@ -7,8 +7,12 @@ import { useNavigation } from "@react-navigation/native";
 import { StepsIndicator } from "@/src/shared/ui/steps-indicator/steps-indicator";
 import { useActiveStore } from "@/src/shared/model/use-active-store";
 import { hp } from "@/src/shared/utils/resize-dimensions";
+import { useSendVerificationStore } from "@/src/entities/registration/model/send-verification-store";
+import { useVerifyCode } from "@/src/entities/registration/api/use-verify-code";
 
 export const CodeConfirmationForm = () => {
+    const { mutate, isPending } = useVerifyCode()
+    const { email } = useSendVerificationStore()
     const [values, setValues] = useState<string[]>(Array(5).fill(""));
     const { setActive } = useActiveStore("steps", "Registration");
     const navigation = useNavigation();
@@ -30,12 +34,17 @@ export const CodeConfirmationForm = () => {
 
     const handleSubmit = () => {
         const code = values.join("");
-        if (code.length === 5) {
-            console.log("✅ Complete code:", code);
-            setActive("Password");
-            navigation.navigate("Password" as never);
-        }
-    };
+        console.log("✅ Complete code:", code);
+        mutate({ code, email }, {
+            onSuccess: () => {
+                setActive("Password");
+                navigation.navigate("Password" as never);
+            },
+            onError: (error) => {
+                console.log('Verification error:', error.message);
+            }
+        })
+    }
 
     useEffect(() => {
         setActive("CodeConfirmation");
@@ -53,7 +62,7 @@ export const CodeConfirmationForm = () => {
             </Text>
             <StepsIndicator />
             <Text weight="regular" className="text-[16px] text-center text-[#FFFFFF] mt-24">
-                We just sent a 5-digit code to sarah.jansen@gmail.com, enter it below:
+                We just sent a 5-digit code to {email}, enter it below:
             </Text>
             <View className="flex flex-row justify-between w-full items-center mt-12">
                 {Array.from({ length: 5 }).map((_, index) => (
@@ -75,7 +84,7 @@ export const CodeConfirmationForm = () => {
                 </Button>
             </View>
             <Button onPress={handleSubmit} variant='blue' className='w-full flex items-center justify-center' style={{ marginTop: hp(30) }}>
-                <Text weight='regular' className='text-[22px] text-[#FFFFFF] flex'>Next</Text>
+                <Text weight='regular' className='text-[22px] text-[#FFFFFF] flex'>{isPending ? 'Sending...' : 'Next'}</Text>
             </Button>
         </View>
     );
