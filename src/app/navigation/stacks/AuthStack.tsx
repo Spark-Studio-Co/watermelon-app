@@ -9,6 +9,7 @@ import { RegistrationScreen } from '../../screens/Auth/registration-screen';
 import { CodeConfirmationScreen } from '../../screens/Auth/code-confirmation-screen';
 import { PasswordScreen } from '../../screens/Auth/password-screen';
 import { SuccessSignInScreen } from '../../screens/Auth/success-sign-in-screen';
+import { SuccessSignUpScreen } from '../../screens/Auth/success-sign-up-screen';
 
 export const AuthStack = () => {
     return (
@@ -18,6 +19,7 @@ export const AuthStack = () => {
             <Stack.Screen name="CodeConfirmation" component={CodeConfirmationScreen} />
             <Stack.Screen name="Password" component={PasswordScreen} />
             <Stack.Screen name="SuccessSignIn" component={SuccessSignInScreen} />
+            <Stack.Screen name="SuccessSignUp" component={SuccessSignUpScreen} />
         </Stack.Navigator>
     );
 };

@@ -10,13 +10,11 @@ import { hp } from '@/src/shared/utils/resize-dimensions';
 
 import { useLoginStore } from '../../../entities/login/model/login-store';
 import { useLogin } from '@/src/entities/login/api/use-login';
-import { useAuthStore } from '@/src/entities/registration/api/use-auth-store';
 
 export const LoginForm = () => {
     const { mutate, isPending, isError } = useLogin()
-    const navigation = useNavigation()
-    const { password, email, setPassword, setEmail } = useLoginStore()
-    const { setToken } = useAuthStore();
+    const { navigate } = useNavigation()
+    const { password, email, setPassword, setEmail, setResponseData } = useLoginStore()
 
     const handleSubmit = () => {
         if (!email.trim() || !password.trim()) {
@@ -26,11 +24,11 @@ export const LoginForm = () => {
         mutate({ email, password }, {
             onSuccess: async (data: any) => {
                 if (data?.token) {
-                    await setToken(data.token)
-                    navigation.navigate("SuccessSignUp" as never)
+                    setResponseData(data.token)
                 } else {
-                    console.log("Problems with login token")
+                    console.log('There is an error with data')
                 }
+                navigate("SuccessSignUp" as never)
             },
             onError: (error: any) => {
                 console.log(error)
@@ -49,7 +47,7 @@ export const LoginForm = () => {
             <Button onPress={handleSubmit} variant='blue' className='w-full flex items-center justify-center' style={{ marginTop: hp(29) }}><Text weight='regular' className='text-[22px] text-[#FFFFFF] flex'>{isPending ? 'Sending...' : 'Next'}</Text></Button>
             <View className='flex flex-row mt-5 items-center gap-x-2'>
                 <Text weight='regular' className='text-[14px] text-[#FFFFFF]'>Don’t have an account?</Text>
-                <Button onPress={() => navigation.navigate('Registration' as never)} variant='custom'><Text weight='bold' className='text-[14px] underline text-[#57AEF1]'>Sign up</Text></Button>
+                <Button onPress={() => navigate('Registration' as never)} variant='custom'><Text weight='bold' className='text-[14px] underline text-[#57AEF1]'>Sign up</Text></Button>
             </View>
         </View>
     )

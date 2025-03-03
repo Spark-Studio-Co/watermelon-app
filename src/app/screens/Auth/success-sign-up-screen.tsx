@@ -1,17 +1,19 @@
 import { AuthLayout } from "../../layouts/auth-layout";
 import { View, Image } from "react-native";
 import Text from "@/src/shared/ui/text/text";
-import { useNavigation } from "@react-navigation/native";
 
 import { hp, wp } from "@/src/shared/utils/resize-dimensions";
 import { Button } from "@/src/shared/ui/button/button";
 
+import { useAuthStore } from "@/src/entities/registration/api/use-auth-store";
+import { useLoginStore } from "@/src/entities/login/model/login-store";
+
 export const SuccessSignUpScreen = () => {
-    const navigation = useNavigation();
+    const { setToken } = useAuthStore()
+    const { responseData } = useLoginStore()
 
-    const handleNavigateDashboard = () => {
-        navigation.navigate('Dashboard' as never);
-
+    const handleNavigateDashboard = async () => {
+        setTimeout(() => setToken(responseData), 1000)
     };
 
     return (
