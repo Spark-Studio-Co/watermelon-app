@@ -5,14 +5,13 @@ import { Platform } from "react-native"
 
 import { IBottomNavigatonButtonProps } from "./model/bottom-navigation-button.interface"
 
-import { useActiveStore } from "./model/active-button-store"
 import { useCurrentScreen } from "@/src/shared/model/use-current-screen"
+import { useActiveStore } from "@/src/shared/model/use-active-store"
 
 export const BottomNavigationButton = ({ label, icon }: IBottomNavigatonButtonProps) => {
-    const { active, setActive } = useActiveStore()
     const { navigate } = useNavigation()
     const screenName = useCurrentScreen();
-
+    const { active, setActive } = useActiveStore('nav-button', screenName)
 
     const handlePressButton = () => {
         setActive(label)

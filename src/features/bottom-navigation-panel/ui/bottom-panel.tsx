@@ -3,12 +3,10 @@ import { Platform } from "react-native"
 
 import { hp } from "@/src/shared/utils/resize-dimensions"
 
-import { useCurrentScreen } from "@/src/shared/model/use-current-screen"
 import { BottomNavigationButton } from "./bottom-navigation-button"
 import { links } from "./model/links"
 
 export const BottomNavigationPanel = () => {
-
     return (
         <View
             className={`bg-[#202020] ${Platform.OS === "ios" ? "h-[90px]" : "h-[70px]"
