@@ -10,12 +10,13 @@ import { hp } from '@/src/shared/utils/resize-dimensions';
 
 import { useLoginStore } from '../../../entities/login/model/login-store';
 import { useLogin } from '@/src/entities/login/api/use-login';
-import { useAuthStore } from '@/src/entities/registration/api/use-auth-token';
+import { useAuthStore } from '@/src/entities/registration/api/use-auth-store';
 
 export const LoginForm = () => {
     const { mutate, isPending, isError } = useLogin()
     const navigation = useNavigation()
     const { password, email, setPassword, setEmail } = useLoginStore()
+    const { setToken } = useAuthStore();
 
     const handleSubmit = () => {
         if (!email.trim() || !password.trim()) {
@@ -23,8 +24,13 @@ export const LoginForm = () => {
             return;
         }
         mutate({ email, password }, {
-            onSuccess: () => {
-                navigation.navigate("SuccessSignUp" as never)
+            onSuccess: async (data: any) => {
+                if (data?.token) {
+                    await setToken(data.token)
+                    navigation.navigate("SuccessSignUp" as never)
+                } else {
+                    console.log("Problems with login token")
+                }
             },
             onError: (error: any) => {
                 console.log(error)

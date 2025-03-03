@@ -7,14 +7,13 @@ import { WeeklyChallengeTab } from "@/src/features/weekly-challenge-tab/ui/weekl
 import { ScreensNavigationPanel } from "@/src/features/screens-navigation-panel/ui/screens-navigaton-panel"
 import { Button } from "@/src/shared/ui/button/button"
 
-import { useAuthStore } from "@/src/entities/registration/api/use-auth-token"
+import { useAuthStore } from "@/src/entities/registration/api/use-auth-store"
 
 export const DashboardScreen = () => {
     const { logout } = useAuthStore();
 
     const handleLogOut = async () => {
-        console.log('Logging out...');
-        logout()
+        setTimeout(() => logout(), 1000)
     };
 
     return (
