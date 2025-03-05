@@ -15,6 +15,6 @@ export const links: IBottomNavigatonButtonProps[] = [
     },
     {
         icon: <ProfileIcon />,
-        label: 'Profile',
+        label: 'Settings',
     }
 ]

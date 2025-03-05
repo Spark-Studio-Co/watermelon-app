@@ -1,7 +1,4 @@
 import { View } from "react-native"
-import { Platform } from "react-native"
-
-import { hp } from "@/src/shared/utils/resize-dimensions"
 
 import { BottomNavigationButton } from "./bottom-navigation-button"
 import { links } from "./model/links"
@@ -9,11 +6,10 @@ import { links } from "./model/links"
 export const BottomNavigationPanel = () => {
     return (
         <View
-            className={`bg-[#202020] ${Platform.OS === "ios" ? "h-[90px]" : "h-[70px]"
+            className={`bg-[#202020] fixed bottom-0  h-[70px]
                 } rounded-tl-[18px] rounded-tr-[18px]`}
-            style={{ marginTop: Platform.OS === "ios" ? hp(-6) : hp(-7.5) }}
         >
-            <View className="flex flex-row justify-between items-center w-[80%] mt-auto mx-auto px-4">
+            <View className="flex-shrink-0 flex flex-row justify-between items-center w-[80%] mt-auto mx-auto">
                 {links.map((link) => (
                     <BottomNavigationButton
                         key={link.label}
