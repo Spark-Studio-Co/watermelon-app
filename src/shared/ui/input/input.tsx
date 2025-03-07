@@ -23,20 +23,22 @@ export const Input = ({ placeholder, className, variant = "default", type, ...pr
             <TextInput
                 className={className + ' ' + StyleSwitchCase({
                     variant, cases: {
-                        auth: 'flex items-center justify-center h-[62px] pr-14 pl-4 bg-[#E3E3E3] rounded-[12px] opacity-[90%] placeholder:text-[#17171780] text-[#17171780] font-[400] text-[20px] font-poppins-regular',
-                        settings: 'flex items-center justify-center h-[40px] pr-14 pl-4 bg-[#E3E3E3] rounded-[12px] opacity-[90%] placeholder:text-[#17171780] text-[#17171780] font-[400] text-[14px] font-poppins-regular',
+                        auth: 'h-[62px] pr-14 pl-4 bg-[#E3E3E3] rounded-[12px] opacity-[90%] text-[#17171780] font-[400] text-[20px] font-poppins-regular',
+                        settings: 'h-[40px] pr-14 pl-4 bg-[#E3E3E3] rounded-[12px] opacity-[90%] text-[#17171780] font-[400] text-[14px] font-poppins-regular',
                         default: 'h-12',
                     }
                 })}
                 placeholder={placeholder}
+                placeholderTextColor="#17171780"
                 secureTextEntry={type === 'password' && !isPasswordVisible}
+                textAlignVertical="center"
                 {...props}
             />
             {type === 'password' && (
                 <Button
                     variant="custom"
                     onPress={() => setIsPasswordVisible(!isPasswordVisible)}
-                    className={`absolute flex items-center justify-center`}
+                    className="absolute flex items-center justify-center"
                     style={{ right: wp(4), bottom: variant === 'settings' ? hp(1.3) : hp(2.6) }}
                 >
                     <PasswordIcon />

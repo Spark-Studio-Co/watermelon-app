@@ -82,7 +82,7 @@ export const SettingsScreen = () => {
                     >
                         <View className="px-4 mt-10">
                             <SeettingsButton onPress={() => navigate('PrivateData' as never)} icon={<PrivateDataIcon />} label="Личные данные" />
-                            <SeettingsButton icon={<PrivacyIcon />} label="Приватность" className="mt-2" />
+                            <SeettingsButton onPress={() => navigate('Privacy' as never)} icon={<PrivacyIcon />} label="Приватность" className="mt-2" />
                         </View>
                     </ImageBackground>
                 </View>
