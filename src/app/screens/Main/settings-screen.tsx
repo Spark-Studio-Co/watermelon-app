@@ -81,7 +81,7 @@ export const SettingsScreen = () => {
                         source={require('../../../images/settings/account.png')}
                     >
                         <View className="px-4 mt-10">
-                            <SeettingsButton icon={<PrivateDataIcon />} label="Личные данные" />
+                            <SeettingsButton onPress={() => navigate('PrivateData' as never)} icon={<PrivateDataIcon />} label="Личные данные" />
                             <SeettingsButton icon={<PrivacyIcon />} label="Приватность" className="mt-2" />
                         </View>
                     </ImageBackground>

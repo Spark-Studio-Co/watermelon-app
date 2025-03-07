@@ -19,7 +19,7 @@ export const SeettingsButton = ({ label, icon, className, isFriendsSettings, isA
                 {icon}
                 <Text weight="regular" className="text-white text-[16px]">{label}</Text>
             </View>
-            {isFriendsSettings ? <View className='bg-white w-[20px] h-[20px] flex items-center justify-center rounded-full'><Text weight="regular" className="text-black text-[11px] -mb-1">3</Text></View> : <RightArrowIcon />}
+            {isFriendsSettings ? <View className='bg-white w-[20px] h-[20px] flex items-center justify-center rounded-full'><Text weight="regular" className="text-black text-[11px]">3</Text></View> : <RightArrowIcon />}
         </TouchableOpacity>
     )
 }
