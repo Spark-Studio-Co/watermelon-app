@@ -3,15 +3,17 @@ import { Image, ImageSourcePropType } from "react-native"
 import Text from "@/src/shared/ui/text/text"
 import { Button } from "@/src/shared/ui/button/button"
 import UserMessageIcon from "@/src/shared/icons/user-message-icon"
+import AddIcon from "@/src/shared/icons/add-icon"
 
 interface IFriendTabProps {
     avatar: ImageSourcePropType,
     username: string,
     nickname: string
-    isMessage?: boolean
+    isAddToFriends?: boolean
+    onPress?: () => void
 }
 
-export const FriendTab = ({ avatar, username, nickname, isMessage = true }: IFriendTabProps) => {
+export const FriendTab = ({ avatar, username, nickname, onPress, isAddToFriends = false }: IFriendTabProps) => {
     return (
         <View className="flex flex-row justify-between w-full items-center">
             <View className="flex flex-row items-center gap-x-4">
@@ -28,8 +30,8 @@ export const FriendTab = ({ avatar, username, nickname, isMessage = true }: IFri
                     <Text weight="regular" className='text-white text-[10px]'>{nickname}</Text>
                 </View>
             </View>
-            <Button variant="custom">
-                <UserMessageIcon />
+            <Button variant="custom" onPress={onPress}>
+                {isAddToFriends ? <AddIcon /> : <UserMessageIcon />}
             </Button>
         </View>
     )

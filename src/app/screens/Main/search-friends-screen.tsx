@@ -24,16 +24,16 @@ const friends = [
 ]
 
 
-export const MyFriendsScreen = () => {
+export const SearchFriendsScreen = () => {
 
     return (
-        <MainLayout isBack title='Мои друзья'>
+        <MainLayout isBack title='Поиск'>
             <Input variant='search' className='mt-6' placeholder='Искать друзей...' />
             <View className=" bg-[#262A34] px-6 py-6 rounded-[15px] w-full mt-4">
                 {friends.map((friend, index) => {
                     return (
                         <>
-                            <FriendTab key={index} avatar={friend.avatar} username={friend.username} nickname={friend.nickname} />
+                            <FriendTab key={index} avatar={friend.avatar} username={friend.username} nickname={friend.nickname} isAddToFriends />
                             <View className={`bg-white w-full h-0.5 mt-6 mb-4 ${index === friends.length - 1 && 'hidden'}`} />
                         </>
                     )

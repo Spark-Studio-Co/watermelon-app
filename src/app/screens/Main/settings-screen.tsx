@@ -97,7 +97,7 @@ export const SettingsScreen = () => {
                     >
                         <View className="px-4 mt-10">
                             <SeettingsButton onPress={() => navigate('MyFriends' as never)} icon={<FriendsIcon />} label="Мои друзья" isFriendsSettings />
-                            <SeettingsButton icon={<SearchIcon />} label="Искать друзей" className="mt-2" />
+                            <SeettingsButton onPress={() => navigate('SearchFriends' as never)} icon={<SearchIcon />} label="Искать друзей" className="mt-2" />
                         </View>
                     </ImageBackground>
                 </View>
@@ -117,7 +117,10 @@ export const SettingsScreen = () => {
                             <View className="bg-white w-[90%] mx-auto h-0.5" />
                             <SeettingsButton icon={<MessageIcon />} label="О приложении" className="mt-2" isApplicationSettings />
                         </View>
-                        <Button variant="custom" className="flex mx-auto mt-1 items-center justify-center gap-x-5 h-[68px] w-[95%] bg-[#262A34] rounded-[15px] flex-row"><SendFeedBackIcon /> <Text weight="regular" className="text-white text-[20px]">Send feedback</Text></Button>
+                        <Button variant="custom" className="flex mx-auto mt-1 items-center justify-center gap-x-5 h-[68px] w-[95%] bg-[#262A34] rounded-[15px] flex-row">
+                            <Text><SendFeedBackIcon /></Text>
+                            <Text weight="regular" className="text-white text-[20px]">Send feedback</Text>
+                        </Button>
                     </ImageBackground>
                 </View>
             }
