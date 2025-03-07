@@ -11,6 +11,7 @@ import { PrivateDataScreen } from '../../screens/Main/private-data-screen';
 import { PrivacyScreen } from '../../screens/Main/privacy-screen';
 import { MyFriendsScreen } from '../../screens/Main/my-friends-screen';
 import { SearchFriendsScreen } from '../../screens/Main/search-friends-screen';
+import { NotificationsScreen } from '../../screens/Main/notifications-screen';
 
 export const MainStack = () => {
     return (
@@ -22,6 +23,7 @@ export const MainStack = () => {
             <Stack.Screen name="Privacy" component={PrivacyScreen} />
             <Stack.Screen name="MyFriends" component={MyFriendsScreen} />
             <Stack.Screen name="SearchFriends" component={SearchFriendsScreen} />
+            <Stack.Screen name="Notifications" component={NotificationsScreen} />
         </Stack.Navigator>
     );
 };

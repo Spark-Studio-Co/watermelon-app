@@ -111,7 +111,7 @@ export const SettingsScreen = () => {
                         source={require('../../../images/settings/app_settings.png')}
                     >
                         <View className="px-4 mt-7">
-                            <SeettingsButton icon={<BellIcon />} label="Уведомления" isApplicationSettings />
+                            <SeettingsButton onPress={() => navigate('Notifications' as never)} icon={<BellIcon />} label="Уведомления" isApplicationSettings />
                             <View className="bg-white w-[90%] mx-auto h-0.5" />
                             <SeettingsButton onPress={() => navigate('PointPremium' as never)} icon={<CrownIcon />} label="Point Premium" className="mt-2" isApplicationSettings />
                             <View className="bg-white w-[90%] mx-auto h-0.5" />
