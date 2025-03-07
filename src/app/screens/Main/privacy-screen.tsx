@@ -1,8 +1,6 @@
 import { View } from "react-native"
 import Text from "@/src/shared/ui/text/text"
 import { MainLayout } from "../../layouts/main-layout"
-import { Input } from "@/src/shared/ui/input/input"
-import { Button } from "@/src/shared/ui/button/button"
 import { Switch } from "@/src/shared/ui/switch/switch"
 
 export const PrivacyScreen = () => {

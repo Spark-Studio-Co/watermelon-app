@@ -96,7 +96,7 @@ export const SettingsScreen = () => {
                         source={require('../../../images/settings/friends.png')}
                     >
                         <View className="px-4 mt-10">
-                            <SeettingsButton icon={<FriendsIcon />} label="Мои друзья" isFriendsSettings />
+                            <SeettingsButton onPress={() => navigate('MyFriends' as never)} icon={<FriendsIcon />} label="Мои друзья" isFriendsSettings />
                             <SeettingsButton icon={<SearchIcon />} label="Искать друзей" className="mt-2" />
                         </View>
                     </ImageBackground>
