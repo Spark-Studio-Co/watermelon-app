@@ -16,9 +16,10 @@ interface MainLayoutProps {
     isUserTab?: boolean
     isBack?: boolean
     title?: string
+    isMap?: boolean
 }
 
-export const MainLayout = ({ children, isUserTab, isBack, title }: MainLayoutProps) => {
+export const MainLayout = ({ children, isUserTab, isBack, title, isMap }: MainLayoutProps) => {
 
     const navigation = useNavigation()
 
@@ -26,17 +27,30 @@ export const MainLayout = ({ children, isUserTab, isBack, title }: MainLayoutPro
         <View className="flex-1 bg-[#1B1C1E]">
             <StatusBar style="light" translucent={true} backgroundColor='transparent' />
             <SafeAreaView style={{ flex: 1 }}>
-                {isBack && <View className='flex flex-row items-center gap-x-3 mx-4 mt-4'><Button variant='custom' className='rotate-180' onPress={() => navigation.goBack()}><RightArrowIcon /></Button><Text weight='regular' className='text-white text-[16px]'>{title}</Text></View>}
-                {isUserTab && <UserTab />}
-                <ScrollView
-                    contentContainerStyle={{ flexGrow: 1, paddingBottom: hp(4), paddingHorizontal: 16 }}
-                    keyboardShouldPersistTaps="handled"
-                    showsVerticalScrollIndicator={false}
-                >
-                    {children}
-                </ScrollView>
-                {!isBack && <BottomNavigationPanel />}
+                {isMap ?
+                    <>
+                        <View>
+                            {children}
+                        </View>
+                        {!isBack && <BottomNavigationPanel />}
+                    </>
+                    :
+                    <>
+                        {isBack && <View className='flex flex-row items-center gap-x-3 mx-4 my-4'><Button variant='custom' className='rotate-180' onPress={() => navigation.goBack()}><RightArrowIcon /></Button><Text weight='regular' className='text-white text-[16px]'>{title}</Text></View>}
+                        {isUserTab && <UserTab />}
+                        <ScrollView
+                            contentContainerStyle={{
+                                paddingBottom: hp(12), paddingHorizontal: 16,
+                            }}
+                            keyboardShouldPersistTaps="handled"
+                            showsVerticalScrollIndicator={false}
+                        >
+                            {children}
+                        </ScrollView>
+                        {!isBack && <BottomNavigationPanel />}
+                    </>
+                }
             </SafeAreaView>
-        </View>
+        </View >
     );
 };

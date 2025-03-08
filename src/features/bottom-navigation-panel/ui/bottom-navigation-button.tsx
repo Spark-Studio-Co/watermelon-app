@@ -17,7 +17,7 @@ export const BottomNavigationButton = ({ label, icon }: IBottomNavigatonButtonPr
     }
 
     return (
-        <Button variant="custom" onPress={handlePressButton} className={`flex-shrink-0 flex flex-row items-center gap-x-3 ${active === label ? `h-[48px] bg-[#2A2A2C] px-4 flex items-center justify-center rounded-tl-[15px] rounded-tr-[15px]` : ''}`}>
+        <Button variant="custom" onPress={handlePressButton} className={`flex flex-row  items-center gap-x-3 ${active === label ? `h-[48px] bg-[#2A2A2C] px-4 flex items-center justify-center rounded-tl-[15px] rounded-tr-[15px]` : ''}`}>
             {icon}
             {active === label &&
                 <Text weight="bold" className="text-[12px] text-white">{label}</Text>}

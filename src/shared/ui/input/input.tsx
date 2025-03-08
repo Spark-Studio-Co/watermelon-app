@@ -38,11 +38,11 @@ export const Input = ({ placeholder, className, variant = "default", type, ...pr
                 {...props}
             />
             {variant === 'search' &&
-                <View className="absolute flex items-center justify-center" style={{ left: wp(4), bottom: hp(2.2) }}>
+                <View className="absolute flex items-center justify-center" style={{ left: wp(4), bottom: hp(1.9) }}>
                     <SearchIcon />
                 </View>}
             {variant === 'search' &&
-                <View className="absolute flex items-center justify-center" style={{ right: wp(4), bottom: hp(2.5) }}>
+                <View className="absolute flex items-center justify-center" style={{ right: wp(4), bottom: hp(2.2) }}>
                     <RightArrowIcon />
                 </View>}
             {type === 'password' && (
