@@ -20,7 +20,7 @@ export const Switch = ({ defaultValue = false, onValueChange, className = '' }: 
 
     return (
         <TouchableOpacity
-            activeOpacity={0.8}
+            activeOpacity={1}
             onPress={toggleSwitch}
             className={`items-center justify-center ${className}`}
         >
