@@ -2,7 +2,6 @@ import { ReactNode } from "react"
 import { TouchableOpacity } from "react-native"
 import { TouchableOpacityProps } from "react-native"
 
-import { StyleSwitchCase } from '../../utils/style-switch-case';
 import { useActiveStore } from "../../model/use-active-store";
 
 interface ITouchableOpacity extends TouchableOpacityProps {
@@ -18,15 +17,26 @@ const baseStyles = 'flex items-center justify-center'
 export const Button = ({ children, variant, className, onPress, label, ...props }: ITouchableOpacity) => {
     const { active } = useActiveStore('settings', '');
 
+    const variantClass = (() => {
+        if (variant === 'blue') return 'bg-[#57AEF1] h-[63px] rounded-[8px]';
+        if (variant === 'settings') {
+            return `rounded-[6.39px] px-[21px] h-[28px] ${active === label ? 'bg-[#27262A]' : 'bg-[#38373A]'}`;
+        }
+        if (variant === 'paywall') return 'bg-[#57AEF1] rounded-[8px]';
+        return '';
+    })();
+
+    const baseClass = variant === 'custom' ? '' : baseStyles;
+
+    const combinedClassName = `${className || ''} ${baseClass} ${variantClass}`;
+
     return (
-        <TouchableOpacity onPress={onPress} activeOpacity={0.7} className={`${className || ''} ${variant === "custom" ? '' : baseStyles} ${StyleSwitchCase({
-            variant, cases: {
-                blue: 'bg-[#57AEF1] h-[63px] rounded-[8px]',
-                // paywall: 'border-2 border-[#31A6FF] h-[46px] rounded-[8px] bg-[#343434]',
-                settings: `rounded-[6.39px] px-[21px] h-[28px] ${active === label ? 'bg-[#27262A]' : 'bg-[#38373A]'} transition-colors duration-300 ease-in-out`,
-                custom: '',
-            }
-        })}`} {...props}>
+        <TouchableOpacity
+            onPress={onPress}
+            activeOpacity={0.7}
+            className={combinedClassName}
+            {...props}
+        >
             {children}
         </TouchableOpacity>
     )

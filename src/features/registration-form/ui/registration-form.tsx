@@ -37,14 +37,18 @@ export const RegistrationForm = () => {
     };
 
     return (
-        <View className="flex items-center justify-center w-full mt-20">
-            <Text weight="medium" className="text-[48px] text-[#FFFFFF]">Registration</Text>
-            <Text weight="regular" className="text-[16px] text-[#FFFFFF] mt-6 mb-6">Create your account</Text>
-            <StepsIndicator />
-            <Input placeholder="Email" variant="auth" className="mt-16" value={email} onChangeText={setEmail} />
-            <Input placeholder="Secret key" variant="auth" className="mt-14" value={secretKey} onChangeText={setSecretKey} />
-            <Button variant='custom' className='mt-2 w-full flex items-end'><Text weight='regular' className='text-[15px] text-[#FFFFFF] flex'>your invite code</Text></Button>
-            <Button onPress={handleSubmit} variant='blue' className='w-full flex items-center justify-center' style={{ marginTop: hp(30) }}><Text weight='regular' className='text-[22px] text-[#FFFFFF] flex'>{isPending ? 'Sending...' : 'Next'}</Text></Button>
+        <View className="flex justify-between h-full">
+            <View className="flex mt-20 flex-col items-center justify-center w-full">
+                <Text weight="medium" className="text-[48px] text-[#FFFFFF]">Registration</Text>
+                <Text weight="regular" className="text-[16px] text-[#FFFFFF] mt-6 mb-6">Create your account</Text>
+                <StepsIndicator />
+                <Input placeholder="Email" variant="auth" className="mt-16" value={email} onChangeText={setEmail} />
+                <Input placeholder="Secret key" variant="auth" className="mt-14" value={secretKey} onChangeText={setSecretKey} />
+                <Button variant='custom' className='mt-2 w-full flex items-end'><Text weight='regular' className='text-[15px] text-[#FFFFFF] flex'>your invite code</Text></Button>
+            </View>
+            <View className="mb-10 w-full">
+                <Button onPress={handleSubmit} variant='blue' className='w-full flex items-center justify-center'><Text weight='regular' className='text-[22px] text-[#FFFFFF] flex'>{isPending ? 'Sending...' : 'Next'}</Text></Button>
+            </View>
         </View >
     );
 };

@@ -55,37 +55,44 @@ export const CodeConfirmationForm = () => {
     }, []);
 
     return (
-        <View className="flex items-center justify-center w-full mt-20">
-            <Text weight="medium" className="text-[48px] text-[#FFFFFF]">Registration</Text>
-            <Text weight="regular" className="text-[16px] text-[#FFFFFF] mt-6 mb-6">
-                Create your account
-            </Text>
-            <StepsIndicator />
-            <Text weight="regular" className="text-[16px] text-center text-[#FFFFFF] mt-24">
-                We just sent a 5-digit code to {email}, enter it below:
-            </Text>
-            <View className="flex flex-row justify-between w-full items-center mt-12">
-                {Array.from({ length: 5 }).map((_, index) => (
-                    <SingleValueInput
-                        key={index}
-                        index={index}
-                        inputRef={(el) => (inputRefs.current[index] = el)}
-                        value={values[index] || ""}
-                        onChangeText={(text) => handleSetValue(index, text)}
-                    />
-                ))}
+        <View className="flex items-center justify-between h-full w-full">
+            <View className="mt-20 flex items-center justify-center w-full">
+                <Text weight="medium" className="text-[48px] text-[#FFFFFF]">Registration</Text>
+                <Text weight="regular" className="text-[16px] text-[#FFFFFF] mt-6 mb-6">
+                    Create your account
+                </Text>
+                <StepsIndicator />
+                <Text weight="regular" className="text-[16px] text-center text-[#FFFFFF] mt-24">
+                    We just sent a 5-digit code to
+                </Text>
+                <Text weight="regular" className="text-[16px] text-center text-[#FFFFFF]">
+                    {email}, enter it below:
+                </Text>
+                <View className=" flex flex-row justify-between w-full items-center mt-12">
+                    {Array.from({ length: 5 }).map((_, index) => (
+                        <SingleValueInput
+                            key={index}
+                            index={index}
+                            inputRef={(el) => (inputRefs.current[index] = el)}
+                            value={values[index] || ""}
+                            onChangeText={(text) => handleSetValue(index, text)}
+                        />
+                    ))}
+                </View>
+                <View className="flex flex-row mt-4 items-center gap-x-2">
+                    <Text weight="regular" className="text-[14px] text-[#FFFFFF]">Wrong email?</Text>
+                    <Button onPress={() => navigation.navigate("Registration" as never)} variant="custom">
+                        <Text weight="bold" className="text-[14px] underline text-[#57AEF1]">
+                            Send to different email
+                        </Text>
+                    </Button>
+                </View>
             </View>
-            <View className="flex flex-row mt-4 items-center gap-x-2">
-                <Text weight="regular" className="text-[14px] text-[#FFFFFF]">Wrong email?</Text>
-                <Button onPress={() => navigation.navigate("Registration" as never)} variant="custom">
-                    <Text weight="bold" className="text-[14px] underline text-[#57AEF1]">
-                        Send to different email
-                    </Text>
+            <View className="w-full mb-10">
+                <Button onPress={handleSubmit} variant='blue' className='w-full flex items-center justify-center'>
+                    <Text weight='regular' className='text-[22px] text-[#FFFFFF] flex'>{isPending ? 'Sending...' : 'Next'}</Text>
                 </Button>
             </View>
-            <Button onPress={handleSubmit} variant='blue' className='w-full flex items-center justify-center' style={{ marginTop: hp(30) }}>
-                <Text weight='regular' className='text-[22px] text-[#FFFFFF] flex'>{isPending ? 'Sending...' : 'Next'}</Text>
-            </Button>
         </View>
     );
 };
