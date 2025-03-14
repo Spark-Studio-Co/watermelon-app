@@ -16,11 +16,9 @@ export const DashboardScreen = () => {
     };
 
     return (
-        <MainLayout isUserTab>
+        <MainLayout isUserTab isWeeklyChallenge>
             <View className="flex items-center justify-center w-full">
-                <View className="w-[90%] flex items-start flex-col mt-4">
-                    <Text weight="bold" className="text-white text-[24px]">Weekly Challenge</Text>
-                    <WeeklyChallengeTab />
+                <View className="w-[90%] flex items-start flex-col">
                     <ScreensNavigationPanel />
                     <Button onPress={handleLogOut} variant={"custom"} className="bg-red-500 w-full h-[60px] flex items-center justify-center mt-8">
                         <Text className="text-white text-xl">Log out</Text>

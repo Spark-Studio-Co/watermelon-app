@@ -3,7 +3,7 @@ import Text from "@/src/shared/ui/text/text"
 
 export const UserSettingsTab = () => {
     return (
-        <View className="px-4 flex flex-row items-center justify-center gap-x-10 mt-8">
+        <View className="flex flex-row items-center justify-center gap-x-10 mt-8">
             <View
                 style={{ height: 96, width: 96 }}
             >

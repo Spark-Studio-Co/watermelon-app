@@ -7,7 +7,7 @@ import { Button } from "@/src/shared/ui/button/button"
 export const PrivateDataScreen = () => {
     return (
         <MainLayout isBack title='Изменить данные'>
-            <View className=" bg-[#262A34] px-6 py-6 rounded-[15px] w-full mt-6">
+            <View className="px-6 py-6 rounded-[15px] w-full mt-6">
                 <Text weight="regular" className="text-[14px] text-white">Имя Пользователя</Text>
                 <Input placeholder="User name" variant="settings" className="mt-2" />
                 <Text weight="regular" className="text-[14px] text-white mt-9">Никнейм</Text>

@@ -20,7 +20,7 @@ export const Button = ({ children, variant, className, onPress, label, ...props 
     const variantClass = (() => {
         if (variant === 'blue') return 'bg-[#57AEF1] h-[63px] rounded-[8px]';
         if (variant === 'settings') {
-            return `rounded-[6.39px] px-[21px] h-[28px] ${active === label ? 'bg-[#27262A]' : 'bg-[#38373A]'}`;
+            return `rounded-[6.39px] px-[24px] h-[40px] ${active === label ? 'bg-[#27262A]' : 'bg-[#38373A]'}`;
         }
         if (variant === 'paywall') return 'bg-[#57AEF1] rounded-[8px]';
         return '';

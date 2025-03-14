@@ -1,4 +1,4 @@
-import MapView, { Region } from 'react-native-maps';
+import MapView, { Region, MapStyleElement } from 'react-native-maps';
 import { useEffect, useState } from "react";
 import * as Location from 'expo-location';
 import { TouchableOpacity, View, Dimensions } from 'react-native';
@@ -12,6 +12,53 @@ import CrosshairIcon from '@/src/shared/icons/crosshair-icon';
 import BurgerIcon from '@/src/shared/icons/burger-icon';
 
 const { width, height } = Dimensions.get('window');
+
+const customMapStyle = [
+    {
+        "elementType": "labels.icon",
+        "stylers": [
+            {
+                "visibility": "off"
+            }
+        ]
+    },
+    {
+        "featureType": "poi",
+        "stylers": [
+            {
+                "visibility": "off"
+            }
+        ]
+    },
+    {
+        "featureType": "transit",
+        "stylers": [
+            {
+                "visibility": "off"
+            }
+        ]
+    },
+    {
+        "featureType": "poi.business",
+        "stylers": [{ "visibility": "off" }]
+    },
+    {
+        "featureType": "poi.park",
+        "stylers": [{ "visibility": "off" }]
+    },
+    {
+        "elementType": "labels.icon",
+        "stylers": [{ "visibility": "off" }]
+    },
+    {
+        "featureType": "poi",
+        "stylers": [{ "visibility": "off" }]
+    },
+    {
+        "featureType": "transit",
+        "stylers": [{ "visibility": "off" }]
+    }
+];
 
 export const Map = () => {
     const [region, setRegion] = useState<Region>(APP_CONFIG.MAP.INITIAL_REGION);
@@ -55,6 +102,12 @@ export const Map = () => {
                 onRegionChangeComplete={setRegion}
                 showsUserLocation
                 showsMyLocationButton={false}
+                customMapStyle={customMapStyle}
+                mapType="standard"
+                showsPointsOfInterest={false}
+                showsBuildings={false}
+                showsTraffic={false}
+                showsIndoors={false}
             />
             <View className="absolute top-14 left-1/2 -translate-x-1/2">
                 <MapSwitch />

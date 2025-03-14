@@ -29,7 +29,7 @@ export const SearchFriendsScreen = () => {
     return (
         <MainLayout isBack title='Поиск'>
             <Input variant='search' className='mt-6' placeholder='Искать друзей...' />
-            <View className=" bg-[#262A34] px-6 py-6 rounded-[15px] w-full mt-4">
+            <View className=" px-6 py-6 rounded-[15px] w-full mt-4">
                 {friends.map((friend, index) => {
                     return (
                         <View key={index}>

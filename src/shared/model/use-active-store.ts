@@ -7,12 +7,12 @@ interface IActiveStore {
 
 const activeStorage: Record<string, UseBoundStore<StoreApi<IActiveStore>>> = {};
 
-export const useActiveStore = (storeKey: string, dafaultActive: string | null) => {
+export const useActiveStore = (storeKey: string, defaultActive: string | null) => {
     if (!activeStorage[storeKey]) {
         activeStorage[storeKey] = create<IActiveStore>((set) => ({
-            active: dafaultActive,
+            active: defaultActive,
             setActive: (active: string) => set({ active })
-        }))
+        }));
     }
     return activeStorage[storeKey]();
 }

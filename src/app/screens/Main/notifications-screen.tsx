@@ -6,7 +6,7 @@ import { Switch } from "@/src/shared/ui/switch/switch"
 export const NotificationsScreen = () => {
     return (
         <MainLayout isBack title='Уведомления'>
-            <View className=" bg-[#262A34] px-6 py-6 rounded-[15px] w-full mt-6">
+            <View className=" px-6 py-6 rounded-[15px] w-full mt-6">
                 <View className="flex flex-row justify-between w-[100%] items-center">
                     <View className="flex flex-col w-[80%]">
                         <Text weight="regular" className="text-white text-[16px]">Все уведомления</Text>

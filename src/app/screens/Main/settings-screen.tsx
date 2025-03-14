@@ -43,7 +43,7 @@ export const SettingsScreen = () => {
             case 'Друзья':
                 friends.open()
                 break
-            case 'Настройки приложения':
+            case 'Настройки':
                 appSettings.open()
                 break
         }
@@ -60,7 +60,7 @@ export const SettingsScreen = () => {
         },
         {
             id: 'app_settings',
-            label: 'Настройки приложения'
+            label: 'Настройки'
         }
     ]
 
@@ -69,19 +69,21 @@ export const SettingsScreen = () => {
             <View className="flex flex-col mx-auto mt-5">
                 <Text weight="medium" className="text-white text-[22px]">Settings</Text>
                 <UserSettingsTab />
-                <View className="flex flex-row items-center w-full gap-x-1 justify-center mt-6">
-                    {buttons.map((button) => (
-                        <Button
-                            key={button.id}
-                            label={button.label}
-                            onPress={() => handleOpenAccount(button.label)}
-                            variant="settings"
-                        >
-                            <Text weight="regular" className="text-white text-[14px]">
-                                {button.label}
-                            </Text>
-                        </Button>
-                    ))}
+                <View className="flex flex-row w-full justify-center mt-6">
+                    <View className="flex-1 flex flex-row gap-x-4 items-center justify-center">
+                        {buttons.map((button) => (
+                            <Button
+                                key={button.id}
+                                label={button.label}
+                                onPress={() => handleOpenAccount(button.label)}
+                                variant="settings"
+                            >
+                                <Text weight="regular" className="text-white text-[14px]">
+                                    {button.label}
+                                </Text>
+                            </Button>
+                        ))}
+                    </View>
                 </View>
             </View>
             {account.isVisible &&

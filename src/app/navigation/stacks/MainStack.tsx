@@ -1,4 +1,5 @@
 import React from 'react';
+import { Platform } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 const Stack = createNativeStackNavigator();
@@ -16,7 +17,19 @@ import { MapScreen } from '../../screens/Main/map-screen';
 
 export const MainStack = () => {
     return (
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Navigator
+            screenOptions={{
+                headerShown: false,
+                animation: Platform.OS === 'ios' ? 'default' : 'slide_from_right',
+                animationDuration: 250,
+                gestureEnabled: true,
+                fullScreenGestureEnabled: true,
+                contentStyle: {
+                    backgroundColor: '#1B1C1E'
+                },
+                gestureDirection: 'horizontal',
+                animationTypeForReplace: 'push'
+            }}>
             <Stack.Screen name="Dashboard" component={DashboardScreen} />
             <Stack.Screen name="Settings" component={SettingsScreen} />
             <Stack.Screen name="PointPremium" component={PointPremiumScreen} />
