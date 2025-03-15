@@ -13,12 +13,12 @@ export const BottomNavigationPanel = () => {
         Animated.sequence([
             Animated.timing(fadeAnim, {
                 toValue: 0.7,
-                duration: 100,
+                duration: 50,
                 useNativeDriver: true,
             }),
             Animated.timing(fadeAnim, {
                 toValue: 1,
-                duration: 150,
+                duration: 80,
                 useNativeDriver: true,
             })
         ]).start();

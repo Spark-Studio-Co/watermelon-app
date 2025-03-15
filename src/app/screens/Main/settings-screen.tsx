@@ -88,54 +88,33 @@ export const SettingsScreen = () => {
             </View>
             {account.isVisible &&
                 <View style={{ width: '100%', }}>
-                    <ImageBackground
-                        className="mt-3.5"
-                        style={{ width: '100%', height: Platform.OS === 'ios' ? 200 : 160 }}
-                        resizeMode="contain"
-                        source={require('../../../images/settings/account.png')}
-                    >
-                        <View className={`px-4 ${Platform.OS === 'ios' ? 'mt-10' : 'mt-6'}`}>
-                            <SeettingsButton onPress={() => navigate('PrivateData' as never)} icon={<PrivateDataIcon />} label="Личные данные" />
-                            <SeettingsButton onPress={() => navigate('Privacy' as never)} icon={<PrivacyIcon />} label="Приватность" className="mt-2" />
-                        </View>
-                    </ImageBackground>
+                    <View className={`px-4 ${Platform.OS === 'ios' ? 'mt-10' : 'mt-6'}`}>
+                        <SeettingsButton onPress={() => navigate('PrivateData' as never)} icon={<PrivateDataIcon />} label="Личные данные" />
+                        <SeettingsButton onPress={() => navigate('Privacy' as never)} icon={<PrivacyIcon />} label="Приватность" className="mt-2" />
+                    </View>
                 </View>
             }
             {friends.isVisible &&
                 <View style={{ width: '100%' }}>
-                    <ImageBackground
-                        className="mt-3.5"
-                        style={{ width: '100%', height: Platform.OS === 'ios' ? 196 : 163 }}
-                        resizeMode="contain"
-                        source={require('../../../images/settings/friends.png')}
-                    >
-                        <View className={`px-4 ${Platform.OS === 'ios' ? 'mt-10' : 'mt-6'}`}>
-                            <SeettingsButton onPress={() => navigate('MyFriends' as never)} icon={<FriendsIcon />} label="Мои друзья" isFriendsSettings />
-                            <SeettingsButton onPress={() => navigate('SearchFriends' as never)} icon={<SearchIcon />} label="Искать друзей" className="mt-2" />
-                        </View>
-                    </ImageBackground>
+                    <View className={`px-4 ${Platform.OS === 'ios' ? 'mt-10' : 'mt-6'}`}>
+                        <SeettingsButton onPress={() => navigate('MyFriends' as never)} icon={<FriendsIcon />} label="Мои друзья" isFriendsSettings />
+                        <SeettingsButton onPress={() => navigate('SearchFriends' as never)} icon={<SearchIcon />} label="Искать друзей" className="mt-2" />
+                    </View>
                 </View>
             }
             {appSettings.isVisible &&
                 <View style={{ width: '100%' }}>
-                    <ImageBackground
-                        className="mt-3.5"
-                        style={{ width: '100%', height: Platform.OS === 'ios' ? 320 : 260 }}
-                        resizeMode="contain"
-                        source={require('../../../images/settings/app_settings.png')}
-                    >
-                        <View className={`px-4 ${Platform.OS === 'ios' ? 'mt-7' : 'mt-1.5'}`}>
-                            <SeettingsButton onPress={() => navigate('Notifications' as never)} icon={<BellIcon />} label="Уведомления" isApplicationSettings />
-                            <View className="bg-white w-[90%] mx-auto h-0.5" />
-                            <SeettingsButton onPress={() => navigate('PointPremium' as never)} icon={<CrownIcon />} label="Point Premium" className={`${Platform.OS === 'ios' ? 'mt-2' : ''}`} isApplicationSettings />
-                            <View className="bg-white w-[90%] mx-auto h-0.5" />
-                            <SeettingsButton icon={<MessageIcon />} label="О приложении" className={`${Platform.OS === 'ios' ? 'mt-2' : ''}`} isApplicationSettings />
-                        </View>
-                        <Button variant="custom" className="flex mx-auto mt-0.5 items-center justify-center gap-x-5 h-[68px] w-[95%] bg-[#262A34] rounded-[15px] flex-row">
-                            <Text><SendFeedBackIcon /></Text>
-                            <Text weight="regular" className="text-white text-[20px]">Send feedback</Text>
-                        </Button>
-                    </ImageBackground>
+                    <View className={`px-4 ${Platform.OS === 'ios' ? 'mt-7' : 'mt-1.5'}`}>
+                        <SeettingsButton onPress={() => navigate('Notifications' as never)} icon={<BellIcon />} label="Уведомления" isApplicationSettings />
+                        <View className="bg-white w-[90%] mx-auto h-0.5" />
+                        <SeettingsButton onPress={() => navigate('PointPremium' as never)} icon={<CrownIcon />} label="Point Premium" className={`${Platform.OS === 'ios' ? 'mt-2' : ''}`} isApplicationSettings />
+                        <View className="bg-white w-[90%] mx-auto h-0.5" />
+                        <SeettingsButton icon={<MessageIcon />} label="О приложении" className={`${Platform.OS === 'ios' ? 'mt-2' : ''}`} isApplicationSettings />
+                    </View>
+                    <Button variant="custom" className="flex mx-auto mt-0.5 items-center justify-center gap-x-5 h-[68px] w-[95%] bg-[#262A34] rounded-[15px] flex-row">
+                        <Text><SendFeedBackIcon /></Text>
+                        <Text weight="regular" className="text-white text-[20px]">Send feedback</Text>
+                    </Button>
                 </View>
             }
         </MainLayout>
