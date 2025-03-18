@@ -48,7 +48,7 @@ export default function App() {
 
     return (
         <QueryClientProvider client={reactQueryClient}>
-            <GestureHandlerRootView>
+            <GestureHandlerRootView >
                 <SafeAreaProvider>
                     <View className="flex-1 w-full m-auto bg-transparent">
                         <RootNavigator />

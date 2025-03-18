@@ -1,68 +1,45 @@
-import MapView, { Region, MapStyleElement } from 'react-native-maps';
+import MapView, { Region, MapStyleElement, Marker } from 'react-native-maps';
 import { useEffect, useState } from "react";
 import * as Location from 'expo-location';
 import { TouchableOpacity, View, Dimensions } from 'react-native';
 import { MapSwitch } from '@/src/shared/ui/map-switch/map-switch';
 
 import { APP_CONFIG } from '@/src/app/config';
+import { customMapStyle } from '../config/map-styles';
+
+import { useVisibleStore } from '@/src/shared/model/use-visible-store';
+import { useTypePointStore } from '../model/type-point-store';
 
 // icons
 import CenterMeIcon from '@/src/shared/icons/center-me-icon';
 import CrosshairIcon from '@/src/shared/icons/crosshair-icon';
 import BurgerIcon from '@/src/shared/icons/burger-icon';
+import { ModalWrapepr } from '@/src/shared/ui/modal-wrapper/modal-wrapper';
+import { PointTypeContent } from './point-type-bottom-sheet';
 
 const { width, height } = Dimensions.get('window');
 
-const customMapStyle = [
-    {
-        "elementType": "labels.icon",
-        "stylers": [
-            {
-                "visibility": "off"
-            }
-        ]
-    },
-    {
-        "featureType": "poi",
-        "stylers": [
-            {
-                "visibility": "off"
-            }
-        ]
-    },
-    {
-        "featureType": "transit",
-        "stylers": [
-            {
-                "visibility": "off"
-            }
-        ]
-    },
-    {
-        "featureType": "poi.business",
-        "stylers": [{ "visibility": "off" }]
-    },
-    {
-        "featureType": "poi.park",
-        "stylers": [{ "visibility": "off" }]
-    },
-    {
-        "elementType": "labels.icon",
-        "stylers": [{ "visibility": "off" }]
-    },
-    {
-        "featureType": "poi",
-        "stylers": [{ "visibility": "off" }]
-    },
-    {
-        "featureType": "transit",
-        "stylers": [{ "visibility": "off" }]
-    }
-];
 
 export const Map = () => {
+    const { open } = useVisibleStore('map')
+    const { type } = useTypePointStore()
+
     const [region, setRegion] = useState<Region>(APP_CONFIG.MAP.INITIAL_REGION);
     const [userLocation, setUserLocation] = useState<Location.LocationObject | null>(null);
+    const [markerPosition, setMarkerPosition] = useState<{ latitude: number, longitude: number } | null>(null);
+
+    const getMarkerBorderColor = () => {
+        switch (type) {
+            case 'premium':
+                return '#A009CD';
+            case 'chat':
+                return '#93E0FF';
+            case 'standard':
+                return '#343434';
+            default:
+                return '#2E2E2E';
+        }
+    }
 
     useEffect(() => {
         (async () => {
@@ -94,13 +71,25 @@ export const Map = () => {
         }
     };
 
+    const createPointAtUserLocation = () => {
+        if (userLocation) {
+            const userCoordinate = {
+                latitude: userLocation.coords.latitude,
+                longitude: userLocation.coords.longitude
+            };
+            setMarkerPosition(userCoordinate);
+            open();
+        }
+    };
+
+
     return (
         <View style={{ width: width, height: height }}>
             <MapView
                 style={{ width: width, height: height }}
                 region={region}
                 onRegionChangeComplete={setRegion}
-                showsUserLocation
+                showsUserLocation={!markerPosition}
                 showsMyLocationButton={false}
                 customMapStyle={customMapStyle}
                 mapType="standard"
@@ -108,7 +97,13 @@ export const Map = () => {
                 showsBuildings={false}
                 showsTraffic={false}
                 showsIndoors={false}
-            />
+            >
+                {markerPosition && (
+                    <Marker coordinate={markerPosition}>
+                        <View className='bg-[#2E2E2E] w-[25px] h-[25px] border-[2px] rounded-full' style={{ borderColor: getMarkerBorderColor() }} />
+                    </Marker>
+                )}
+            </MapView>
             <View className="absolute top-14 left-1/2 -translate-x-1/2">
                 <MapSwitch />
             </View>
@@ -131,11 +126,12 @@ export const Map = () => {
                 <TouchableOpacity
                     activeOpacity={0.7}
                     className="bg-white mt-4 w-14 h-14 rounded-full flex items-center justify-center shadow-lg"
-                    onPress={centerOnUser}
+                    onPress={createPointAtUserLocation}
                 >
                     <CrosshairIcon />
                 </TouchableOpacity>
             </View>
+            <ModalWrapepr isBottomSheet children={<PointTypeContent />} storeKey='map' />
         </View>
     )
 }

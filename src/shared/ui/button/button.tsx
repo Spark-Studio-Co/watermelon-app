@@ -7,14 +7,15 @@ import { useActiveStore } from "../../model/use-active-store";
 interface ITouchableOpacity extends TouchableOpacityProps {
     children: ReactNode
     className?: string
-    variant: "custom" | "blue" | 'paywall' | 'settings'
+    variant: "custom" | "blue" | 'paywall' | 'settings' | "point-type"
+    borderColor?: string
     onPress?: () => void
     label?: string
 }
 
 const baseStyles = 'flex items-center justify-center'
 
-export const Button = ({ children, variant, className, onPress, label, ...props }: ITouchableOpacity) => {
+export const Button = ({ children, variant, className, onPress, label, borderColor, ...props }: ITouchableOpacity) => {
     const { active } = useActiveStore('settings', '');
 
     const variantClass = (() => {
@@ -23,18 +24,22 @@ export const Button = ({ children, variant, className, onPress, label, ...props 
             return `rounded-[6.39px] px-[24px] h-[40px] ${active === label ? 'bg-[#27262A]' : 'bg-[#38373A]'}`;
         }
         if (variant === 'paywall') return 'bg-[#57AEF1] rounded-[8px]';
+        if (variant === 'point-type') return `bg-[#343434] w-full rounded-[10px] border ${`border-${borderColor}`} h-[54px]`
         return '';
     })();
 
+    const borderStyle = variant === 'point-type' && borderColor ? { borderColor, borderWidth: 1 } : {};
+
     const baseClass = variant === 'custom' ? '' : baseStyles;
 
-    const combinedClassName = `${className || ''} ${baseClass} ${variantClass}`;
+    const combinedClassName = `${className || ''} ${baseClass} ${variantClass} `;
 
     return (
         <TouchableOpacity
             onPress={onPress}
             activeOpacity={0.7}
             className={combinedClassName}
+            style={borderStyle}
             {...props}
         >
             {children}
