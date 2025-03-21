@@ -1,35 +1,41 @@
-import MapView, { Region, MapStyleElement, Marker } from 'react-native-maps';
-import { useEffect, useState } from "react";
-import * as Location from 'expo-location';
+import MapView, { Marker } from 'react-native-maps';
+import { useState } from "react";
 import { TouchableOpacity, View, Dimensions } from 'react-native';
 import { MapSwitch } from '@/src/shared/ui/map-switch/map-switch';
 
-import { APP_CONFIG } from '@/src/app/config';
 import { customMapStyle } from '../config/map-styles';
 
 import { useVisibleStore } from '@/src/shared/model/use-visible-store';
 import { useTypePointStore } from '../model/type-point-store';
+import { useMarkerPositionStore } from '../model/marker-position-store';
+import { useUserLocationStore } from '../model/user-location-store';
 
 // icons
 import CenterMeIcon from '@/src/shared/icons/center-me-icon';
 import CrosshairIcon from '@/src/shared/icons/crosshair-icon';
 import BurgerIcon from '@/src/shared/icons/burger-icon';
+
 import { ModalWrapepr } from '@/src/shared/ui/modal-wrapper/modal-wrapper';
 import { PointTypeContent } from './point-type-bottom-sheet';
+import { BetBottomContent } from './bet-bottom-sheet';
 
 const { width, height } = Dimensions.get('window');
 
+type MarkerData = {
+    latitude: number;
+    longitude: number;
+    type: string;
+};
 
 export const Map = () => {
-    const { open } = useVisibleStore('map')
-    const { type } = useTypePointStore()
+    const { open } = useVisibleStore('point')
+    const { type, setType } = useTypePointStore()
+    const { markerPosition, setMarkerPosition } = useMarkerPositionStore()
+    const { region, setRegion, centerOnUser, coordinate } = useUserLocationStore()
+    const [savedMarkers, setSavedMarkers] = useState<MarkerData[]>([]);
 
-    const [region, setRegion] = useState<Region>(APP_CONFIG.MAP.INITIAL_REGION);
-    const [userLocation, setUserLocation] = useState<Location.LocationObject | null>(null);
-    const [markerPosition, setMarkerPosition] = useState<{ latitude: number, longitude: number } | null>(null);
-
-    const getMarkerBorderColor = () => {
-        switch (type) {
+    const getMarkerBorderColor = (pointType: string) => {
+        switch (pointType) {
             case 'premium':
                 return '#A009CD';
             case 'chat':
@@ -37,48 +43,18 @@ export const Map = () => {
             case 'standard':
                 return '#343434';
             default:
-                return '#2E2E2E';
+                return '';
         }
     }
 
-    useEffect(() => {
-        (async () => {
-            const { status } = await Location.requestForegroundPermissionsAsync();
-            if (status !== 'granted') {
-                console.error('Permission to access location was denied');
-                return;
-            }
 
-            const location = await Location.getCurrentPositionAsync({});
-            setUserLocation(location);
-            setRegion({
-                latitude: location.coords.latitude,
-                longitude: location.coords.longitude,
-                latitudeDelta: 0.1,
-                longitudeDelta: 0.1,
-            });
-        })();
-    }, []);
-
-    const centerOnUser = () => {
-        if (userLocation) {
-            setRegion({
-                latitude: userLocation.coords.latitude,
-                longitude: userLocation.coords.longitude,
-                latitudeDelta: 0.05,
-                longitudeDelta: 0.05,
-            });
-        }
-    };
-
-    const createPointAtUserLocation = () => {
-        if (userLocation) {
-            const userCoordinate = {
-                latitude: userLocation.coords.latitude,
-                longitude: userLocation.coords.longitude
-            };
-            setMarkerPosition(userCoordinate);
-            open();
+    const savePoint = () => {
+        if (markerPosition && type) {
+            setSavedMarkers([...savedMarkers, {
+                ...markerPosition,
+                type
+            }]);
+            setMarkerPosition(null);
         }
     };
 
@@ -86,10 +62,15 @@ export const Map = () => {
     return (
         <View style={{ width: width, height: height }}>
             <MapView
+                onLongPress={() => {
+                    setType('');
+                    setMarkerPosition(coordinate);
+                    open();
+                }}
                 style={{ width: width, height: height }}
                 region={region}
                 onRegionChangeComplete={setRegion}
-                showsUserLocation={!markerPosition}
+                showsUserLocation={(!markerPosition || !type) && savedMarkers.length === 0}
                 showsMyLocationButton={false}
                 customMapStyle={customMapStyle}
                 mapType="standard"
@@ -98,11 +79,22 @@ export const Map = () => {
                 showsTraffic={false}
                 showsIndoors={false}
             >
-                {markerPosition && (
+                {markerPosition && type && (
                     <Marker coordinate={markerPosition}>
-                        <View className='bg-[#2E2E2E] w-[25px] h-[25px] border-[2px] rounded-full' style={{ borderColor: getMarkerBorderColor() }} />
+                        <View
+                            className='bg-[#2E2E2E] w-[25px] h-[25px] border-[2px] rounded-full'
+                            style={{ borderColor: getMarkerBorderColor(type) }}
+                        />
                     </Marker>
                 )}
+                {savedMarkers.map((marker, index) => (
+                    <Marker key={index} coordinate={marker}>
+                        <View
+                            className='bg-[#2E2E2E] w-[25px] h-[25px] border-[2px] rounded-full'
+                            style={{ borderColor: getMarkerBorderColor(marker.type) }}
+                        />
+                    </Marker>
+                ))}
             </MapView>
             <View className="absolute top-14 left-1/2 -translate-x-1/2">
                 <MapSwitch />
@@ -119,19 +111,19 @@ export const Map = () => {
                 <TouchableOpacity
                     activeOpacity={0.7}
                     className="bg-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg"
-                    onPress={centerOnUser}
+                    onPress={() => centerOnUser()}
                 >
                     <CenterMeIcon />
                 </TouchableOpacity>
                 <TouchableOpacity
                     activeOpacity={0.7}
                     className="bg-white mt-4 w-14 h-14 rounded-full flex items-center justify-center shadow-lg"
-                    onPress={createPointAtUserLocation}
                 >
                     <CrosshairIcon />
                 </TouchableOpacity>
             </View>
-            <ModalWrapepr isBottomSheet children={<PointTypeContent />} storeKey='map' />
+            <ModalWrapepr isBottomSheet children={<PointTypeContent />} storeKey='point' />
+            <ModalWrapepr isBottomSheet children={<BetBottomContent onSavePoint={savePoint} />} storeKey='bet' />
         </View>
     )
 }

@@ -7,10 +7,12 @@ import { useEffect, useState } from 'react';
 import { SplashScreen } from 'expo-router';
 import { QueryClientProvider } from '@tanstack/react-query';
 import reactQueryClient from './src/app/config/queryClient';
+import { useUserLocationStore } from './src/features/map/model/user-location-store';
 
 import './global.css';
 
 export default function App() {
+    const { loadUserLocation } = useUserLocationStore()
 
     const [fontsLoaded] = useFonts({
         "Poppins-Thin": require("./assets/fonts/Poppins/Poppins-Thin.ttf"),
@@ -29,6 +31,7 @@ export default function App() {
     useEffect(() => {
         const hideSplash = async () => {
             try {
+                loadUserLocation()
                 if (fontsLoaded) {
                     setIsSplashVisible(false);
                     await SplashScreen.hideAsync();
