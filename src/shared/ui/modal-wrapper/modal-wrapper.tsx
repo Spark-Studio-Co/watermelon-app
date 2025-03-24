@@ -9,7 +9,7 @@ interface IModalWrapper {
     isBottomSheet?: boolean
 }
 
-export const ModalWrapepr = ({ children, storeKey, isBottomSheet }: IModalWrapper) => {
+export const ModalWrapper = ({ children, storeKey, isBottomSheet }: IModalWrapper) => {
 
     const { close, isVisible } = useVisibleStore(storeKey)
 

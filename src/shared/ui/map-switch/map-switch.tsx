@@ -8,11 +8,14 @@ import { hp, wp } from "../../utils/resize-dimensions"
 import EarthIcon from "../../icons/earth-icon"
 import ProfileIcon from "../../icons/profile-icon"
 
-export const MapSwitch = () => {
-    const [switched, setSwitched] = useState<boolean>(false)
+interface MapSwitchProps {
+    switched: boolean
+    onSwitch: (val: boolean) => void
+}
 
+export const MapSwitch = ({ switched, onSwitch }: MapSwitchProps) => {
     const handleSwitch = () => {
-        setSwitched((prev) => !prev);
+        onSwitch(!switched);
     }
 
     return (
@@ -24,10 +27,10 @@ export const MapSwitch = () => {
                 <View className={`${switched ? 'translate-x-14' : 'translate-x-0'} bg-white w-[37%] h-[80%] rounded-full absolute`} style={{ top: hp(0.43), left: wp(1.4) }} />
                 <View className="flex flex-row items-center justify-between px-[15px] h-full">
                     <View className="z-10" style={{ marginLeft: wp(-1.7) }}>
-                        <EarthIcon color={switched === false ? 'black' : 'white'} />
+                        <EarthIcon color={!switched ? 'black' : 'white'} />
                     </View>
                     <View className="z-10" style={{ marginRight: wp(-0.5) }}>
-                        <ProfileIcon color={switched === true ? 'black' : 'white'} />
+                        <ProfileIcon color={switched ? 'black' : 'white'} />
                     </View>
                 </View>
             </LinearGradient>

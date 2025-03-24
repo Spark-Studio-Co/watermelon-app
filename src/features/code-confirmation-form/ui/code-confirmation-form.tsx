@@ -68,7 +68,7 @@ export const CodeConfirmationForm = () => {
                 <Text weight="regular" className="text-[16px] text-center text-[#FFFFFF]">
                     {email}, enter it below:
                 </Text>
-                <View className=" flex flex-row justify-between w-full items-center mt-12">
+                <View className="flex flex-row justify-between w-full items-center mt-12">
                     {Array.from({ length: 5 }).map((_, index) => (
                         <SingleValueInput
                             key={index}

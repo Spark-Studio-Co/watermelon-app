@@ -12,7 +12,7 @@ import RightArrowIcon from "../../icons/right-arrow-icon";
 
 interface IInputProps extends TextInputProps {
     placeholder: string;
-    variant?: "auth" | "default" | 'settings' | 'search';
+    variant?: "auth" | "default" | 'settings' | 'search' | 'point';
     className?: string;
     type?: string;
 }
@@ -28,6 +28,7 @@ export const Input = ({ placeholder, className, variant = "default", type, ...pr
                         auth: 'h-[62px] pr-14 pl-4 bg-[#E3E3E3] rounded-[12px] opacity-[90%] text-[#17171780] font-[400] text-[20px] font-poppins-regular',
                         settings: 'h-[40px] pr-14 pl-4 bg-[#E3E3E3] rounded-[12px] opacity-[90%] text-[#17171780] font-[400] text-[14px] font-poppins-regular',
                         search: 'h-[60px] pr-14 pl-16 bg-[#262A34] text-white rounded-[12px] text-[16px] font-poppins-regular',
+                        point: 'h-[40px] pl-4 rounded-[6px] w-full bg-white border-[0.49px] border-[#00000066]',
                         default: 'h-12',
                     }
                 })}
