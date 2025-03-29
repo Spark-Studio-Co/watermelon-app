@@ -65,9 +65,9 @@ export const BetBottomContent = ({ onSavePoint }: { onSavePoint: () => void }) =
             </View>
             <View className="bg-[#C4C4C4] opacity-[50%] w-full h-[1px] mt-2" />
             <Text weight="bold" className="mt-5 text-white text-[20px]">Начальная ставка</Text>
-            <View className="flex flex-row w-[75%] justify-center items-center mt-5">
+            <View className="flex flex-row w-[75%] gap-x-2 justify-center items-center mt-5">
                 <Input keyboardType="numeric" returnKeyType="done"
-                    type="numeric" placeholder='' value={activeBet || value} variant="point" className="w-[240px]" onChangeText={(text: string) => {
+                    type="numeric" placeholder='' value={activeBet || value} variant="point" className="w-[220px]" onChangeText={(text: string) => {
                         setValue(text);
                     }} />
                 <Button

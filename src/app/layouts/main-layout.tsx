@@ -19,9 +19,10 @@ interface MainLayoutProps {
     title?: string
     isMap?: boolean
     isWeeklyChallenge?: boolean
+    isScrollable?: boolean
 }
 
-export const MainLayout = ({ children, isUserTab, isBack, title, isMap, isWeeklyChallenge }: MainLayoutProps) => {
+export const MainLayout = ({ children, isUserTab, isBack, title, isMap, isWeeklyChallenge, isScrollable = true }: MainLayoutProps) => {
 
     const navigation = useNavigation()
 
@@ -37,26 +38,43 @@ export const MainLayout = ({ children, isUserTab, isBack, title, isMap, isWeekly
                         {!isBack && <BottomNavigationPanel />}
                     </>
                     :
-                    <>
-                        {isBack && <View className='flex flex-row items-center gap-x-3 mx-4 my-4'><Button variant='custom' className='rotate-180' onPress={() => navigation.goBack()}><RightArrowIcon /></Button><Text weight='regular' className='text-white text-[16px]'>{title}</Text></View>}
-                        {isUserTab && <UserTab />}
-                        {isWeeklyChallenge && (
-                            <View className=" mx-auto px-4 mb-4 w-[90%]">
-                                <Text weight="bold" className="text-white text-[24px]">Weekly Challenge</Text>
-                                <WeeklyChallengeTab />
+                    isScrollable ?
+                        <>
+                            {isBack && <View className='flex flex-row items-center gap-x-3 mx-4 my-4'><Button variant='custom' className='rotate-180' onPress={() => navigation.goBack()}><RightArrowIcon /></Button><Text weight='regular' className='text-white text-[16px]'>{title}</Text></View>}
+                            {isUserTab && <UserTab />}
+                            {isWeeklyChallenge && (
+                                <View className=" mx-auto px-4 mb-4 w-[90%]">
+                                    <Text weight="bold" className="text-white text-[24px]">Weekly Challenge</Text>
+                                    <WeeklyChallengeTab />
+                                </View>
+                            )}
+                            <ScrollView
+                                contentContainerStyle={{
+                                    paddingBottom: hp(12), paddingHorizontal: 16,
+                                }}
+                                keyboardShouldPersistTaps="handled"
+                                showsVerticalScrollIndicator={false}
+                            >
+                                {children}
+                            </ScrollView>
+                            {!isBack && <BottomNavigationPanel />}
+                        </>
+                        :
+                        <>
+                            {isBack && <View className='flex flex-row items-center gap-x-3 mx-4 my-4'><Button variant='custom' className='rotate-180' onPress={() => navigation.goBack()}><RightArrowIcon /></Button><Text weight='regular' className='text-white text-[16px]'>{title}</Text></View>}
+                            {isUserTab && <UserTab />}
+                            {isWeeklyChallenge && (
+                                <View className=" mx-auto px-4 mb-4 w-[90%]">
+                                    <Text weight="bold" className="text-white text-[24px]">Weekly Challenge</Text>
+                                    <WeeklyChallengeTab />
+                                </View>
+                            )}
+                            <View
+                                className=" mx-auto px-4 mb-44">
+                                {children}
                             </View>
-                        )}
-                        <ScrollView
-                            contentContainerStyle={{
-                                paddingBottom: hp(12), paddingHorizontal: 16,
-                            }}
-                            keyboardShouldPersistTaps="handled"
-                            showsVerticalScrollIndicator={false}
-                        >
-                            {children}
-                        </ScrollView>
-                        {!isBack && <BottomNavigationPanel />}
-                    </>
+                            {!isBack && <BottomNavigationPanel />}
+                        </>
                 }
             </SafeAreaView>
         </View >

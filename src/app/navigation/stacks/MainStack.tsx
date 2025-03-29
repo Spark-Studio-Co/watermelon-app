@@ -14,6 +14,8 @@ import { MyFriendsScreen } from '../../screens/Main/my-friends-screen';
 import { SearchFriendsScreen } from '../../screens/Main/search-friends-screen';
 import { NotificationsScreen } from '../../screens/Main/notifications-screen';
 import { MapScreen } from '../../screens/Main/map-screen';
+import { AuctionScreen } from '../../screens/Main/auction-screen';
+import { AuctionInnerScreen } from '../../screens/Main/auction-inner-screen';
 
 export const MainStack = () => {
     return (
@@ -39,6 +41,8 @@ export const MainStack = () => {
             <Stack.Screen name="SearchFriends" component={SearchFriendsScreen} />
             <Stack.Screen name="Notifications" component={NotificationsScreen} />
             <Stack.Screen name="Map" component={MapScreen} />
+            <Stack.Screen name="Auction" component={AuctionScreen} />
+            <Stack.Screen name="AuctionInner" component={AuctionInnerScreen} />
         </Stack.Navigator>
     );
 };

@@ -6,12 +6,13 @@ interface IScreenNavigationTab {
     uri: any
     width?: number
     margin?: number
+    onPress: () => {}
 }
 
 export const ScreenNavigationTab = ({ uri, width = 190, margin,
-}: IScreenNavigationTab) => {
+    onPress }: IScreenNavigationTab) => {
     return (
-        <Button variant="custom">
+        <Button variant="custom" onPress={onPress}>
             <ImageBackground
                 source={uri}
                 style={{ width: width, height: 160, margin: margin }}
