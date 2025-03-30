@@ -6,9 +6,12 @@ import { Button } from "@/src/shared/ui/button/button"
 import { BetPlaceTab } from "@/src/features/auction/ui/bet-place-tab/bet-place-tab"
 import { AuctionOfferModal } from "@/src/features/auction/ui/auction-offer-modal/auction-offer-modal"
 import { WinModal } from "@/src/features/auction/ui/win-modal/win-modal"
+import { useNavigation } from "@react-navigation/native"
+
 import { bets } from "@/src/features/auction/lib/bets"
 
 export const AuctionInnerScreen = () => {
+    const navigation = useNavigation()
     const [timeLeft, setTimeLeft] = useState({
         hours: 0,
         minutes: 1,
@@ -16,6 +19,13 @@ export const AuctionInnerScreen = () => {
     })
     const [offerModalVisible, setOfferModalVisible] = useState(false)
     const [winModalVisible, setWinModalVisible] = useState(false)
+
+    const handleCloseWinModal = () => {
+        setWinModalVisible(false)
+        setTimeout(() => {
+            navigation.navigate("PointCreation" as never)
+        }, 500)
+    }
 
     useEffect(() => {
         if (timeLeft.hours === 0 && timeLeft.minutes === 0 && timeLeft.seconds === 0) {
@@ -127,7 +137,7 @@ export const AuctionInnerScreen = () => {
             />
             <WinModal
                 visible={winModalVisible}
-                onClose={() => setWinModalVisible(false)}
+                onClose={handleCloseWinModal}
             />
         </MainLayout>
     )

@@ -16,6 +16,7 @@ import { NotificationsScreen } from '../../screens/Main/notifications-screen';
 import { MapScreen } from '../../screens/Main/map-screen';
 import { AuctionScreen } from '../../screens/Main/auction-screen';
 import { AuctionInnerScreen } from '../../screens/Main/auction-inner-screen';
+import { PointCreationScreen } from '../../screens/Main/point-creation-screeen';
 
 export const MainStack = () => {
     return (
@@ -43,6 +44,7 @@ export const MainStack = () => {
             <Stack.Screen name="Map" component={MapScreen} />
             <Stack.Screen name="Auction" component={AuctionScreen} />
             <Stack.Screen name="AuctionInner" component={AuctionInnerScreen} />
+            <Stack.Screen name="PointCreation" component={PointCreationScreen} />
         </Stack.Navigator>
     );
 };

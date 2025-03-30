@@ -11,6 +11,7 @@ interface WinModalProps {
 }
 
 export const WinModal = ({ visible, onClose }: WinModalProps) => {
+
     return (
         <Modal
             animationType="fade"

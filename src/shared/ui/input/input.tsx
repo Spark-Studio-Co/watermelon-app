@@ -1,8 +1,7 @@
-import { TextInputProps, View } from "react-native";
-import { TextInput } from "react-native-gesture-handler";
+import { TextInputProps, View, TextInput } from "react-native";
 import { Button } from "../button/button";
 
-import { useState } from "react";
+import { useState, forwardRef } from "react";
 import { StyleSwitchCase } from '../../utils/style-switch-case';
 import { hp, wp } from "../../utils/resize-dimensions";
 
@@ -15,14 +14,16 @@ interface IInputProps extends TextInputProps {
     variant?: "auth" | "default" | 'settings' | 'search' | 'point';
     className?: string;
     type?: string;
+    // All other TextInput props are inherited from TextInputProps
 }
 
-export const Input = ({ placeholder, className, variant = "default", type, ...props }: IInputProps) => {
+export const Input = forwardRef<TextInput, IInputProps>(({ placeholder, className, variant = "default", type, ...props }, ref) => {
     const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
     return (
         <View className="w-full relative">
             <TextInput
+                ref={ref}
                 className={className + ' ' + StyleSwitchCase({
                     variant, cases: {
                         auth: 'h-[62px] pr-14 pl-4 bg-[#E3E3E3] rounded-[12px] opacity-[90%] text-[#17171780] font-[400] text-[20px] font-poppins-regular',
@@ -57,4 +58,4 @@ export const Input = ({ placeholder, className, variant = "default", type, ...pr
             )}
         </View>
     );
-};
+});
