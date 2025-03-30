@@ -23,7 +23,7 @@ export const AuctionInnerScreen = () => {
     const handleCloseWinModal = () => {
         setWinModalVisible(false)
         setTimeout(() => {
-            navigation.navigate("PointCreation" as never)
+            navigation.navigate("PrivatePointCreation" as never)
         }, 500)
     }
 
