@@ -1,51 +1,31 @@
 import React, { useState, useEffect } from "react"
 import { MainLayout } from "../../layouts/main-layout"
-import { View, Image, Alert } from "react-native"
+import { View, Image } from "react-native"
 import Text from "@/src/shared/ui/text/text"
 import { Button } from "@/src/shared/ui/button/button"
 import { BetPlaceTab } from "@/src/features/auction/ui/bet-place-tab/bet-place-tab"
 import { AuctionOfferModal } from "@/src/features/auction/ui/auction-offer-modal/auction-offer-modal"
-
-// Bets are already sorted by points (highest to lowest)
-const bets = [
-    {
-        points: 23,
-        date: "2025-03-30",
-        time: "14:00"
-    },
-    {
-        points: 20,
-        date: "2025-03-30",
-        time: "15:00"
-    },
-    {
-        points: 15,
-        date: "2025-03-30",
-        time: "16:00"
-    },
-    {
-        points: 13,
-        date: "2025-03-30",
-        time: "17:00"
-    },
-    {
-        points: 10,
-        date: "2025-03-30",
-        time: "18:00"
-    }
-]
+import { WinModal } from "@/src/features/auction/ui/win-modal/win-modal"
+import { bets } from "@/src/features/auction/lib/bets"
 
 export const AuctionInnerScreen = () => {
     const [timeLeft, setTimeLeft] = useState({
-        hours: 4,
-        minutes: 20,
+        hours: 0,
+        minutes: 1,
         seconds: 0
     })
     const [offerModalVisible, setOfferModalVisible] = useState(false)
+    const [winModalVisible, setWinModalVisible] = useState(false)
 
     useEffect(() => {
         if (timeLeft.hours === 0 && timeLeft.minutes === 0 && timeLeft.seconds === 0) {
-            return
+            if (bets.length > 0) {
+                const highestPoints = Math.max(...bets.map(bet => bet.points));
+                if (highestPoints) {
+                    setWinModalVisible(true);
+                }
+            }
+            return;
         }
 
         const intervalId = setInterval(() => {
@@ -54,20 +34,42 @@ export const AuctionInnerScreen = () => {
                 const newMinutes = newSeconds < 0 ? prevTime.minutes - 1 : prevTime.minutes
                 const newHours = newMinutes < 0 ? prevTime.hours - 1 : prevTime.hours
 
-                return {
+                const newTime = {
                     hours: newHours,
                     minutes: newMinutes < 0 ? 59 : newMinutes,
                     seconds: newSeconds < 0 ? 59 : newSeconds
+                };
+
+                if (newTime.hours === 0 && newTime.minutes === 0 && newTime.seconds === 0) {
+                    if (bets.length > 0) {
+                        const highestPoints = Math.max(...bets.map(bet => bet.points));
+                        if (highestPoints) {
+                            setTimeout(() => setWinModalVisible(true), 500);
+                        }
+                    }
                 }
+
+                return newTime;
             })
         }, 1000)
 
         return () => clearInterval(intervalId)
-    }, [timeLeft])
+    }, [timeLeft, bets])
 
     const formatTime = (value: number) => {
         return value < 10 ? `0${value}` : `${value}`
     }
+
+    const handlePlaceOffer = () => {
+        setOfferModalVisible(true)
+    }
+
+
+    useEffect(() => {
+        if (bets.length === 0) return
+        const highestPoints = Math.max(...bets.map(bet => bet.points))
+        if (highestPoints && timeLeft.hours === 0 && timeLeft.minutes === 0 && timeLeft.seconds === 0) return setWinModalVisible(true)
+    }, [bets])
 
     return (
         <MainLayout>
@@ -78,13 +80,13 @@ export const AuctionInnerScreen = () => {
             <View className="flex flex-col items-center w-full rounded-[12px]" style={{ boxShadow: '0px 4px 4px 0px #11D4994D' }}>
                 <View className="flex flex-row items-center w-[95%] justify-center border border-white rounded-[15px] h-[65px] mt-8">
                     <Text weight="regular" className="text-white text-[16px]">Last</Text>
-                    <Text weight="regular" className="text-white text-[32px] ml-1">32</Text>
+                    <Text weight="regular" className="text-white text-[24px] ml-1">{bets[0].points}</Text>
                     <Text weight="regular" className="text-white text-[16px] ml-[18px]">Start</Text>
-                    <Text weight="regular" className="text-white text-[32px] ml-1">14</Text>
+                    <Text weight="regular" className="text-white text-[24px] ml-1"> {bets[bets.length - 1].points}</Text>
                     <Button
                         variant="custom"
                         className="bg-[#14A278] rounded-[6px] ml-14 w-[132px] h-[42px] flex items-center justify-center"
-                        onPress={() => setOfferModalVisible(true)}
+                        onPress={handlePlaceOffer}
                     >
                         <Text weight="regular" className="text-white text-[16px]">Place Offer</Text>
                     </Button>
@@ -99,24 +101,33 @@ export const AuctionInnerScreen = () => {
                 </View>
             </View>
             <View className="flex flex-col items-center w-full gap-y-2.5 mt-7">
-                {bets.map((bet, index) => (
+                {bets.sort((a, b) => b.points - a.points).map((bet, index) => (
                     <BetPlaceTab
                         key={index}
                         points={bet.points}
                         date={bet.date}
                         time={bet.time}
-                        place={index + 1} // Assign place based on index (1-based)
+                        place={index + 1}
                     />
                 ))}
             </View>
-
-            {/* Auction Offer Modal */}
             <AuctionOfferModal
                 visible={offerModalVisible}
-                onClose={() => setOfferModalVisible(false)}
-                onSaveOffer={() => {
-                    setOfferModalVisible(false)
+                onClose={() => {
+                    setOfferModalVisible(false);
+                    if (timeLeft.hours === 0 && timeLeft.minutes === 0 && timeLeft.seconds === 0) {
+                        setTimeout(() => {
+                            setWinModalVisible(true);
+                        }, 1000);
+                    }
                 }}
+                onSaveOffer={() => {
+                    setOfferModalVisible(false);
+                }}
+            />
+            <WinModal
+                visible={winModalVisible}
+                onClose={() => setWinModalVisible(false)}
             />
         </MainLayout>
     )

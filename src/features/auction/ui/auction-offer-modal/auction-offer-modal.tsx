@@ -7,14 +7,17 @@ import AddPcIcon from "@/src/shared/icons/add-pc-icon"
 import { useActiveStore } from "@/src/shared/model/use-active-store"
 import CloseModalIcon from "@/src/shared/icons/close-modal-icon"
 import { BetSuccessModal } from "../bet-success-modal/bet-success-modal"
+import { usePlaceOfferStore } from "../../model/place-offer-store"
+import { bets } from "../../lib/bets"
 
 interface AuctionOfferModalProps {
     visible: boolean
     onClose: () => void
-    onSaveOffer: () => void
+    onSaveOffer: (points: number) => void
 }
 
 export const AuctionOfferModal = ({ visible, onClose, onSaveOffer }: AuctionOfferModalProps) => {
+    const { setOffer, offer } = usePlaceOfferStore()
     const { active, toggle } = useActiveStore('offer', '')
     const [activeOffer, setActiveOffer] = useState('')
     const [value, setValue] = useState('')
@@ -22,13 +25,25 @@ export const AuctionOfferModal = ({ visible, onClose, onSaveOffer }: AuctionOffe
     const [showSuccessModal, setShowSuccessModal] = useState(false)
     const hasMadeOffer = useRef(false)
 
-    const offers = ['Pc 5', 'Pc 10', 'Pc 20', 'Pc 50', 'Pc 100', 'Pc 200', 'Pc 500']
+    const offers = ['5', '10', '20', '50', '100', '200', '500']
+
+    const now = new Date();
+
+    const currentDate = now.toISOString().split('T')[0]
+    const currentTime = now.toTimeString().split(' ')[0].substring(0, 5)
 
     const handleMakeOffer = () => {
         if (isOfferSet && (activeOffer || value)) {
+            const updatedOffer = {
+                points: Number(activeOffer || value),
+                date: currentDate,
+                time: currentTime
+            }
+            setOffer(updatedOffer)
             hasMadeOffer.current = true
-            onSaveOffer()
+            onSaveOffer(updatedOffer.points)
             setShowSuccessModal(true)
+            bets.push(updatedOffer)
         }
     }
 
@@ -44,13 +59,18 @@ export const AuctionOfferModal = ({ visible, onClose, onSaveOffer }: AuctionOffe
             }
             setActiveOffer('')
             setIsOfferSet(true)
+            setOffer({
+                points: Number(value),
+                date: currentDate,
+                time: currentTime
+            })
         } else if (active) {
             setIsOfferSet(true)
         } else {
             setActiveOffer('')
             setIsOfferSet(false)
         }
-    }, [value, active])
+    }, [value, active, currentDate, currentTime])
 
     useEffect(() => {
         return () => {
@@ -93,6 +113,12 @@ export const AuctionOfferModal = ({ visible, onClose, onSaveOffer }: AuctionOffe
                                     className="w-[79%]"
                                     onChangeText={(text: string) => {
                                         setValue(text);
+                                        const points = Number(text) || Number(activeOffer) || 0
+                                        setOffer({
+                                            points,
+                                            date: currentDate,
+                                            time: currentTime
+                                        })
                                     }}
                                 />
                                 <Button
@@ -112,9 +138,15 @@ export const AuctionOfferModal = ({ visible, onClose, onSaveOffer }: AuctionOffe
                                         onPress={() => {
                                             toggle(offer)
                                             setActiveOffer(offer)
+                                            setValue('')
+                                            setOffer({
+                                                points: Number(offer),
+                                                date: currentDate,
+                                                time: currentTime
+                                            })
                                         }}
                                     >
-                                        <Text weight="medium" className="text-black text-[12px]" style={{ color: active === offer ? '#FFFFFF' : '#000000' }}>{offer}</Text>
+                                        <Text weight="medium" className="text-black text-[12px]" style={{ color: active === offer ? '#FFFFFF' : '#000000' }}>pc {offer}</Text>
                                     </Button>
                                 ))}
                             </View>
