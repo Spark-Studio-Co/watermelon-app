@@ -10,7 +10,6 @@ interface IPointBioTab {
     onPress?: () => void
 }
 
-
 export const PointBioTab = ({ pointname, nickname, onPress }: IPointBioTab) => {
     return (
         <View className="flex flex-row items-center justify-center gap-x-10 mt-8">

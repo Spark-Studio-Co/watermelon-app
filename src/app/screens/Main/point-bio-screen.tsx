@@ -6,6 +6,8 @@ import { PointBioTab } from "@/src/features/point/ui/point-bio-tab"
 import { Button } from "@/src/shared/ui/button/button"
 //@ts-ignore
 import MasonryList from "react-native-masonry-list";
+import { PointSettings } from "@/src/features/point/ui/point-settings"
+import { PointRadiusSettings } from "@/src/features/point/ui/point-radius-settings"
 
 import MailIcon from "@/src/shared/icons/mail-icon"
 import ThreeDotIcon from "@/src/shared/icons/three-dot-icon"
@@ -16,12 +18,14 @@ import { usePointBioStore } from "@/src/features/point/model/point-bio-store"
 import { useActiveStore } from "@/src/shared/model/use-active-store"
 import { useVisibleStore } from "@/src/shared/model/use-visible-store"
 import { hp } from "@/src/shared/utils/resize-dimensions"
+import { RadiusColorSettings } from "@/src/features/point/ui/radius-color-settings"
 
 
 export const PointBioScreen = () => {
     const { active, setActive } = useActiveStore("pointBio", 'bio')
     const { subscribed, setSubscribed } = usePointBioStore()
     const { open } = useVisibleStore("pointBio")
+    const { open: openSettings } = useVisibleStore("pointSettings")
 
     const buttons = [
         'bio', "Публикации"
@@ -50,6 +54,7 @@ export const PointBioScreen = () => {
             }
         };
     });
+
     const handleOpenSection = (label: string) => {
         setActive(label)
     }
@@ -57,7 +62,7 @@ export const PointBioScreen = () => {
     return (
         <MainLayout >
             <View className="w-[80%] mx-auto mt-4">
-                <PointBioTab pointname="Point Name" nickname="point_name" />
+                <PointBioTab pointname="Point Name" nickname="point_name" onPress={openSettings} />
             </View>
             <View className="flex flex-row items-center mt-12 w-[90%] mx-auto relative">
                 <Button variant="follow" onPress={setSubscribed}>
@@ -78,15 +83,13 @@ export const PointBioScreen = () => {
                     <ThreeDotIcon />
                 </Button>
                 <ModalWrapper storeKey="pointBio" isMini>
-                    <View className="bg-[#313034] flex flex-row items-center justify-between w-[335px] h-[62px] rounded-[15px] px-6" style={{ top: hp(-17) }}>
+                    <Button activeOpacity={0.9} className="bg-[#313034] flex flex-row items-center justify-between w-[335px] h-[62px] rounded-[15px] px-6" style={{ top: hp(-17) }}>
                         <View className="flex flex-row items-center gap-x-4">
                             <SendFeedBackIcon />
                             <Text weight="regular" className="text-white text-[18px]">Поделиться</Text>
                         </View>
-                        <Button>
-                            <RightArrowIcon />
-                        </Button>
-                    </View>
+                        <RightArrowIcon />
+                    </Button>
                 </ModalWrapper>
             </View>
             <View className="mx-auto flex flex-row gap-x-4 items-center justify-center mt-6">
@@ -125,6 +128,16 @@ export const PointBioScreen = () => {
                     </View>
                 }
             </View>
+
+            <ModalWrapper storeKey="pointSettings" isMini className="w-[90%]">
+                <PointSettings />
+            </ModalWrapper>
+            <ModalWrapper storeKey="pointRadius" isMini className="w-[90%]">
+                <PointRadiusSettings />
+            </ModalWrapper>
+            <ModalWrapper storeKey="radiusColor" isMini className="w-[90%] -top-8">
+                <RadiusColorSettings />
+            </ModalWrapper>
         </MainLayout>
     )
 }

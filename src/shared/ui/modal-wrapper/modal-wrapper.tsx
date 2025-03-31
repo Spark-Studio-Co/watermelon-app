@@ -8,9 +8,10 @@ interface IModalWrapper {
     storeKey: string
     isBottomSheet?: boolean
     isMini?: boolean
+    className?: string
 }
 
-export const ModalWrapper = ({ children, storeKey, isBottomSheet, isMini }: IModalWrapper) => {
+export const ModalWrapper = ({ children, storeKey, isBottomSheet, isMini, className }: IModalWrapper) => {
 
     const { close, isVisible } = useVisibleStore(storeKey)
 
@@ -31,7 +32,7 @@ export const ModalWrapper = ({ children, storeKey, isBottomSheet, isMini }: IMod
                         <TouchableWithoutFeedback onPress={close}>
                             <View className="absolute top-0 left-0 right-0 bottom-0" />
                         </TouchableWithoutFeedback>
-                        <View pointerEvents="box-none">
+                        <View pointerEvents="box-none" className={className}>
                             {children}
                         </View>
                     </View> :
@@ -39,7 +40,7 @@ export const ModalWrapper = ({ children, storeKey, isBottomSheet, isMini }: IMod
                         <TouchableWithoutFeedback onPress={close}>
                             <View className="absolute top-0 left-0 right-0 bottom-0" />
                         </TouchableWithoutFeedback>
-                        <View pointerEvents="box-none">
+                        <View pointerEvents="box-none" className={className}>
                             {children}
                         </View>
                     </View>
