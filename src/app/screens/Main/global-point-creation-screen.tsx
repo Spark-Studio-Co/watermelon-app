@@ -47,9 +47,9 @@ export const GlobalPointCreationScreen = () => {
             <View className="flex flex-col items-end mt-4">
                 <Text weight="bold" className="text-white text-[24px]">Point #12123</Text>
             </View>
-            <Image 
-                source={capturedImage ? {uri: capturedImage} : require('@/src/images/point_image.png')} 
-                className="w-full h-[182px] rounded-[12px] mt-1" 
+            <Image
+                source={capturedImage ? { uri: capturedImage } : require('@/src/images/point_image.png')}
+                className="w-full h-[182px] rounded-[12px] mt-1"
             />
             <View style={{ boxShadow: '0px 4px 4px 0px #00000040' }} className="rounded-[12px] ">
                 <View className="flex flex-col py-2  w-[95%] justify-center mx-auto">
@@ -69,17 +69,13 @@ export const GlobalPointCreationScreen = () => {
                 <View className="flex items-center justify-center mt-5">
                     <View className="flex flex-col items-center gap-y-5">
                         <Text weight="bold" className="text-white text-[24px]">Add photo</Text>
-                        <Button 
+                        <Button
                             onPress={openCamera}
-                            variant="custom" 
-                            className="bg-[#1B1C1E] flex items-center justify-center border border-[#222328] rounded-[15px] w-[100px] h-[100px]" 
+                            variant="custom"
+                            className="bg-[#1B1C1E] flex items-center justify-center border border-[#222328] rounded-[15px] w-[100px] h-[100px]"
                             style={{ boxShadow: '0px 4px 4px 0px #00000040' }}
                         >
-                            {capturedImage ? (
-                                <Image source={{uri: capturedImage}} className="w-full h-full rounded-[15px]" />
-                            ) : (
-                                <CameraIcon />
-                            )}
+                            <CameraIcon />
                         </Button>
                     </View>
                 </View>

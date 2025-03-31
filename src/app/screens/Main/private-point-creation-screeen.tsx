@@ -5,11 +5,14 @@ import { Input } from "@/src/shared/ui/input/input"
 import { useRef, useState } from "react"
 import { Button } from "@/src/shared/ui/button/button"
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
-
-import CameraIcon from "@/src/shared/icons/camera-icon"
 import { PointTypeSwitch } from "@/src/shared/ui/point-type-switch/point-type-switch"
 
+import { useNavigation } from "@react-navigation/native"
+
+import CameraIcon from "@/src/shared/icons/camera-icon"
+
 export const PrivatePointCreationScreen = () => {
+    const navigation = useNavigation()
     const bioInputRef = useRef(null);
     const cameraRef = useRef<any>(null);
 
@@ -77,11 +80,7 @@ export const PrivatePointCreationScreen = () => {
                             className="bg-[#1B1C1E] flex items-center justify-center border border-[#222328] rounded-[15px] w-[100px] h-[100px]"
                             style={{ boxShadow: '0px 4px 4px 0px #00000040' }}
                         >
-                            {capturedImage ? (
-                                <Image source={{ uri: capturedImage }} className="w-full h-full rounded-[15px]" />
-                            ) : (
-                                <CameraIcon />
-                            )}
+                            <CameraIcon />
                         </Button>
                     </View>
                     <View className="flex flex-col items-center gap-y-5">
@@ -93,6 +92,7 @@ export const PrivatePointCreationScreen = () => {
                 </View>
                 <View className="mt-10 mb-9 flex items-center justify-center">
                     <Button
+                        onPress={() => navigation.navigate("PointBio" as never)}
                         variant="custom"
                         className='w-[134px] py-3.5 rounded-[6px] bg-[#14A278] flex items-center justify-center'>
                         <Text weight="regular" className="text-white text-[16px]">CREATE</Text>

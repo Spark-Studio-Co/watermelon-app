@@ -68,7 +68,7 @@ export const SettingsScreen = () => {
         <MainLayout>
             <View className="flex flex-col mx-auto mt-5">
                 <Text weight="medium" className="text-white text-[22px]">Settings</Text>
-                <UserSettingsTab />
+                <UserSettingsTab username="User Name" nickname="user_name" lvl={25} />
                 <View className="flex flex-row w-full justify-center mt-6">
                     <View className="flex-1 flex flex-row gap-x-4 items-center justify-center">
                         {buttons.map((button) => (

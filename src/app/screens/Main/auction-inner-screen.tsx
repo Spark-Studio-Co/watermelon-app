@@ -14,7 +14,7 @@ export const AuctionInnerScreen = () => {
     const navigation = useNavigation()
     const [timeLeft, setTimeLeft] = useState({
         hours: 0,
-        minutes: 1,
+        minutes: 0,
         seconds: 0
     })
     const [offerModalVisible, setOfferModalVisible] = useState(false)
