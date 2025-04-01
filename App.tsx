@@ -10,6 +10,7 @@ import reactQueryClient from './src/app/config/queryClient';
 import { useUserLocationStore } from './src/features/map/model/user-location-store';
 
 import './global.css';
+import { initCameraStore } from './src/widget/camera/model/camera-store';
 
 export default function App() {
     const { loadUserLocation } = useUserLocationStore()
@@ -27,6 +28,8 @@ export default function App() {
     });
 
     const [isSplashVisible, setIsSplashVisible] = useState(true);
+
+    initCameraStore('addPost');
 
     useEffect(() => {
         const hideSplash = async () => {

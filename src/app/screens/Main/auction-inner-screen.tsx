@@ -15,7 +15,7 @@ export const AuctionInnerScreen = () => {
     const [timeLeft, setTimeLeft] = useState({
         hours: 0,
         minutes: 0,
-        seconds: 0
+        seconds: 20
     })
     const [offerModalVisible, setOfferModalVisible] = useState(false)
     const [winModalVisible, setWinModalVisible] = useState(false)
@@ -23,7 +23,7 @@ export const AuctionInnerScreen = () => {
     const handleCloseWinModal = () => {
         setWinModalVisible(false)
         setTimeout(() => {
-            navigation.navigate("PrivatePointCreation" as never)
+            navigation.navigate("GlobalPointCreation" as never)
         }, 500)
     }
 

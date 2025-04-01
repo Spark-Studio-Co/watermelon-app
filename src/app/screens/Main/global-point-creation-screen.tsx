@@ -5,10 +5,12 @@ import { Input } from "@/src/shared/ui/input/input"
 import { useRef, useState } from "react"
 import { Button } from "@/src/shared/ui/button/button"
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
+import { useNavigation } from "@react-navigation/native"
 
 import CameraIcon from "@/src/shared/icons/camera-icon"
 
 export const GlobalPointCreationScreen = () => {
+    const navigation = useNavigation()
     const bioInputRef = useRef(null);
     const cameraRef = useRef<any>(null);
 
@@ -81,6 +83,7 @@ export const GlobalPointCreationScreen = () => {
                 </View>
                 <View className="mt-10 mb-9 flex items-center justify-center">
                     <Button
+                        onPress={() => navigation.navigate("PointBio" as never)}
                         variant="custom"
                         className='w-[134px] py-3.5 rounded-[6px] bg-[#14A278] flex items-center justify-center'>
                         <Text weight="regular" className="text-white text-[16px]">CREATE</Text>

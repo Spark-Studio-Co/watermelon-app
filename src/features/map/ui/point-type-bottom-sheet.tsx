@@ -4,15 +4,21 @@ import { Button } from "@/src/shared/ui/button/button"
 
 import { useTypePointStore } from "../model/type-point-store"
 import { useVisibleStore } from "@/src/shared/model/use-visible-store"
-import { useUserLocationStore } from "../model/user-location-store"
-import { useMarkerPositionStore } from "../model/marker-position-store"
+import { useNavigation } from "@react-navigation/native"
 
-export const PointTypeContent = () => {
+type PointTypeContentProps = {
+    isPrivateView: boolean;
+    longPressCoordinate: {
+        latitude: number;
+        longitude: number;
+    } | null;
+}
+
+export const PointTypeContent = ({ isPrivateView, longPressCoordinate }: PointTypeContentProps) => {
+    const navigation = useNavigation()
     const { open } = useVisibleStore('bet')
     const { close } = useVisibleStore('point')
     const { setType } = useTypePointStore()
-    const { markerPosition, setMarkerPosition } = useMarkerPositionStore()
-    const { coordinate } = useUserLocationStore()
 
 
     const buttons = [
@@ -33,10 +39,19 @@ export const PointTypeContent = () => {
         }
     ]
 
+
     const handleSetType = (pointType: string) => {
         setType(pointType)
         setTimeout(() => close(), 500)
-        setTimeout(() => open(), 1000)
+
+        if (!isPrivateView) {
+            setTimeout(() => {
+                //@ts-ignore
+                navigation.navigate('PrivatePointCreation' as never);
+            }, 1000);
+        } else {
+            setTimeout(() => open(), 1000);
+        }
     }
 
 

@@ -10,7 +10,7 @@ import { useActiveStore } from "@/src/shared/model/use-active-store"
 
 export const PointRadiusSettings = () => {
     const { close } = useVisibleStore("pointRadius")
-    const { setActive } = useActiveStore("radiusSettings", "")
+    const { setActive } = useActiveStore("radiusSettings", "0")
 
     const handleSetRadius = (radius: string) => {
         setActive(radius)
@@ -60,7 +60,7 @@ export const PointRadiusSettings = () => {
             <View className="flex flex-col mt-6 mb-4 w-[90%]">
                 {radiusSettings.map((item, index) =>
                     <View key={index} className="flex flex-col gap-y-6">
-                        <RadiusSettingsTab meteres={item.meteres} description={item.description} isLocked={item.isLocked} onPress={() => item.onPress(item.meteres)} />
+                        <RadiusSettingsTab meteres={item.meteres} description={item.description} isLocked={item.isLocked} onPress={() => item.onPress(item.meteres)} defaultValue={radiusSettings[0].meteres} />
                         {index !== radiusSettings.length - 1 && <View className="h-[1px] w-full bg-[#454547] mb-5 -mt-1" />}
                     </View>
                 )}

@@ -1,8 +1,9 @@
 import MapView, { Marker, Callout } from 'react-native-maps';
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { TouchableOpacity, View, Dimensions } from 'react-native';
 import { MapSwitch } from '@/src/shared/ui/map-switch/map-switch';
 import Text from '@/src/shared/ui/text/text';
+import { useNavigation } from '@react-navigation/native';
 
 
 import { customMapStyle } from '../config/map-styles';
@@ -33,6 +34,7 @@ type MarkerData = {
 };
 
 export const Map = () => {
+    const navigation = useNavigation();
     const { open } = useVisibleStore('point')
     const { type, setType } = useTypePointStore()
     const { markerPosition, setMarkerPosition } = useMarkerPositionStore()
@@ -40,6 +42,7 @@ export const Map = () => {
     const [savedMarkers, setSavedMarkers] = useState<MarkerData[]>([]);
     const [selectedMarker, setSelectedMarker] = useState<MarkerData | null>(null);
     const [isCityView, setIsCityView] = useState(true);
+    const mapRef = useRef<MapView>(null);
 
     const getMarkerBorderColor = (pointType: string) => {
         switch (pointType) {
@@ -99,12 +102,13 @@ export const Map = () => {
     return (
         <View style={{ width: width, height: height }}>
             <MapView
-                onLongPress={() => {
-                    if (!isCityView && coordinate) {
-                        setType('');
-                        setMarkerPosition(coordinate);
-                        open();
-                    }
+                ref={mapRef}
+                onLongPress={(e) => {
+                    // Allow point creation in both city and private view
+                    const pressCoordinate = e.nativeEvent.coordinate;
+                    setType('');
+                    setMarkerPosition(pressCoordinate);
+                    open();
                 }}
                 style={{ width: width, height: height }}
                 region={region}
@@ -210,7 +214,7 @@ export const Map = () => {
                     <CrosshairIcon />
                 </TouchableOpacity>
             </View>
-            <ModalWrapper isBottomSheet children={<PointTypeContent />} storeKey='point' />
+            <ModalWrapper isBottomSheet children={<PointTypeContent isPrivateView={!isCityView} longPressCoordinate={markerPosition} />} storeKey='point' />
             <ModalWrapper isBottomSheet children={<BetBottomContent onSavePoint={savePoint} />} storeKey='bet' />
         </View>
     )

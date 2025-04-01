@@ -1,50 +1,34 @@
 import { MainLayout } from "../../layouts/main-layout"
-import { View, Image, Keyboard, TouchableOpacity, Modal, StyleSheet } from "react-native"
+import { View, Image, Keyboard } from "react-native"
 import Text from "@/src/shared/ui/text/text"
 import { Input } from "@/src/shared/ui/input/input"
-import { useRef, useState } from "react"
+import { useRef } from "react"
 import { Button } from "@/src/shared/ui/button/button"
-import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
+import { useCameraPermissions } from 'expo-camera';
 import { PointTypeSwitch } from "@/src/shared/ui/point-type-switch/point-type-switch"
+import { CameraModalWidget } from "@/src/widget/camera/ui/camera-modal-widget"
 
 import { useNavigation } from "@react-navigation/native"
+import { useCameraStore } from "@/src/widget/camera/model/camera-store"
+import { useVisibleStore } from "@/src/shared/model/use-visible-store"
 
 import CameraIcon from "@/src/shared/icons/camera-icon"
 
 export const PrivatePointCreationScreen = () => {
     const navigation = useNavigation()
     const bioInputRef = useRef(null);
-    const cameraRef = useRef<any>(null);
 
-    const [facing, setFacing] = useState<CameraType>('back');
+    const { image } = useCameraStore('privateCamera')
+    const { open } = useVisibleStore("privateCamera")
     const [permission, requestPermission] = useCameraPermissions();
-    const [showCamera, setShowCamera] = useState(false);
-    const [capturedImage, setCapturedImage] = useState<string | null>(null);
-
-
-    const takePicture = async () => {
-        if (cameraRef.current) {
-            try {
-                const photo = await cameraRef.current.takePictureAsync();
-                setCapturedImage(photo.uri);
-                setShowCamera(false);
-            } catch (error) {
-                console.error('Error taking picture:', error);
-            }
-        }
-    };
 
     const openCamera = async () => {
         const { granted } = await requestPermission();
         if (granted) {
-            setShowCamera(true);
+            open()
         } else {
             console.log('Camera permission not granted');
         }
-    };
-
-    const flipCamera = () => {
-        setFacing(current => (current === 'back' ? 'front' : 'back'));
     };
 
     return (
@@ -53,7 +37,7 @@ export const PrivatePointCreationScreen = () => {
                 <Text weight="bold" className="text-white text-[24px]">Point #12123</Text>
             </View>
             <Image
-                source={capturedImage ? { uri: capturedImage } : require('@/src/images/point_image.png')}
+                source={image ? { uri: image } : require('@/src/images/point_image.png')}
                 className="w-full h-[182px] rounded-[12px] mt-1"
             />
             <View style={{ boxShadow: '0px 4px 4px 0px #00000040' }} className="rounded-[12px] ">
@@ -99,82 +83,7 @@ export const PrivatePointCreationScreen = () => {
                     </Button>
                 </View>
             </View>
-            <Modal
-                visible={showCamera}
-                transparent={true}
-                animationType="slide"
-            >
-                <View style={styles.modalContainer}>
-                    <CameraView
-                        ref={cameraRef}
-                        style={styles.camera}
-                        facing={facing}
-                        className="flex-1"
-                    >
-                        <View style={styles.cameraControls}>
-                            <TouchableOpacity
-                                style={styles.closeButton}
-                                onPress={() => setShowCamera(false)}
-                            >
-                                <Text weight="bold" className="text-white text-[18px]">Close</Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={styles.takePictureButton}
-                                onPress={takePicture}
-                            >
-                                <View style={styles.takePictureButtonInner} />
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={styles.flipButton}
-                                onPress={flipCamera}
-                            >
-                                <Text weight="bold" className="text-white text-[18px]">Flip</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </CameraView>
-                </View>
-            </Modal>
+            <CameraModalWidget storeKey="privateCamera" />
         </MainLayout>
     )
 }
-
-const styles = StyleSheet.create({
-    modalContainer: {
-        flex: 1,
-        backgroundColor: 'black',
-    },
-    camera: {
-        flex: 1,
-    },
-    cameraControls: {
-        position: 'absolute',
-        bottom: 30,
-        left: 0,
-        right: 0,
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        alignItems: 'center',
-    },
-    closeButton: {
-        padding: 10,
-    },
-    takePictureButton: {
-        width: 70,
-        height: 70,
-        borderRadius: 35,
-        backgroundColor: 'rgba(255, 255, 255, 0.3)',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    takePictureButtonInner: {
-        width: 60,
-        height: 60,
-        borderRadius: 30,
-        backgroundColor: 'white',
-    },
-    flipButton: {
-        padding: 10,
-    }
-});

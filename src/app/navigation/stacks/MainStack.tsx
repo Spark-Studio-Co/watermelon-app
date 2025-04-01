@@ -18,6 +18,8 @@ import { AuctionScreen } from '../../screens/Main/auction-screen';
 import { AuctionInnerScreen } from '../../screens/Main/auction-inner-screen';
 import { PrivatePointCreationScreen } from '../../screens/Main/private-point-creation-screeen';
 import { PointBioScreen } from '../../screens/Main/point-bio-screen';
+import { FullPostScreen } from '../../screens/Main/full-post-screen';
+import { GlobalPointCreationScreen } from '../../screens/Main/global-point-creation-screen';
 
 export const MainStack = () => {
     return (
@@ -46,7 +48,9 @@ export const MainStack = () => {
             <Stack.Screen name="Auction" component={AuctionScreen} />
             <Stack.Screen name="AuctionInner" component={AuctionInnerScreen} />
             <Stack.Screen name="PrivatePointCreation" component={PrivatePointCreationScreen} />
+            <Stack.Screen name="GlobalPointCreation" component={GlobalPointCreationScreen} />
             <Stack.Screen name="PointBio" component={PointBioScreen} />
+            <Stack.Screen name="FullPost" component={FullPostScreen} />
         </Stack.Navigator>
     );
 };

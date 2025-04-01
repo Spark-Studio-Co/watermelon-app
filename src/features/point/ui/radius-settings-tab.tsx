@@ -12,10 +12,11 @@ interface IRadiusSettingsTab {
     description: string
     onPress?: () => void
     isLocked: boolean | undefined
+    defaultValue: string
 }
 
-export const RadiusSettingsTab = ({ meteres, description, onPress, isLocked }: IRadiusSettingsTab) => {
-    const { active } = useActiveStore("radiusSettings", "")
+export const RadiusSettingsTab = ({ meteres, description, onPress, isLocked, defaultValue }: IRadiusSettingsTab) => {
+    const { active } = useActiveStore("radiusSettings", defaultValue)
 
     return (
         <Button className="flex flex-row justify-between items-center w-full mx-auto" onPress={isLocked ? undefined : onPress}>
