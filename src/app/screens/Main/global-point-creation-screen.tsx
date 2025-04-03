@@ -62,7 +62,7 @@ export const GlobalPointCreationScreen = () => {
                         returnKeyType="done"
                         multiline
                         placeholder="bio information..."
-                        className="placeholder:text-[#5C5A5A] text-[#5C5A5A] text-[20px] pl-6 mt-6 pt-6 border-[1px] h-[156px] border-[#999999] rounded-[15px] w-full"
+                        className="placeholder:text-[#5C5A5A] text-[#5C5A5A] text-[20px] px-6 mt-6 pt-6 border-[1px] h-[156px] border-[#999999] rounded-[15px] w-full"
                         onSubmitEditing={() => {
                             Keyboard.dismiss();
                         }}

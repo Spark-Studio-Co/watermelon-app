@@ -64,7 +64,7 @@ export const MainLayout = ({ children, isUserTab, isBack, title, isMap, isWeekly
                             {isBack && <View className='flex flex-row items-center gap-x-3 mx-4 my-4'><Button variant='custom' className='rotate-180' onPress={() => navigation.goBack()}><RightArrowIcon /></Button><Text weight='regular' className='text-white text-[16px]'>{title}</Text></View>}
                             {isUserTab && <UserTab />}
                             {isWeeklyChallenge && (
-                                <View className=" mx-auto px-4 mb-4 w-[90%]">
+                                <View className=" mx-auto px-4 mb-4 w-[90%] min-h-[100vh] flex-1">
                                     <Text weight="bold" className="text-white text-[24px]">Weekly Challenge</Text>
                                     <WeeklyChallengeTab />
                                 </View>

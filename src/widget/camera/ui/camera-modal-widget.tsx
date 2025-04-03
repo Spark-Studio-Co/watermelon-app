@@ -4,19 +4,16 @@ import { useRef, useState, useEffect } from "react"
 import { CameraView, CameraType } from 'expo-camera';
 
 import { useVisibleStore } from "@/src/shared/model/use-visible-store";
-import { initCameraStore, useCameraStore } from "../model/camera-store";
+import { useCameraStore } from "../model/camera-store";
 
 interface ICameraModalWidgetProps {
     storeKey: string
 }
 
 export const CameraModalWidget = ({ storeKey }: ICameraModalWidgetProps) => {
-    const storeRef = initCameraStore('addPost');
     const cameraRef = useRef<any>(null);
     const { setImage } = useCameraStore(storeKey)
     const { isVisible, close } = useVisibleStore(storeKey)
-    const { open: openAddPost } = useVisibleStore("addPost")
-    const { close: closePhotoOptions } = useVisibleStore("photoOptions")
     const [facing, setFacing] = useState<CameraType>('back');
     const [isTakingPicture, setIsTakingPicture] = useState(false);
 
@@ -32,15 +29,11 @@ export const CameraModalWidget = ({ storeKey }: ICameraModalWidgetProps) => {
             try {
                 const photo = await cameraRef.current.takePictureAsync();
                 setImage(photo.uri);
-                closePhotoOptions();
                 close();
-                setTimeout(() => {
-                    console.log("🟢 Opening add post modal...");
-                    openAddPost();
-                }, 200);
             } catch (error) {
                 console.error('Error taking picture:', error);
                 Alert.alert("Error", "Failed to take picture. Please try again.");
+            } finally {
                 setIsTakingPicture(false);
             }
         }
