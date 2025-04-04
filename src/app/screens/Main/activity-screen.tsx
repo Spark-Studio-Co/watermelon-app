@@ -36,7 +36,7 @@ export const ActivityScreen = () => {
         <MainLayout>
             <View className="flex flex-col items-center mx-auto w-[90%] mt-5">
                 <Text weight="medium" className="text-white text-[32px]">Activity</Text>
-                <View className="flex flex-row items-center justify-between w-[80%] mx-auto mt-6">
+                <View className="flex flex-row items-center justify-between w-[90%] mx-auto mt-6">
                     {buttons.map((button) => {
                         return (
                             <View className="flex flex-col items-center" key={button}>
@@ -49,7 +49,7 @@ export const ActivityScreen = () => {
                     })}
                 </View>
                 {active === 'Global' && (
-                    <View className="flex flex-col w-[80%] items-start mt-6">
+                    <View className="flex flex-col w-[90%] items-start mt-6">
                         {global.map((item, index) => (
                             <ActivityCard
                                 key={index}
@@ -62,7 +62,7 @@ export const ActivityScreen = () => {
                     </View>
                 )}
                 {active === 'Friends' && (
-                    <View className="flex flex-col w-[80%] items-end mt-6">
+                    <View className="flex flex-col w-[90%] items-end mt-6">
                         {friends.map((item, index) => (
                             <ActivityCard
                                 key={index}

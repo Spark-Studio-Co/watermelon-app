@@ -23,6 +23,7 @@ import { GlobalPointCreationScreen } from '../../screens/Main/global-point-creat
 import { CommentsScreen } from '../../screens/Main/comments-screen';
 import { FeedScreen } from '../../screens/Main/feed-screen';
 import { ActivityScreen } from '../../screens/Main/activity-screen';
+import { TasksScreen } from '../../screens/Main/tasks-screen';
 
 export const MainStack = () => {
     return (
@@ -57,6 +58,7 @@ export const MainStack = () => {
             <Stack.Screen name="Comments" component={CommentsScreen} />
             <Stack.Screen name="Feed" component={FeedScreen} />
             <Stack.Screen name="Activity" component={ActivityScreen} />
+            <Stack.Screen name="Tasks" component={TasksScreen} />
         </Stack.Navigator>
     );
 };
