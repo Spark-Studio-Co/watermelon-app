@@ -22,7 +22,7 @@ export const ScreensNavigationPanel = () => {
         { uri: FeedImage, width: 223, margin: hp(0.25), navigation: 'Feed' },
         { uri: BookMarkImage, navigation: 'Bookmarks' },
         { uri: TaskImage, navigation: 'Tasks' },
-        { uri: ActivityImage, width: 223, margin: hp(0.25), navigation: 'Activity' }
+        { uri: ActivityImage, width: 223, margin: hp(0.25), navigation: 'Activity', }
     ];
 
     return (

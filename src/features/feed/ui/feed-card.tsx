@@ -6,6 +6,8 @@ import HeartLikeIcon from "@/src/shared/icons/heart-like-icon"
 import ViewsIcon from "@/src/shared/icons/views-icon"
 import CommentIcon from "@/src/shared/icons/comment-icon"
 
+import { useState } from "react"
+
 
 interface IFeedCardProps {
     username: string
@@ -23,6 +25,13 @@ interface IFeedCardProps {
 
 
 export const FeedCard = ({ username, date, image, text, likes, views, comments, onPress, onLike, active }: IFeedCardProps) => {
+
+    const [isFullText, setIsFullText] = useState(false)
+
+    const handleTextToggle = () => {
+        setIsFullText(!isFullText)
+    }
+
     return (
         <View className="flex flex-col">
             <View className="flex flex-row items-center gap-x-4">
@@ -53,7 +62,9 @@ export const FeedCard = ({ username, date, image, text, likes, views, comments, 
                     </View>
                 </View>
             </View>
-            <Text weight="regular" className="text-white text-[12px] leading-[26px] mt-4">{text?.slice(0, 200)}...</Text>
+            <Button onPress={handleTextToggle}>
+                <Text weight="regular" className="text-white text-[12px] leading-[26px] mt-4">{isFullText ? text : text?.slice(0, 200)}...</Text>
+            </Button>
         </View>
     )
 }

@@ -22,6 +22,7 @@ import { FullPostScreen } from '../../screens/Main/full-post-screen';
 import { GlobalPointCreationScreen } from '../../screens/Main/global-point-creation-screen';
 import { CommentsScreen } from '../../screens/Main/comments-screen';
 import { FeedScreen } from '../../screens/Main/feed-screen';
+import { ActivityScreen } from '../../screens/Main/activity-screen';
 
 export const MainStack = () => {
     return (
@@ -55,6 +56,7 @@ export const MainStack = () => {
             <Stack.Screen name="FullPost" component={FullPostScreen} />
             <Stack.Screen name="Comments" component={CommentsScreen} />
             <Stack.Screen name="Feed" component={FeedScreen} />
+            <Stack.Screen name="Activity" component={ActivityScreen} />
         </Stack.Navigator>
     );
 };
