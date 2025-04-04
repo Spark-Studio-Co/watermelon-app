@@ -3,8 +3,8 @@ import Svg, { Rect, Defs, Pattern, Use, Image, SvgProps } from "react-native-svg
 
 const RightArrowIcon = (props: SvgProps) => (
     <Svg
-        width={18}
-        height={18}
+        width={22}
+        height={22}
         viewBox="0 0 18 18"
         fill="none"
         {...props}
