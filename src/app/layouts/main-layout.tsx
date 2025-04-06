@@ -7,12 +7,15 @@ import Text from '@/src/shared/ui/text/text';
 import { Button } from '@/src/shared/ui/button/button';
 import { WeeklyChallengeTab } from '@/src/features/weekly-challenge-tab/ui/weekly-challenge-tab';
 import { ChatInput } from '@/src/features/comments/ui/chat-input';
+import { ChatTab } from '@/src/features/chat/ui/chat-tab';
 
 import { hp } from '@/src/shared/utils/resize-dimensions';
 
 import RightArrowIcon from '@/src/shared/icons/right-arrow-icon';
 
 import { useNavigation } from '@react-navigation/native';
+
+type ChatInputType = "comments" | "private" | "group"
 
 interface MainLayoutProps {
     children: React.ReactNode;
@@ -23,21 +26,23 @@ interface MainLayoutProps {
     isWeeklyChallenge?: boolean
     isScrollable?: boolean
     isChat?: boolean
+    chatInputType?: ChatInputType
 }
 
-export const MainLayout = ({ children, isUserTab, isBack, title, isMap, isWeeklyChallenge, isScrollable = true, isChat = false }: MainLayoutProps) => {
+export const MainLayout = ({ children, isUserTab, isBack, title, isMap, isWeeklyChallenge, isScrollable = true, isChat = false, chatInputType }: MainLayoutProps) => {
 
     const navigation = useNavigation()
 
     return (
         <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            behavior={isChat ? (Platform.OS === 'ios' ? 'padding' : 'height') : undefined}
             style={{ flex: 1 }}
             keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
         >
             <View className="flex-1 bg-[#1B1C1E]">
                 <StatusBar style="light" translucent={true} backgroundColor='transparent' />
                 <SafeAreaView style={{ flex: 1 }}>
+                    {chatInputType === 'group' || chatInputType === 'private' && <ChatTab />}
                     {isMap ?
                         <>
                             <View>
@@ -66,7 +71,7 @@ export const MainLayout = ({ children, isUserTab, isBack, title, isMap, isWeekly
                                     {children}
                                 </ScrollView>
                                 {!isBack && <BottomNavigationPanel />}
-                                {isChat && <ChatInput />}
+                                {isChat && <ChatInput type={chatInputType || 'comments'} />}
                             </>
                             :
                             <>

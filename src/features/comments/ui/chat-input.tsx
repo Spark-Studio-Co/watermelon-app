@@ -3,16 +3,21 @@ import { Keyboard, View } from 'react-native'
 import { Input } from '@/src/shared/ui/input/input'
 import { Button } from '@/src/shared/ui/button/button'
 
-import EmojiIcon from '@/src/shared/icons/emoji-icon'
 import ThinPlusIcon from '@/src/shared/icons/thin-plus-icon'
 import RightArrowIcon from '@/src/shared/icons/right-arrow-icon'
+import MicIcon from '@/src/shared/icons/mic-icon'
 
 import { useCommentsStore } from '../model/comments-store'
+import { useChatStore } from '../../chat/model/chat-store'
 
-export const ChatInput = () => {
+interface IChatInputProps {
+    type: string | "comments" | "private" | "group"
+}
+
+export const ChatInput = ({ type }: IChatInputProps) => {
+    const { setMessage } = useChatStore()
     const { addComment } = useCommentsStore()
     const [text, setText] = useState('')
-    const [isEmojiOpen, setIsEmojiOpen] = useState(false)
 
     const handleAddComment = () => {
         if (!text.trim()) return
@@ -22,19 +27,12 @@ export const ChatInput = () => {
 
         const nickname = `@user1`
 
-        addComment({ comment: text, date: time, nickname })
+        type === "private" ? setMessage(text) : addComment({ comment: text, date: time, nickname })
+
         setText('')
         Keyboard.dismiss()
     }
 
-    const toggleEmoji = () => {
-        Keyboard.dismiss()
-        setIsEmojiOpen(!isEmojiOpen)
-    }
-
-    const handleSelectEmoji = (emoji: string) => {
-        setText((prev) => prev + emoji)
-    }
 
     return (
         <View className="bg-[#202020] absolute w-full bottom-0 min-h-[90px] rounded-tl-[15px] rounded-tr-[15px] pl-[33px] pt-[21px] pb-[40px] pr-[100px]">
@@ -49,7 +47,7 @@ export const ChatInput = () => {
                 />
                 <View className="flex flex-row items-center gap-x-6">
                     <Button variant="custom" className="rounded-[15px] w-[20px] h-[20px] -mt-2">
-                        <ThinPlusIcon />
+                        {type === "comments" ? <ThinPlusIcon /> : <MicIcon />}
                     </Button>
                     <Button variant="custom" className="bg-[#656565] w-[40px] h-[40px] flex items-center justify-center rounded-full pl-1" onPress={handleAddComment}>
                         <RightArrowIcon />

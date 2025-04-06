@@ -97,7 +97,7 @@ export const FeedScreen = () => {
                             views={post.views}
                             comments={post.comments}
                             //@ts-ignore
-                            onPress={() => navigation.navigate('FullPost' as never, { imageUri: post.image, index })}
+                            onPress={() => navigation.navigate('FullPost' as never, { imageUri: post.image, index, storeKey: 'feed' })}
                             onLike={() => handleLike(post.image)}
                             active={active === post.image}
                         />

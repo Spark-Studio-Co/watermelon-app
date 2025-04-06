@@ -99,7 +99,7 @@ export const PointBioScreen = () => {
                 <Button variant="follow" onPress={setSubscribed}>
                     <Text weight="bold" className="text-[#5992FF] text-[13.82px]">{subscribed ? "Unfollow" : "+ Follow"}</Text>
                 </Button>
-                <Button variant="custom" className="w-[32.822383880615234px] h-[32.822383880615234px] bg-[#8888882E] rounded-[7.77px] border-[0.86px] border-[#888888] flex items-center justify-center ml-2">
+                <Button onPress={() => navigation.navigate('PrivateChat' as never)} variant="custom" className="w-[32.822383880615234px] h-[32.822383880615234px] bg-[#8888882E] rounded-[7.77px] border-[0.86px] border-[#888888] flex items-center justify-center ml-2">
                     <MailIcon />
                 </Button>
                 <View className="flex flex-col ml-6">
@@ -180,6 +180,7 @@ export const PointBioScreen = () => {
                             //@ts-ignore
                             navigation.navigate("FullPost" as never, {
                                 index,
+                                storeKey: 'pointBio'
                             });
                         }}
                     />
