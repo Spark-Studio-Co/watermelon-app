@@ -4,7 +4,7 @@ import { IRegisterRDO } from "./rdo/register.rdo";
 
 export const register = async (data: IRegisterRDO) => {
     try {
-        const response = await apiClient.post("/api/auth/register", data)
+        const response = await apiClient.post("/auth/register", data)
         console.log("Registered", response.data)
         return response.data
     } catch (error: any) {

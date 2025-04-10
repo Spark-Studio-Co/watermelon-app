@@ -4,16 +4,30 @@ import { create } from "zustand";
 
 interface IAuthStore {
     token: string | null | undefined;
+    id: string | null
     isNewLogin: boolean;
     setToken: (token: string | null) => void;
     setIsNewLogin: (value: boolean) => void;
     logout: () => void;
     loadToken: () => Promise<void>;
+    setId: (id: string) => void;
+    loadId: () => void
 }
 
 export const useAuthStore = create<IAuthStore>((set) => ({
+    id: null,
     token: undefined,
     isNewLogin: false,
+
+    setId: async (id) => {
+        await AsyncStorage.setItem("userId", id)
+        set({ id: id })
+    },
+
+    loadId: async () => {
+        const id = await AsyncStorage.getItem("userId");
+        set({ id: id || null })
+    },
 
     setIsNewLogin: (value: boolean) => set({ isNewLogin: value }),
 
@@ -28,9 +42,10 @@ export const useAuthStore = create<IAuthStore>((set) => ({
 
     logout: async () => {
         await AsyncStorage.removeItem("authToken");
+        await AsyncStorage.removeItem("userId");
         reactQueryClient.resetQueries();
         reactQueryClient.clear();
-        set({ token: null, isNewLogin: false });
+        set({ token: null, isNewLogin: false, id: null });
     },
 
     loadToken: async () => {

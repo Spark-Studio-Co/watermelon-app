@@ -8,6 +8,7 @@ import { SeettingsButton } from "@/src/shared/ui/settings-button/settings-button
 import { useActiveStore } from "@/src/shared/model/use-active-store"
 import { useVisibleStore } from "@/src/shared/model/use-visible-store"
 import { useNavigation } from "@react-navigation/native"
+import { useGetMe } from "@/src/entities/users/api/use-get-me"
 
 import { Platform } from "react-native"
 
@@ -26,6 +27,8 @@ export const SettingsScreen = () => {
     const account = useVisibleStore('account')
     const friends = useVisibleStore('friends')
     const appSettings = useVisibleStore('appSettings')
+
+    const { data: me } = useGetMe()
 
     const { navigate } = useNavigation()
 
@@ -68,7 +71,7 @@ export const SettingsScreen = () => {
         <MainLayout>
             <View className="flex flex-col mx-auto mt-5">
                 <Text weight="medium" className="text-white text-[22px]">Settings</Text>
-                <UserSettingsTab username="User Name" nickname="user_name" lvl={25} />
+                <UserSettingsTab username={me?.name ? me?.name : 'User Name'} nickname={me?.username ? me?.username : "user_name"} lvl={me?.level ? me?.level : 0} />
                 <View className="flex flex-row w-full justify-center mt-6">
                     <View className="flex-1 flex flex-row gap-x-4 items-center justify-center">
                         {buttons.map((button) => (

@@ -6,15 +6,15 @@ import { Button } from '@/src/shared/ui/button/button';
 
 import { useNavigation } from '@react-navigation/native';
 
-import { hp } from '@/src/shared/utils/resize-dimensions';
-
 import { useLoginStore } from '../../../entities/login/model/login-store';
 import { useLogin } from '@/src/entities/login/api/use-login';
+import { useAuthStore } from '@/src/entities/registration/api/use-auth-store';
 
 export const LoginForm = () => {
     const { mutate, isPending, isError } = useLogin()
     const { navigate } = useNavigation()
     const { password, email, setPassword, setEmail, setResponseData } = useLoginStore()
+    const { setId, id } = useAuthStore()
 
     const handleSubmit = () => {
         if (!email.trim() || !password.trim()) {
@@ -23,7 +23,8 @@ export const LoginForm = () => {
         }
         mutate({ email, password }, {
             onSuccess: async (data: any) => {
-                if (data?.token) {
+                if (data?.token || data?.user) {
+                    setId(data.user.id)
                     setResponseData(data.token)
                 } else {
                     console.log('There is an error with data')

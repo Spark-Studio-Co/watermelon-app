@@ -8,9 +8,10 @@ import { useCameraStore } from "../model/camera-store";
 
 interface ICameraModalWidgetProps {
     storeKey: string
+    onPhotoTaken?: (uri: string) => void;
 }
 
-export const CameraModalWidget = ({ storeKey }: ICameraModalWidgetProps) => {
+export const CameraModalWidget = ({ storeKey, onPhotoTaken }: ICameraModalWidgetProps) => {
     const cameraRef = useRef<any>(null);
     const { setImage } = useCameraStore(storeKey)
     const { isVisible, close } = useVisibleStore(storeKey)
@@ -30,9 +31,14 @@ export const CameraModalWidget = ({ storeKey }: ICameraModalWidgetProps) => {
                 const photo = await cameraRef.current.takePictureAsync();
                 setImage(photo.uri);
                 close();
+
+                if (onPhotoTaken) {
+                    onPhotoTaken(photo.uri);
+                }
+
             } catch (error) {
-                console.error('Error taking picture:', error);
-                Alert.alert("Error", "Failed to take picture. Please try again.");
+                console.error("Error taking picture:", error);
+                Alert.alert("Ошибка", "Не удалось сделать фото");
             } finally {
                 setIsTakingPicture(false);
             }

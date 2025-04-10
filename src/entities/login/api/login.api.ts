@@ -4,7 +4,7 @@ import axios from "axios";
 
 export const login = async (data: ILoginRDO) => {
     try {
-        const response = await apiClient.post('/api/auth/login', data)
+        const response = await apiClient.post('/auth/login', data)
         console.log("Login successful!", response.data)
         return response.data
     } catch (error: any) {

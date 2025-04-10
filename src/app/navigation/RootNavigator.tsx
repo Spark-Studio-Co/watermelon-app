@@ -9,12 +9,13 @@ import { AuthStack } from './stacks/AuthStack';
 import { MainStack } from './stacks/MainStack';
 
 export const RootNavigator = () => {
-    const { token, loadToken } = useAuthStore();
+    const { token, loadToken, loadId, id } = useAuthStore();
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const checkToken = async () => {
             await loadToken();
+            loadId()
             setIsLoading(false);
         };
         checkToken();
@@ -22,6 +23,7 @@ export const RootNavigator = () => {
 
     useEffect(() => {
         console.log("Token updated:", token);
+        console.log(id)
     }, [token]);
 
     if (isLoading) {
