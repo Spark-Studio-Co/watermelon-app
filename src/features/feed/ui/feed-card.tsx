@@ -7,7 +7,7 @@ import ViewsIcon from "@/src/shared/icons/views-icon"
 import CommentIcon from "@/src/shared/icons/comment-icon"
 
 import { useState } from "react"
-
+import { useNavigation } from "@react-navigation/native"
 
 interface IFeedCardProps {
     username: string
@@ -25,7 +25,7 @@ interface IFeedCardProps {
 
 
 export const FeedCard = ({ username, date, image, text, likes, views, comments, onPress, onLike, active }: IFeedCardProps) => {
-
+    const navigation = useNavigation()
     const [isFullText, setIsFullText] = useState(false)
 
     const handleTextToggle = () => {
@@ -38,10 +38,14 @@ export const FeedCard = ({ username, date, image, text, likes, views, comments, 
                 <Text weight="regular" className="text-white text-[17.4px]">{username}</Text>
                 <Text weight="regular" className="text-white text-[12px]">{date}</Text>
             </View>
-            <Image
-                source={{ uri: image || '' }}
-                className="w-full h-[309px] rounded-[15px] mt-2.5"
-            />
+            <Button onPress={() => navigation.navigate(
+                //@ts-ignore
+                'FullPost' as never, { imageUri: image, storeKey: 'feed' })}>
+                <Image
+                    source={{ uri: image || '' }}
+                    className="w-full h-[309px] rounded-[15px] mt-2.5"
+                />
+            </Button>
             <View className="flex flex-row items-center justify-center mt-5">
                 <View className="flex flex-row gap-x-5">
                     <View className="flex flex-row items-center gap-x-1">

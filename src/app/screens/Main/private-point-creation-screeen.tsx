@@ -7,6 +7,8 @@ import { Button } from "@/src/shared/ui/button/button"
 import { useCameraPermissions } from 'expo-camera';
 import { PointTypeSwitch } from "@/src/shared/ui/point-type-switch/point-type-switch"
 import { CameraModalWidget } from "@/src/widget/camera/ui/camera-modal-widget"
+import { ModalWrapper } from "@/src/shared/ui/modal-wrapper/modal-wrapper"
+import * as ImagePicker from 'expo-image-picker';
 
 import { useNavigation } from "@react-navigation/native"
 import { useCameraStore } from "@/src/widget/camera/model/camera-store"
@@ -18,18 +20,36 @@ export const PrivatePointCreationScreen = () => {
     const navigation = useNavigation()
     const bioInputRef = useRef(null);
 
-    const { image } = useCameraStore('privateCamera')
+    const { image, setImage } = useCameraStore('privateCamera')
     const { open } = useVisibleStore("privateCamera")
+    const { open: openChoice, close: closeChoice } = useVisibleStore("cameraChoice")
     const [permission, requestPermission] = useCameraPermissions();
 
     const openCamera = async () => {
         const { granted } = await requestPermission();
         if (granted) {
+            closeChoice()
             open()
         } else {
             console.log('Camera permission not granted');
         }
     };
+
+    const pickImage = async () => {
+        let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ['images'],
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 1,
+        });
+        closeChoice()
+
+        if (!result.canceled && result.assets?.length) {
+            setImage(result.assets[0].uri);
+        } else {
+            setImage(null);
+        }
+    }
 
     return (
         <MainLayout>
@@ -59,7 +79,7 @@ export const PrivatePointCreationScreen = () => {
                     <View className="flex flex-col items-center gap-y-5">
                         <Text weight="bold" className="text-white text-[24px]">Add photo</Text>
                         <Button
-                            onPress={openCamera}
+                            onPress={openChoice}
                             variant="custom"
                             className="bg-[#1B1C1E] flex items-center justify-center border border-[#222328] rounded-[15px] w-[100px] h-[100px]"
                             style={{ boxShadow: '0px 4px 4px 0px #00000040' }}
@@ -83,6 +103,18 @@ export const PrivatePointCreationScreen = () => {
                     </Button>
                 </View>
             </View>
+            <ModalWrapper storeKey="cameraChoice">
+                <View className=" bg-[#38373A] w-[90%] px-8 rounded-lg">
+                    <View className="flex flex-row items-center justify-between w-[100%] h-[200px]">
+                        <Button className="bg-[#27262A] px-4 py-3 rounded-md" onPress={openCamera}>
+                            <Text weight="medium" className="text-white">Make a photo</Text>
+                        </Button>
+                        <Button className="bg-[#27262A] px-4 py-3 rounded-md" onPress={pickImage}>
+                            <Text weight="medium" className="text-white">Pick from gallery</Text>
+                        </Button>
+                    </View>
+                </View>
+            </ModalWrapper>
             <CameraModalWidget storeKey="privateCamera" />
         </MainLayout>
     )

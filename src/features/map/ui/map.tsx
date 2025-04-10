@@ -34,7 +34,6 @@ type MarkerData = {
 };
 
 export const Map = () => {
-    const navigation = useNavigation();
     const { open } = useVisibleStore('point')
     const { type, setType } = useTypePointStore()
     const { markerPosition, setMarkerPosition } = useMarkerPositionStore()
