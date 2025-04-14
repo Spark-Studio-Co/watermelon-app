@@ -9,8 +9,10 @@ import MasonryList from "react-native-masonry-list";
 import { PointSettings } from "@/src/features/point/ui/point-settings"
 import { PointRadiusSettings } from "@/src/features/point/ui/point-radius-settings"
 import { RadiusColorSettings } from "@/src/features/point/ui/radius-color-settings"
+import { PointNameSettings } from "@/src/features/point/ui/point-name-settings"
 import { Input } from "@/src/shared/ui/input/input"
 import { CameraModalWidget } from "@/src/widget/camera/ui/camera-modal-widget"
+import { PointBioSettings } from "@/src/features/point/ui/point-bio-settings"
 
 
 import MailIcon from "@/src/shared/icons/mail-icon"
@@ -23,14 +25,36 @@ import CameraIcon from "@/src/shared/icons/camera-icon"
 import { usePointBioStore } from "@/src/features/point/model/point-bio-store"
 import { useActiveStore } from "@/src/shared/model/use-active-store"
 import { useVisibleStore } from "@/src/shared/model/use-visible-store"
-import { useNavigation } from "@react-navigation/native"
+import { RouteProp, useNavigation } from "@react-navigation/native"
 import { hp } from "@/src/shared/utils/resize-dimensions"
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useCameraPermissions } from "expo-camera"
 import { useCameraStore } from "@/src/widget/camera/model/camera-store"
+import { useMarkerDataById } from "@/src/entities/markers/api/use-marker-data-by-id"
+import { useGetMe } from "@/src/entities/users/api/use-get-me"
+import { useMarkerStore } from "@/src/entities/markers/model/use-marker-store"
 
+type PointBioRouteProp = {
+    route: RouteProp<any, any>
+}
 
-export const PointBioScreen = () => {
+type RouteParams = {
+    id: string;
+    ownerId: string
+}
+
+export const PointBioScreen = ({ route }: PointBioRouteProp) => {
+    const { id, ownerId } = route.params as RouteParams
+
+    const { setId } = useMarkerStore()
+
+    useEffect(() => {
+        setId(id)
+    }, [id])
+
+    const { data: marker } = useMarkerDataById(id)
+    const { data: me } = useGetMe()
+
     const bioInputRef = useRef(null);
     const navigation = useNavigation()
     const { open: openPost } = useVisibleStore("post")
@@ -93,17 +117,19 @@ export const PointBioScreen = () => {
     return (
         <MainLayout>
             <View className="w-[80%] mx-auto mt-4">
-                <PointBioTab pointname="Point Name" nickname="point_name" onPress={openSettings} />
+                <PointBioTab pointname={marker?.name} nickname="point_name" onPress={openSettings} />
             </View>
             <View className="flex flex-row items-center mt-12 w-[90%] mx-auto relative">
-                <Button variant="follow" onPress={setSubscribed}>
-                    <Text weight="bold" className="text-[#5992FF] text-[13.82px]">{subscribed ? "Unfollow" : "+ Follow"}</Text>
-                </Button>
-                <Button onPress={() => navigation.navigate('PrivateChat' as never)} variant="custom" className="w-[32.822383880615234px] h-[32.822383880615234px] bg-[#8888882E] rounded-[7.77px] border-[0.86px] border-[#888888] flex items-center justify-center ml-2">
-                    <MailIcon />
-                </Button>
+                {ownerId === me?.id ? <View className="ml-10" /> : <>
+                    <Button variant="follow" onPress={setSubscribed}>
+                        <Text weight="bold" className="text-[#5992FF] text-[13.82px]">{subscribed ? "Unfollow" : "+ Follow"}</Text>
+                    </Button>
+                    <Button onPress={() => navigation.navigate('PrivateChat' as never)} variant="custom" className="w-[32.822383880615234px] h-[32.822383880615234px] bg-[#8888882E] rounded-[7.77px] border-[0.86px] border-[#888888] flex items-center justify-center ml-2">
+                        <MailIcon />
+                    </Button>
+                </>}
                 <View className="flex flex-col ml-6">
-                    <Text weight="medium" className="text-white text-[13.82px]">787</Text>
+                    <Text weight="medium" className="text-white text-[13.82px]">{marker?.followersCount}</Text>
                     <Text weight="regular" className="text-[#888888] text-[11.23px]">Followers</Text>
                 </View>
                 <View className="flex flex-col ml-4">
@@ -163,7 +189,7 @@ export const PointBioScreen = () => {
                     active === 'bio' &&
                     <View>
                         <Text className="text-[#888888] text-[11.23px]">About</Text>
-                        <Text className="text-white mt-1 text-[13.82px] w-[80%]">Text bio 1132392094 smblsmany www.top.ru text more and - h wew</Text>
+                        <Text className="text-white mt-1 text-[13.82px] w-[80%]">{marker?.description}</Text>
                     </View>
                 }
                 {
@@ -232,6 +258,12 @@ export const PointBioScreen = () => {
             </ModalWrapper>
             <ModalWrapper storeKey="radiusColor" isMini className="w-[90%] -top-8">
                 <RadiusColorSettings />
+            </ModalWrapper>
+            <ModalWrapper storeKey="pointName" isMini className="w-[90%] -top-8">
+                <PointNameSettings />
+            </ModalWrapper>
+            <ModalWrapper storeKey="pointBioSettings" isMini className="w-[90%] -top-8">
+                <PointBioSettings />
             </ModalWrapper>
             <CameraModalWidget storeKey="post" />
         </MainLayout >

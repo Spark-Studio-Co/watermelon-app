@@ -11,6 +11,9 @@ export const PointSettings = () => {
     const { close } = useVisibleStore("pointSettings")
     const { open: openRadiusSettings } = useVisibleStore("pointRadius")
     const { open: openRadiusColorSettings } = useVisibleStore("radiusColor")
+    const { open: openPointNameSettings } = useVisibleStore("pointName")
+    const { open: openPointBioSettings } = useVisibleStore("pointBioSettings")
+
 
     const handleOpenSettings = (title: string) => {
         close();
@@ -22,6 +25,12 @@ export const PointSettings = () => {
                     break;
                 case "Цвет радиуса":
                     openRadiusColorSettings();
+                    break;
+                case "Название":
+                    openPointNameSettings();
+                    break;
+                case "bio":
+                    openPointBioSettings();
                     break;
                 default:
                     console.log('No matching setting for:', title);

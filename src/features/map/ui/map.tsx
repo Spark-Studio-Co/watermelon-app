@@ -3,8 +3,6 @@ import { useEffect, useState, useRef } from "react";
 import { TouchableOpacity, View, Dimensions } from 'react-native';
 import { MapSwitch } from '@/src/shared/ui/map-switch/map-switch';
 import Text from '@/src/shared/ui/text/text';
-import { useNavigation } from '@react-navigation/native';
-
 
 import { customMapStyle } from '../config/map-styles';
 
@@ -12,10 +10,13 @@ import { useVisibleStore } from '@/src/shared/model/use-visible-store';
 import { useTypePointStore } from '../model/type-point-store';
 import { useMarkerPositionStore } from '../model/marker-position-store';
 import { useUserLocationStore } from '../model/user-location-store';
+import { useNavigation } from '@react-navigation/native';
+import { useMarkerStore } from '@/src/entities/markers/model/use-marker-store';
+import { useGetMe } from '@/src/entities/users/api/use-get-me';
+import { useMarkersData } from '@/src/entities/markers/api/use-markers-data';
 
 // icons
 import CenterMeIcon from '@/src/shared/icons/center-me-icon';
-import CrosshairIcon from '@/src/shared/icons/crosshair-icon';
 import BurgerIcon from '@/src/shared/icons/burger-icon';
 import StandardPointIcon from '@/src/shared/icons/standard-point-icon';
 import ChatPointIcon from '@/src/shared/icons/chat-point-icon';
@@ -34,6 +35,8 @@ type MarkerData = {
 };
 
 export const Map = () => {
+    const navigation = useNavigation()
+    const { data: me } = useGetMe()
     const { open } = useVisibleStore('point')
     const { type, setType } = useTypePointStore()
     const { markerPosition, setMarkerPosition } = useMarkerPositionStore()
@@ -42,6 +45,10 @@ export const Map = () => {
     const [selectedMarker, setSelectedMarker] = useState<MarkerData | null>(null);
     const [isCityView, setIsCityView] = useState(true);
     const mapRef = useRef<MapView>(null);
+
+    const { setLatitude, setLongitude, setType: setMarkerType, setIsPrivate, setOwnerId } = useMarkerStore()
+    const { data: markers, refetch } = useMarkersData()
+
 
     const getMarkerBorderColor = (pointType: string) => {
         switch (pointType) {
@@ -56,7 +63,6 @@ export const Map = () => {
         }
     }
 
-
     const savePoint = () => {
         if (markerPosition && type) {
             const pointName = `${type.charAt(0).toUpperCase() + type.slice(1)} Point`;
@@ -66,6 +72,8 @@ export const Map = () => {
                 type,
                 name: pointName
             };
+
+
 
             setSavedMarkers([...savedMarkers, newMarker]);
             setMarkerPosition(null);
@@ -82,6 +90,7 @@ export const Map = () => {
                 longitudeDelta: isCityView ? 0.01 : 0.2,
             });
         }
+        refetch()
     }, [isCityView, coordinate]);
 
     const renderedMarkerType = (markerType: string) => {
@@ -103,16 +112,28 @@ export const Map = () => {
             <MapView
                 ref={mapRef}
                 onLongPress={(e) => {
-                    // Allow point creation in both city and private view
                     const pressCoordinate = e.nativeEvent.coordinate;
-                    setType('');
+
                     setMarkerPosition(pressCoordinate);
-                    open();
+                    setLatitude(pressCoordinate.latitude);
+                    setLongitude(pressCoordinate.longitude);
+                    setIsPrivate(!isCityView);
+                    setOwnerId(me?.id ?? '')
+
+                    if (!isCityView) {
+                        setType('');
+                        open();
+                    } else {
+                        //@ts-ignore
+                        navigation.navigate("PrivatePointCreation" as never, {
+                            coordinate: pressCoordinate,
+                        });
+                    }
                 }}
                 style={{ width: width, height: height }}
                 region={region}
                 onRegionChangeComplete={setRegion}
-                showsUserLocation={(!markerPosition || !type) && savedMarkers.length === 0}
+                showsUserLocation={true}
                 showsMyLocationButton={false}
                 customMapStyle={customMapStyle}
                 mapType="standard"
@@ -129,18 +150,23 @@ export const Map = () => {
                         />
                     </Marker>
                 )}
-                {savedMarkers.map((marker, index) => (
+                {markers?.map((marker: any, index: number) => (
                     <Marker
-                        key={index}
-                        coordinate={marker}
+                        key={marker.id || index}
+                        coordinate={{ latitude: marker.latitude, longitude: marker.longitude }}
                         onPress={() => setSelectedMarker(marker)}
                     >
                         <View
                             className='bg-[#2E2E2E] w-[25px] h-[25px] border-[2px] rounded-full'
                             style={{ borderColor: getMarkerBorderColor(marker.type) }}
                         />
-                        <Callout tooltip>
-                            <View className='bg-[#272836] border-[2px] p-3 rounded-lg shadow-lg w-[200px]' style={{ borderColor: getMarkerBorderColor(marker.type) }}>
+                        <Callout tooltip onPress={() =>
+                            //@ts-ignore
+                            navigation.navigate("PointBio" as never, {
+                                id: marker?.id,
+                                ownerId: marker?.ownerId
+                            })}>
+                            <View className='bg-[#272836] border-[2px] p-3 rounded-lg shadow-lg w-[200px] h-24' style={{ borderColor: getMarkerBorderColor(marker.type) }}>
                                 <View className="absolute bottom-[5px] left-1/2 -translate-x-1/2">
                                     <View
                                         style={{
@@ -176,7 +202,7 @@ export const Map = () => {
                                 <View className='items-start w-full justify-between flex-row'>
                                     <View className='flex flex-col'>
                                         <View className='flex-row items-center mb-1'>
-                                            <Text weight="medium" className='text-white text-[20px]'>Point Name</Text>
+                                            <Text weight="medium" className='text-white text-[20px]'>{marker.name}</Text>
                                         </View>
                                         <Text weight="regular" className='text-[#817E7E] text-[12px]'>{renderedMarkerType(marker.type)}</Text>
                                     </View>
@@ -205,12 +231,6 @@ export const Map = () => {
                     onPress={() => centerOnUser()}
                 >
                     <CenterMeIcon />
-                </TouchableOpacity>
-                <TouchableOpacity
-                    activeOpacity={0.7}
-                    className="bg-white mt-4 w-14 h-14 rounded-full flex items-center justify-center shadow-lg"
-                >
-                    <CrosshairIcon />
                 </TouchableOpacity>
             </View>
             <ModalWrapper isBottomSheet children={<PointTypeContent isPrivateView={!isCityView} longPressCoordinate={markerPosition} />} storeKey='point' />
