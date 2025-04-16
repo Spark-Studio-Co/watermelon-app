@@ -6,21 +6,28 @@ import { Checkbox } from "@/src/shared/ui/checkbox/checkbox"
 import { useActiveStore } from "@/src/shared/model/use-active-store"
 
 interface IPointSettingsTab {
-    color: string
+    color: string | null
     description: string
-    defaultChoice: string
+    defaultChoice: string | null
+    onPress: () => void
+    label: string
 }
 
-export const RadiusColorTab = ({ color, description, defaultChoice }: IPointSettingsTab) => {
+export const RadiusColorTab = ({ color, description, defaultChoice, onPress, label }: IPointSettingsTab) => {
     const { setActive } = useActiveStore("radiusColor", defaultChoice)
 
+    const handleSetActive = () => {
+        setActive(color ?? '') // если null — сохраняем как пустую строку
+        onPress()
+    }
+
     return (
-        <Button className="flex flex-row justify-between items-center" onPress={() => setActive(color)}>
+        <Button className="flex flex-row justify-between items-center" onPress={handleSetActive}>
             <View className="flex flex-col">
-                <Text weight="regular" className="text-white text-[16px]">{color}</Text>
+                <Text weight="regular" className="text-white text-[16px]">{label}</Text>
                 <Text weight="regular" className="text-[#6B6B6B] text-[14px]">{description}</Text>
             </View>
-            <Checkbox activeItem={color} storeKey="radiusColor" />
+            <Checkbox activeItem={color ?? ''} storeKey="radiusColor" />
         </Button>
     )
 }

@@ -1,4 +1,4 @@
-import MapView, { Marker, Callout } from 'react-native-maps';
+import MapView, { Marker, Callout, Circle } from 'react-native-maps';
 import { useEffect, useState, useRef } from "react";
 import { TouchableOpacity, View, Dimensions } from 'react-native';
 import { MapSwitch } from '@/src/shared/ui/map-switch/map-switch';
@@ -106,14 +106,12 @@ export const Map = () => {
         }
     }
 
-
     return (
         <View style={{ width: width, height: height }}>
             <MapView
                 ref={mapRef}
                 onLongPress={(e) => {
                     const pressCoordinate = e.nativeEvent.coordinate;
-
                     setMarkerPosition(pressCoordinate);
                     setLatitude(pressCoordinate.latitude);
                     setLongitude(pressCoordinate.longitude);
@@ -142,6 +140,18 @@ export const Map = () => {
                 showsTraffic={false}
                 showsIndoors={false}
             >
+                {markers?.map((marker: any, index: number) => (
+                    marker.radius ? (
+                        <Circle
+                            key={`circle-${index}`}
+                            center={{ latitude: marker.latitude, longitude: marker.longitude }}
+                            radius={marker.radius.value}
+                            strokeColor="#FFFFFF"
+                            fillColor={marker.radius.color || 'rgba(255,255,255,0.2)'}
+                            strokeWidth={2}
+                        />
+                    ) : null
+                ))}
                 {markerPosition && type && (
                     <Marker coordinate={markerPosition}>
                         <View

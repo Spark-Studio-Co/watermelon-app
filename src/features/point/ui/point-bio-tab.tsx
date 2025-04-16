@@ -14,7 +14,6 @@ import { useUpdateMarker } from "@/src/entities/markers/api/use-update-marker";
 import { useMarkerStore } from "@/src/entities/markers/model/use-marker-store";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMarkerDataById } from "@/src/entities/markers/api/use-marker-data-by-id";
-import { useState } from "react";
 
 interface IPointBioTab {
     pointname: string
