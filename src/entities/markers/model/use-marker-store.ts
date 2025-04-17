@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-import { ICreateMarkerDTO } from "../api/rdo/create-marker.dto";
+import { ICreateMarkerDTO } from "../api/dto/create-marker.dto";
 
 interface IMarkerStore extends ICreateMarkerDTO {
     setType: (type: string) => void;

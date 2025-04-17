@@ -1,16 +1,13 @@
 import { View } from 'react-native'
 import { MainLayout } from '../../layouts/main-layout'
-import Text from '@/src/shared/ui/text/text'
-import { LevelTab } from '@/src/features/tasks/ui/level-tab'
-import { Button } from '@/src/shared/ui/button/button'
+
 
 import { useActiveStore } from '@/src/shared/model/use-active-store'
 import { TaskCard } from '@/src/features/tasks/ui/task-card'
 
 export const TasksScreen = () => {
-    const { active, setActive } = useActiveStore('tasks', 'Coins')
+    const { active } = useActiveStore('tasks', 'Coins')
 
-    const categories = ["Coins", 'Exp', 'Boost']
 
     const tasksData = [
         {

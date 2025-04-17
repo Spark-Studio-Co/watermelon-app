@@ -33,6 +33,7 @@ import { useCameraStore } from "@/src/widget/camera/model/camera-store"
 import { useMarkerDataById } from "@/src/entities/markers/api/use-marker-data-by-id"
 import { useGetMe } from "@/src/entities/users/api/use-get-me"
 import { useMarkerStore } from "@/src/entities/markers/model/use-marker-store"
+import { useUploadImage } from "@/src/entities/markers/api/use-upload-image"
 
 type PointBioRouteProp = {
     route: RouteProp<any, any>
@@ -45,7 +46,7 @@ type RouteParams = {
 
 export const PointBioScreen = ({ route }: PointBioRouteProp) => {
     const { id, ownerId } = route.params as RouteParams
-
+    const { mutate: uploadImage } = useUploadImage()
     const { setId } = useMarkerStore()
 
     useEffect(() => {
@@ -65,6 +66,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
     const [permission, requestPermission] = useCameraPermissions();
     const { image, clearImage } = useCameraStore('post')
     const { setImage } = useCameraStore('fullPost')
+    const [caption, setCaption] = useState('');
     const [images, setImages] = useState<any[]>([
         { uri: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=687&q=80' },
         { uri: 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80' },
@@ -105,11 +107,23 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
     };
 
     const createPost = () => {
+        const formData = new FormData();
+
         if (image) {
             setImages(prev => [...prev, { uri: image }]);
+
+            formData.append('caption', caption);
+            formData.append('image', image);
+            formData.append('markerId', id);
+
+            console.log(formData)
+
+            uploadImage(formData)
+
             setTimeout(() => {
                 clearImage()
-            }, 300)
+            }, 500)
+
             setActive("Публикации");
         }
     }
@@ -218,7 +232,9 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
                         <Input
                             ref={bioInputRef}
                             returnKeyType="done"
+                            value={caption}
                             multiline
+                            onChangeText={setCaption}
                             placeholder="Ваше сообщение..."
                             className="placeholder:text-[#5C5A5A] text-[#5C5A5A] text-[20px] px-6 mt-6 pt-6 border-[1px] h-[156px] border-[#999999] rounded-[15px] w-full"
                             onSubmitEditing={() => {
