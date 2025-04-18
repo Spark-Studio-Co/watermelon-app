@@ -11,6 +11,9 @@ import DarkBurgerIcon from '@/src/shared/icons/dark-burger-icon'
 
 import { useActiveStore } from '@/src/shared/model/use-active-store'
 import { useAuctionsData } from '@/src/entities/auction/api/use-auctions-data'
+import { useQueryClient } from '@tanstack/react-query'
+
+import { AuctionSort } from '@/src/entities/auction/types/auction-sort.t'
 
 const tabs = [
     "New",
@@ -18,48 +21,6 @@ const tabs = [
     "My bet"
 ]
 
-const newPointTabs = [
-    {
-        type: "Premium",
-        name: "Rio de Janeiro",
-        subscribers: 787,
-        views: 123
-    },
-    {
-        type: "Chat",
-        name: "El Diablo",
-        members: 123
-    },
-    {
-        type: "Standard",
-        name: "New York"
-
-    },
-    {
-        type: "Premium",
-        name: "Rio de Janeiro"
-    },
-    {
-        type: "Chat",
-        name: "El Diablo"
-    },
-    {
-        type: "Standard",
-        name: "New York"
-    },
-    {
-        type: "Premium",
-        name: "Rio de Janeiro"
-    },
-    {
-        type: "Chat",
-        name: "El Diablo"
-    },
-    {
-        type: "Standard",
-        name: "New York"
-    },
-]
 
 const onSoldPointTabs = [
     {
@@ -146,10 +107,22 @@ const myBetPointTabs = [
 ]
 
 const filterOptions = [
-    "by range",
-    "on last time",
-    "on low bit",
-    "on hight bit"
+    {
+        label: "by range",
+        filter: null
+    },
+    {
+        label: "on last time",
+        filter: "lastTime"
+    },
+    {
+        label: "on low bid",
+        filter: "lowBid"
+    },
+    {
+        label: "on high bid",
+        filter: "highBid"
+    }
 ]
 
 const styles = StyleSheet.create({
@@ -193,7 +166,9 @@ const styles = StyleSheet.create({
 })
 
 export const AuctionScreen = () => {
-    const { data: auctions } = useAuctionsData()
+    const queryClient = useQueryClient()
+    const [filterMethod, setFilterMethod] = useState<AuctionSort | null>()
+    const { data: auctions, isLoading } = useAuctionsData(undefined, filterMethod)
     const navigation = useNavigation()
     const { active, toggle } = useActiveStore('auction', 'New')
     const [modalVisible, setModalVisible] = useState(false)
@@ -202,11 +177,6 @@ export const AuctionScreen = () => {
     const toggleModal = () => {
         setModalVisible(!modalVisible)
     }
-
-    useEffect(() => {
-        console.log(auctions)
-    }, [active])
-
 
     return (
         <MainLayout isScrollable={false}>
@@ -229,51 +199,52 @@ export const AuctionScreen = () => {
                         </View>
                     ))}
                 </View>
-                <ScrollView
-                    className="mt-7"
-                    showsVerticalScrollIndicator={false}
-                >
-                    {active === 'New' && auctions?.map((auction: any, index: number) => (
-                        <Button key={index} variant='custom' onPress={() => navigation.navigate('AuctionInner' as never)}>
-                            <View className="mb-4">
+                {isLoading ? <View className='flex items-center justify-center w-full h-[90%]'><Text className='text-white text-[20px]'>Loading...</Text></View> :
+                    <ScrollView
+                        className="mt-7"
+                        showsVerticalScrollIndicator={false}
+                    >
+                        {active === 'New' && Array.isArray(auctions) && auctions?.map((auction: any, index: number) => (
+                            <Button key={index} variant='custom' onPress={() => navigation.navigate('AuctionInner' as never)}>
+                                <View className="mb-4">
+                                    <PointTab
+                                        status={active}
+                                        type={auction.marker?.type}
+                                        name={`Point #${index + 1}`}
+                                        subscribers={auction.subscribers}
+                                        views={auction.views}
+                                        members={auction.members}
+                                    />
+                                </View>
+                            </Button>
+                        ))}
+
+                        {active === 'On sold' && onSoldPointTabs.map((tab, index) => (
+                            <View key={index} className="mb-4">
                                 <PointTab
                                     status={active}
-                                    type={auction.marker?.type}
-                                    name={auction.marker?.name}
-                                    subscribers={auction.subscribers}
-                                    views={auction.views}
-                                    members={auction.members}
+                                    type={tab.type}
+                                    name={tab.name}
+                                    subscribers={tab.subscribers}
+                                    views={tab.views}
+                                    members={tab.members}
                                 />
                             </View>
-                        </Button>
-                    ))}
+                        ))}
 
-                    {active === 'On sold' && onSoldPointTabs.map((tab, index) => (
-                        <View key={index} className="mb-4">
-                            <PointTab
-                                status={active}
-                                type={tab.type}
-                                name={tab.name}
-                                subscribers={tab.subscribers}
-                                views={tab.views}
-                                members={tab.members}
-                            />
-                        </View>
-                    ))}
-
-                    {active === 'My bet' && myBetPointTabs.map((tab, index) => (
-                        <View key={index} className="mb-4">
-                            <PointTab
-                                status={active}
-                                type={tab.type}
-                                name={tab.name}
-                                subscribers={tab.subscribers}
-                                views={tab.views}
-                                members={tab.members}
-                            />
-                        </View>
-                    ))}
-                </ScrollView>
+                        {active === 'My bet' && myBetPointTabs.map((tab, index) => (
+                            <View key={index} className="mb-4">
+                                <PointTab
+                                    status={active}
+                                    type={tab.type}
+                                    name={tab.name}
+                                    subscribers={tab.subscribers}
+                                    views={tab.views}
+                                    members={tab.members}
+                                />
+                            </View>
+                        ))}
+                    </ScrollView>}
             </View>
 
             <Modal
@@ -293,12 +264,18 @@ export const AuctionScreen = () => {
                                 key={index}
                                 style={styles.optionRow}
                                 onPress={() => {
+                                    setFilterMethod(option.filter as AuctionSort | null)
                                     setSelectedFilter(index)
+
+                                    queryClient.invalidateQueries({
+                                        queryKey: ['auctions']
+                                    })
+
                                     toggleModal()
                                 }}
                             >
                                 <View style={[styles.radioButton, selectedFilter === index && styles.radioButtonSelected]} />
-                                <Text weight="regular" className="text-black text-[16px] ml-3">{option}</Text>
+                                <Text weight="regular" className="text-black text-[16px] ml-3">{option.label}</Text>
                             </TouchableOpacity>
                         ))}
                     </View>

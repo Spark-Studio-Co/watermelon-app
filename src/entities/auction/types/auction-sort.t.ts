@@ -1,0 +1,1 @@
+export type AuctionSort = "lastTime" | "lowBid" | "highBid"

@@ -1,5 +1,6 @@
 import { MainLayout } from "../../layouts/main-layout"
 import { View, TouchableOpacity, Image, Keyboard } from "react-native"
+import * as ImagePicker from 'expo-image-picker';
 import { ModalWrapper } from "@/src/shared/ui/modal-wrapper/modal-wrapper"
 import Text from "@/src/shared/ui/text/text"
 import { PointBioTab } from "@/src/features/point/ui/point-bio-tab"
@@ -35,6 +36,7 @@ import { useGetMe } from "@/src/entities/users/api/use-get-me"
 import { useMarkerStore } from "@/src/entities/markers/model/use-marker-store"
 import { useUploadImage } from "@/src/entities/markers/api/use-upload-image"
 import { usePrivatePublicationsData } from "@/src/entities/markers/api/use-private-publications-data"
+import { useQueryClient } from "@tanstack/react-query";
 
 type PointBioRouteProp = {
     route: RouteProp<any, any>
@@ -47,6 +49,7 @@ type RouteParams = {
 }
 
 export const PointBioScreen = ({ route }: PointBioRouteProp) => {
+    const queryClient = useQueryClient()
     const { id, ownerId, isPrivate } = route.params as RouteParams
     const { data: publications, isLoading } = usePrivatePublicationsData(id)
     const { mutate: uploadImage } = useUploadImage()
@@ -63,13 +66,15 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
     const bioInputRef = useRef(null);
     const navigation = useNavigation()
     const { open: openPost } = useVisibleStore("post")
+    const { open: openChoice, close: closeChoice } = useVisibleStore("cameraChoice")
+    const [photoUri, setPhotoUri] = useState<string | null>(null);
     const { active, setActive } = useActiveStore("pointBio", 'bio')
     const { subscribed, setSubscribed } = usePointBioStore()
     const { open } = useVisibleStore("pointBio")
     const { open: openSettings } = useVisibleStore("pointSettings")
     const [permission, requestPermission] = useCameraPermissions();
-    const { image, clearImage } = useCameraStore('post')
-    const { setImage } = useCameraStore('fullPost')
+    const { image, setImage: setPostImage, clearImage } = useCameraStore('post')
+    const { setImage: setFullPostImage } = useCameraStore('fullPost')
     const [caption, setCaption] = useState('');
 
 
@@ -95,18 +100,46 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
     const openCamera = async () => {
         const { granted } = await requestPermission();
         if (granted) {
+            closeChoice()
             openPost()
         } else {
             console.log('Camera permission not granted');
         }
     };
 
+    const pickImage = async () => {
+        let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: false, // ❌ отключаем кроп
+            quality: 1, // максимальное качество
+            base64: false, // можно true, если хочешь получить base64
+            exif: false
+        });
+        closeChoice()
+
+        if (!result.canceled && result.assets?.length) {
+            setPostImage(result.assets[0].uri);
+        } else {
+            setPostImage(null);
+        }
+    }
+
     const createPost = () => {
         const formData = new FormData();
 
-        if (image) {
+        const photoToSend = photoUri || image;
+        if (photoToSend) {
+            const fileName = photoToSend.split("/").pop() || "photo.jpg";
+            const fileType = fileName.split(".").pop();
+            const mimeType = `image/${fileType}`;
+
+            formData.append("image", {
+                uri: photoToSend,
+                name: fileName,
+                type: mimeType,
+            } as any);
+
             formData.append('caption', caption);
-            formData.append('image', image);
             formData.append('markerId', id);
 
             console.log(formData)
@@ -115,7 +148,12 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
 
             setTimeout(() => {
                 clearImage()
+                setPhotoUri(null)
             }, 500)
+
+            queryClient.invalidateQueries({
+                queryKey: "private-publications"
+            })
 
             setActive("Публикации");
         }
@@ -201,22 +239,29 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
                 }
                 {
                     active === 'Публикации' &&
-                    (publications === null ? <Text className="text-white mt-1 text-[13.82px] w-[80%]">No publications</Text> : <MasonryList
-                        images={alternatingHeightsImages}
-                        columns={2}
-                        spacing={2}
-                        backgroundColor="transparent"
-                        imageContainerStyle={{ borderRadius: 23.03 }}
-                        onPressImage={(item: any, index: number) => {
-                            console.log("🖼️ Clicked item:", item);
-                            setImage(item.uri);
-                            //@ts-ignore
-                            navigation.navigate("FullPost" as never, {
-                                index,
-                                storeKey: 'pointBio'
-                            });
-                        }}
-                    />)
+                    (!publications || publications.length === 0 ?
+                        <View className="flex items-center justify-center w-full h-full">
+                            <Text className="text-white text-[16px]">No publications</Text>
+                        </View> :
+                        isLoading ? <View className="flex items-center justify-center w-full h-full">
+                            <Text className="text-white text-[16px]">Loading...</Text>
+                        </View>
+                            : <MasonryList
+                                images={alternatingHeightsImages}
+                                columns={2}
+                                spacing={2}
+                                backgroundColor="transparent"
+                                imageContainerStyle={{ borderRadius: 23.03 }}
+                                onPressImage={(item: any, index: number) => {
+                                    console.log("📸️ Clicked item:", item);
+                                    setFullPostImage(item.uri);
+                                    //@ts-ignore
+                                    navigation.navigate("FullPost" as never, {
+                                        index,
+                                        storeKey: 'pointBio'
+                                    });
+                                }}
+                            />)
                 }
                 {
                     active === 'post' &&
@@ -241,7 +286,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
                             <View className="mt-7 flex flex-col items-center gap-y-5">
                                 <Text weight="bold" className="text-white text-[24px]">Add photo</Text>
                                 <Button
-                                    onPress={openCamera}
+                                    onPress={openChoice}
                                     variant="custom"
                                     className="bg-[#1B1C1E] flex items-center justify-center border border-[#222328] rounded-[15px] w-[100px] h-[100px]"
                                     style={{ boxShadow: '0px 4px 4px 0px #00000040' }}
@@ -274,7 +319,19 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
             <ModalWrapper storeKey="pointBioSettings" isMini className="w-[90%] -top-8">
                 <PointBioSettings />
             </ModalWrapper>
-            <CameraModalWidget storeKey="post" />
+            <ModalWrapper storeKey="cameraChoice">
+                <View className=" bg-[#38373A] w-[90%] px-8 rounded-lg">
+                    <View className="flex flex-row items-center justify-between w-[100%] h-[200px]">
+                        <Button className="bg-[#27262A] px-4 py-3 rounded-md" onPress={openCamera}>
+                            <Text weight="medium" className="text-white">Make a photo</Text>
+                        </Button>
+                        <Button className="bg-[#27262A] px-4 py-3 rounded-md" onPress={pickImage}>
+                            <Text weight="medium" className="text-white">Pick from gallery</Text>
+                        </Button>
+                    </View>
+                </View>
+            </ModalWrapper>
+            <CameraModalWidget storeKey="post" onPhotoTaken={(uri) => setPhotoUri(uri)} />
         </MainLayout >
     )
 }
