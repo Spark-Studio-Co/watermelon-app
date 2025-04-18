@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { MainLayout } from '../../layouts/main-layout'
 import { ScrollView, View, Modal, TouchableOpacity, StyleSheet } from 'react-native'
 import Text from '@/src/shared/ui/text/text'
@@ -10,6 +10,7 @@ import { Button } from '@/src/shared/ui/button/button'
 import DarkBurgerIcon from '@/src/shared/icons/dark-burger-icon'
 
 import { useActiveStore } from '@/src/shared/model/use-active-store'
+import { useAuctionsData } from '@/src/entities/auction/api/use-auctions-data'
 
 const tabs = [
     "New",
@@ -192,6 +193,7 @@ const styles = StyleSheet.create({
 })
 
 export const AuctionScreen = () => {
+    const { data: auctions } = useAuctionsData()
     const navigation = useNavigation()
     const { active, toggle } = useActiveStore('auction', 'New')
     const [modalVisible, setModalVisible] = useState(false)
@@ -200,6 +202,11 @@ export const AuctionScreen = () => {
     const toggleModal = () => {
         setModalVisible(!modalVisible)
     }
+
+    useEffect(() => {
+        console.log(auctions)
+    }, [active])
+
 
     return (
         <MainLayout isScrollable={false}>
@@ -226,16 +233,16 @@ export const AuctionScreen = () => {
                     className="mt-7"
                     showsVerticalScrollIndicator={false}
                 >
-                    {active === 'New' && newPointTabs.map((tab, index) => (
+                    {active === 'New' && auctions?.map((auction: any, index: number) => (
                         <Button key={index} variant='custom' onPress={() => navigation.navigate('AuctionInner' as never)}>
                             <View className="mb-4">
                                 <PointTab
                                     status={active}
-                                    type={tab.type}
-                                    name={tab.name}
-                                    subscribers={tab.subscribers}
-                                    views={tab.views}
-                                    members={tab.members}
+                                    type={auction.marker?.type}
+                                    name={auction.marker?.name}
+                                    subscribers={auction.subscribers}
+                                    views={auction.views}
+                                    members={auction.members}
                                 />
                             </View>
                         </Button>

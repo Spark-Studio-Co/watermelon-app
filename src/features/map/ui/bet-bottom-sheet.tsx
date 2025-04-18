@@ -6,13 +6,19 @@ import { Input } from "@/src/shared/ui/input/input"
 
 import { useVisibleStore } from "@/src/shared/model/use-visible-store"
 import { useActiveStore } from "@/src/shared/model/use-active-store"
-import { useTypePointStore } from "../model/type-point-store"
 import { useEffect, useState, useRef } from "react"
+import { useMarkerStore } from "@/src/entities/markers/model/use-marker-store"
+import { useCreateMarker } from "@/src/entities/markers/api/use-create-marker"
+import { useGetMe } from "@/src/entities/users/api/use-get-me"
+import { useQueryClient } from "@tanstack/react-query"
 
-export const BetBottomContent = ({ onSavePoint }: { onSavePoint: () => void }) => {
+export const BetBottomContent = () => {
+    const queryClient = useQueryClient()
+    const { data: me } = useGetMe()
     const { close } = useVisibleStore('bet')
     const { active, toggle } = useActiveStore('bet', '')
-    const { type, setType } = useTypePointStore()
+    const { mutate: createPoint } = useCreateMarker();
+    const { setStartBet, type, latitude, longitude, isPrivate } = useMarkerStore()
     const [activeBet, setActiveBet] = useState('')
     const [value, setValue] = useState('')
     const [isBetSet, setIsBetSet] = useState(false)
@@ -22,8 +28,30 @@ export const BetBottomContent = ({ onSavePoint }: { onSavePoint: () => void }) =
 
     const handleMakeBet = () => {
         if (isBetSet && type && (activeBet || value)) {
+            const data = new FormData();
+
+            data.append("type", type);
+            data.append("startingBid", String((activeBet || value).replace(/[^0-9.]/g, '').trim()));
+            if (latitude) data.append("latitude", String(latitude));
+            if (longitude) data.append("longitude", String(longitude));
+            data.append("ownerId", String(me?.id));
+            data.append("isPrivate", String(isPrivate));
+
+            console.log("🚀 ~ handleMakeBet ~ data:", data)
+
+            createPoint(data, {
+                onSuccess: (data: any) => {
+                    console.log("✅ Маркер успешно создан!", data);
+                    queryClient.invalidateQueries({
+                        queryKey: 'markers'
+                    })
+                },
+                onError: (error) => {
+                    console.error("❌ Ошибка при создании маркера:", error.response);
+                }
+            });
+
             hasMadeBet.current = true;
-            onSavePoint()
             setTimeout(() => close(), 500)
         }
     }
@@ -42,15 +70,6 @@ export const BetBottomContent = ({ onSavePoint }: { onSavePoint: () => void }) =
             setIsBetSet(false);
         }
     }, [value, active]);
-
-    useEffect(() => {
-        return () => {
-            if (!hasMadeBet.current) {
-                setType('');
-            }
-            hasMadeBet.current = false;
-        };
-    }, []);
 
     return (
         <View className="flex items-center flex-col h-[305px] w-[95%] mx-auto">

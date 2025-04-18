@@ -37,18 +37,22 @@ type MarkerData = {
 export const Map = () => {
     const navigation = useNavigation()
     const { data: me } = useGetMe()
-    const { open } = useVisibleStore('point')
+    const { open: openPointType } = useVisibleStore('pointType')
     const { type, setType } = useTypePointStore()
     const { markerPosition, setMarkerPosition } = useMarkerPositionStore()
     const { region, setRegion, centerOnUser, coordinate } = useUserLocationStore()
     const [savedMarkers, setSavedMarkers] = useState<MarkerData[]>([]);
     const [selectedMarker, setSelectedMarker] = useState<MarkerData | null>(null);
-    const [isCityView, setIsCityView] = useState(true);
+    const [isPrivate, setIsPrivate] = useState(true);
     const mapRef = useRef<MapView>(null);
 
-    const { setLatitude, setLongitude, setType: setMarkerType, setIsPrivate, setOwnerId } = useMarkerStore()
+    const { setLatitude, setLongitude, setType: setMarkerType, setIsPrivate: setMarkerIsPrivate, setOwnerId } = useMarkerStore()
     const { data: markers, refetch } = useMarkersData()
 
+    const privateMarkers = markers?.filter((marker: any) => marker.isPrivate === true)
+    const publicMarkers = markers?.filter((marker: any) => marker.isPrivate === false)
+
+    const markersList = isPrivate ? privateMarkers : publicMarkers;
 
     const getMarkerBorderColor = (pointType: string) => {
         switch (pointType) {
@@ -74,7 +78,6 @@ export const Map = () => {
             };
 
 
-
             setSavedMarkers([...savedMarkers, newMarker]);
             setMarkerPosition(null);
             setType('');
@@ -86,12 +89,12 @@ export const Map = () => {
             setRegion({
                 latitude: coordinate.latitude,
                 longitude: coordinate.longitude,
-                latitudeDelta: isCityView ? 0.01 : 0.2,
-                longitudeDelta: isCityView ? 0.01 : 0.2,
+                latitudeDelta: isPrivate ? 0.01 : 0.2,
+                longitudeDelta: isPrivate ? 0.01 : 0.2,
             });
         }
         refetch()
-    }, [isCityView, coordinate]);
+    }, [isPrivate, coordinate]);
 
     const renderedMarkerType = (markerType: string) => {
         switch (markerType) {
@@ -106,6 +109,8 @@ export const Map = () => {
         }
     }
 
+    const isWin = markers?.auctions?.some((auction: any) => auction.winnerId === null)
+
     return (
         <View style={{ width: width, height: height }}>
             <MapView
@@ -115,12 +120,11 @@ export const Map = () => {
                     setMarkerPosition(pressCoordinate);
                     setLatitude(pressCoordinate.latitude);
                     setLongitude(pressCoordinate.longitude);
-                    setIsPrivate(!isCityView);
+                    setMarkerIsPrivate(isPrivate);
                     setOwnerId(me?.id ?? '')
 
-                    if (!isCityView) {
-                        setType('');
-                        open();
+                    if (!isPrivate) {
+                        openPointType();
                     } else {
                         //@ts-ignore
                         navigation.navigate("PrivatePointCreation" as never, {
@@ -143,7 +147,7 @@ export const Map = () => {
                 {markers?.map((marker: any, index: number) => (
                     marker.radius ? (
                         <Circle
-                            key={`circle-${index}`}
+                            key={`circle-${marker.id ?? index}`}
                             center={{ latitude: marker.latitude, longitude: marker.longitude }}
                             radius={marker.radius.value}
                             strokeColor="#FFFFFF"
@@ -160,71 +164,73 @@ export const Map = () => {
                         />
                     </Marker>
                 )}
-                {markers?.map((marker: any, index: number) => (
+                {Array.isArray(markersList) && markersList?.map((marker: any, index: number) => (
                     <Marker
-                        key={marker.id || index}
+                        key={`marker-${marker.id ?? index}`}
                         coordinate={{ latitude: marker.latitude, longitude: marker.longitude }}
                         onPress={() => setSelectedMarker(marker)}
                     >
                         <View
                             className='bg-[#2E2E2E] w-[25px] h-[25px] border-[2px] rounded-full'
-                            style={{ borderColor: getMarkerBorderColor(marker.type) }}
+                            style={{ borderColor: !isWin && !isPrivate ? 'gray' : getMarkerBorderColor(marker.type) }}
                         />
-                        <Callout tooltip onPress={() =>
-                            //@ts-ignore
-                            navigation.navigate("PointBio" as never, {
-                                id: marker?.id,
-                                ownerId: marker?.ownerId
-                            })}>
-                            <View className='bg-[#272836] border-[2px] p-3 rounded-lg shadow-lg w-[200px] h-24' style={{ borderColor: getMarkerBorderColor(marker.type) }}>
-                                <View className="absolute bottom-[5px] left-1/2 -translate-x-1/2">
-                                    <View
-                                        style={{
-                                            position: 'absolute',
-                                            top: 0,
-                                            left: 0,
-                                            width: 0,
-                                            height: 0,
-                                            borderLeftWidth: 14,
-                                            borderRightWidth: 14,
-                                            borderTopWidth: 14,
-                                            borderLeftColor: 'transparent',
-                                            borderRightColor: 'transparent',
-                                            borderTopColor: getMarkerBorderColor(marker.type)
-                                        }}
-                                    />
-                                    <View
-                                        style={{
-                                            position: 'absolute',
-                                            top: 1.8,
-                                            left: 4,
-                                            width: 0,
-                                            height: 0,
-                                            borderLeftWidth: 10,
-                                            borderRightWidth: 10,
-                                            borderTopWidth: 10,
-                                            borderLeftColor: 'transparent',
-                                            borderRightColor: 'transparent',
-                                            borderTopColor: '#272836',
-                                        }}
-                                    />
-                                </View>
-                                <View className='items-start w-full justify-between flex-row'>
-                                    <View className='flex flex-col'>
-                                        <View className='flex-row items-center mb-1'>
-                                            <Text weight="medium" className='text-white text-[20px]'>{marker.name}</Text>
-                                        </View>
-                                        <Text weight="regular" className='text-[#817E7E] text-[12px]'>{renderedMarkerType(marker.type)}</Text>
+                        {!isWin && !isPrivate ? null : (
+                            <Callout tooltip onPress={() =>
+                                //@ts-ignore
+                                navigation.navigate("PointBio" as never, {
+                                    id: marker?.id,
+                                    ownerId: marker?.ownerId,
+                                    isPrivate: marker?.isPrivate
+                                })}>
+                                <View className='bg-[#272836] border-[2px] p-3 rounded-lg shadow-lg w-[200px] min-h-24' style={{ borderColor: getMarkerBorderColor(marker.type) }}>
+                                    <View className="absolute bottom-[5px] left-1/2 -translate-x-1/2">
+                                        <View
+                                            style={{
+                                                position: 'absolute',
+                                                top: 0,
+                                                left: 0,
+                                                width: 0,
+                                                height: 0,
+                                                borderLeftWidth: 14,
+                                                borderRightWidth: 14,
+                                                borderTopWidth: 14,
+                                                borderLeftColor: 'transparent',
+                                                borderRightColor: 'transparent',
+                                                borderTopColor: getMarkerBorderColor(marker.type)
+                                            }}
+                                        />
+                                        <View
+                                            style={{
+                                                position: 'absolute',
+                                                top: 1.8,
+                                                left: 4,
+                                                width: 0,
+                                                height: 0,
+                                                borderLeftWidth: 10,
+                                                borderRightWidth: 10,
+                                                borderTopWidth: 10,
+                                                borderLeftColor: 'transparent',
+                                                borderRightColor: 'transparent',
+                                                borderTopColor: '#272836',
+                                            }}
+                                        />
                                     </View>
-                                    {marker.type === 'standard' ? <StandardPointIcon /> : marker.type === 'chat' ? <ChatPointIcon /> : null}
+                                    <View className='items-start w-full justify-between flex-row'>
+                                        <View className='flex flex-col'>
+                                            <View className='flex-row items-center mb-1'>
+                                                <Text weight="medium" className='text-white text-[20px]'>{marker.name}</Text>
+                                            </View>
+                                            <Text weight="regular" className='text-[#817E7E] text-[12px]'>{renderedMarkerType(marker.type)}</Text>
+                                        </View>
+                                        {marker.type === 'standard' ? <StandardPointIcon /> : marker.type === 'chat' ? <ChatPointIcon /> : null}
+                                    </View>
                                 </View>
-                            </View>
-                        </Callout>
+                            </Callout>)}
                     </Marker>
                 ))}
             </MapView>
             <View className="absolute top-14 left-1/2 -translate-x-1/2">
-                <MapSwitch switched={isCityView} onSwitch={setIsCityView} />
+                <MapSwitch switched={isPrivate} onSwitch={setIsPrivate} />
             </View>
             <View className='absolute left-4 top-14'>
                 <TouchableOpacity
@@ -243,8 +249,8 @@ export const Map = () => {
                     <CenterMeIcon />
                 </TouchableOpacity>
             </View>
-            <ModalWrapper isBottomSheet children={<PointTypeContent isPrivateView={!isCityView} longPressCoordinate={markerPosition} />} storeKey='point' />
-            <ModalWrapper isBottomSheet children={<BetBottomContent onSavePoint={savePoint} />} storeKey='bet' />
+            <ModalWrapper isBottomSheet children={<PointTypeContent isPrivateView={!isPrivate} longPressCoordinate={markerPosition} />} storeKey='pointType' />
+            <ModalWrapper isBottomSheet children={<BetBottomContent />} storeKey='bet' />
         </View>
     )
 }

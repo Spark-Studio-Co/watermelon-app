@@ -2,9 +2,11 @@ import Text from "@/src/shared/ui/text/text"
 import { View } from "react-native"
 import { Button } from "@/src/shared/ui/button/button"
 
-import { useTypePointStore } from "../model/type-point-store"
 import { useVisibleStore } from "@/src/shared/model/use-visible-store"
 import { useNavigation } from "@react-navigation/native"
+
+import { useMarkerStore } from "@/src/entities/markers/model/use-marker-store"
+import { useEffect } from "react"
 
 type PointTypeContentProps = {
     isPrivateView: boolean;
@@ -17,9 +19,16 @@ type PointTypeContentProps = {
 export const PointTypeContent = ({ isPrivateView, longPressCoordinate }: PointTypeContentProps) => {
     const navigation = useNavigation()
     const { open } = useVisibleStore('bet')
-    const { close } = useVisibleStore('point')
-    const { setType } = useTypePointStore()
+    const { close } = useVisibleStore('pointType')
 
+    const { setLatitude, setLongitude, setType } = useMarkerStore()
+
+    useEffect(() => {
+        if (longPressCoordinate) {
+            setLatitude(longPressCoordinate.latitude)
+            setLongitude(longPressCoordinate.longitude)
+        }
+    }, [longPressCoordinate])
 
     const buttons = [
         {

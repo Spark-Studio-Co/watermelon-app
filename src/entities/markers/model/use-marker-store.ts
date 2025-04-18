@@ -3,6 +3,7 @@ import { create } from "zustand";
 import { ICreateMarkerDTO } from "../api/dto/create-marker.dto";
 
 interface IMarkerStore extends ICreateMarkerDTO {
+    setStartBet: (startBet: number) => void;
     setType: (type: string) => void;
     setLatitude: (value: number | null) => void;
     setLongitude: (value: number | null) => void;
@@ -14,7 +15,8 @@ interface IMarkerStore extends ICreateMarkerDTO {
     setRadiusColor: (radiusColor: string | undefined) => void;
     setImage: (image: any | undefined) => void;
     setId: (id: string) => void
-    id: string
+    id: string,
+    startBet: number | null,
     reset: () => void;
 }
 
@@ -35,7 +37,9 @@ export const useMarkerStore = create<IMarkerStore>((set) => ({
     ...initialState,
 
     id: '',
+    startBet: null,
     setId: (id: string) => set({ id }),
+    setStartBet: (startBet: number) => set({ startBet }),
     setType: (type) => set({ type }),
     setLatitude: (value) => set({ latitude: value }),
     setLongitude: (value) => set({ longitude: value }),

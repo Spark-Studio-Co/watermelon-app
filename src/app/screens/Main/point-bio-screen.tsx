@@ -34,6 +34,7 @@ import { useMarkerDataById } from "@/src/entities/markers/api/use-marker-data-by
 import { useGetMe } from "@/src/entities/users/api/use-get-me"
 import { useMarkerStore } from "@/src/entities/markers/model/use-marker-store"
 import { useUploadImage } from "@/src/entities/markers/api/use-upload-image"
+import { usePrivatePublicationsData } from "@/src/entities/markers/api/use-private-publications-data"
 
 type PointBioRouteProp = {
     route: RouteProp<any, any>
@@ -42,15 +43,18 @@ type PointBioRouteProp = {
 type RouteParams = {
     id: string;
     ownerId: string
+    isPrivate: boolean
 }
 
 export const PointBioScreen = ({ route }: PointBioRouteProp) => {
-    const { id, ownerId } = route.params as RouteParams
+    const { id, ownerId, isPrivate } = route.params as RouteParams
+    const { data: publications, isLoading } = usePrivatePublicationsData(id)
     const { mutate: uploadImage } = useUploadImage()
-    const { setId } = useMarkerStore()
+    const { setId, setIsPrivate } = useMarkerStore()
 
     useEffect(() => {
         setId(id)
+        setIsPrivate(isPrivate)
     }, [id])
 
     const { data: marker } = useMarkerDataById(id)
@@ -67,26 +71,17 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
     const { image, clearImage } = useCameraStore('post')
     const { setImage } = useCameraStore('fullPost')
     const [caption, setCaption] = useState('');
-    const [images, setImages] = useState<any[]>([
-        { uri: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=687&q=80' },
-        { uri: 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80' },
-        { uri: 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80' },
-        { uri: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=687&q=80' },
-        { uri: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80' },
-        { uri: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=735&q=80' },
-        { uri: 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80' },
-        { uri: 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80' }
-    ])
+
 
     const buttons = [
         'bio', "Публикации"
     ]
 
-    const alternatingHeightsImages = images.map((item, index) => {
+    const alternatingHeightsImages = publications?.map((item: any, index: number) => {
         const isEven = index % 2 === 0;
 
         return {
-            ...item,
+            uri: item?.image,
             dimensions: {
                 height: isEven ? 219.70872497558594 : 178.95631408691406,
             }
@@ -110,8 +105,6 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
         const formData = new FormData();
 
         if (image) {
-            setImages(prev => [...prev, { uri: image }]);
-
             formData.append('caption', caption);
             formData.append('image', image);
             formData.append('markerId', id);
@@ -208,7 +201,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
                 }
                 {
                     active === 'Публикации' &&
-                    <MasonryList
+                    (publications === null ? <Text className="text-white mt-1 text-[13.82px] w-[80%]">No publications</Text> : <MasonryList
                         images={alternatingHeightsImages}
                         columns={2}
                         spacing={2}
@@ -223,7 +216,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
                                 storeKey: 'pointBio'
                             });
                         }}
-                    />
+                    />)
                 }
                 {
                     active === 'post' &&
