@@ -165,6 +165,7 @@ const styles = StyleSheet.create({
     },
 })
 
+
 export const AuctionScreen = () => {
     const queryClient = useQueryClient()
     const [filterMethod, setFilterMethod] = useState<AuctionSort | null>()
@@ -205,7 +206,10 @@ export const AuctionScreen = () => {
                         showsVerticalScrollIndicator={false}
                     >
                         {active === 'New' && Array.isArray(auctions) && auctions?.map((auction: any, index: number) => (
-                            <Button key={index} variant='custom' onPress={() => navigation.navigate('AuctionInner' as never)}>
+                            <Button key={index} variant='custom' onPress={() => {
+                                //@ts-ignore
+                                navigation.navigate('AuctionInner' as never, { id: auction.id, name: `Point #${index + 1}`, start: auction.startingBid, startDate: auction.startDate, endDate: auction.endDate })
+                            }}>
                                 <View className="mb-4">
                                     <PointTab
                                         status={active}

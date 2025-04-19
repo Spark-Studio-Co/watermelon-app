@@ -14,9 +14,10 @@ interface AuctionOfferModalProps {
     visible: boolean
     onClose: () => void
     onSaveOffer: (points: number) => void
+    name: string
 }
 
-export const AuctionOfferModal = ({ visible, onClose, onSaveOffer }: AuctionOfferModalProps) => {
+export const AuctionOfferModal = ({ visible, onClose, onSaveOffer, name }: AuctionOfferModalProps) => {
     const { setOffer, offer } = usePlaceOfferStore()
     const { active, toggle } = useActiveStore('offer', '')
     const [activeOffer, setActiveOffer] = useState('')
@@ -93,7 +94,7 @@ export const AuctionOfferModal = ({ visible, onClose, onSaveOffer }: AuctionOffe
                         </Button>
                         <View className="flex items-center flex-col w-[95%] mx-auto">
                             <View className="flex justify-between flex-row items-center w-full mt-4">
-                                <Text weight="bold" className="text-white text-[24px]">Point #12123</Text>
+                                <Text weight="bold" className="text-white text-[24px]">{name}</Text>
                                 <View className="flex flex-row gap-x-2.5">
                                     <Button variant="custom" className="bg-[#F3F4F5] rounded-[4px]">
                                         <AddPcIcon />
