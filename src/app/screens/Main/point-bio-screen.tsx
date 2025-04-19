@@ -110,9 +110,9 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
     const pickImage = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: false, // ❌ отключаем кроп
-            quality: 1, // максимальное качество
-            base64: false, // можно true, если хочешь получить base64
+            allowsEditing: false,
+            quality: 1,
+            base64: false,
             exif: false
         });
         closeChoice()

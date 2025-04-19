@@ -182,7 +182,7 @@ export const Map = () => {
                                     ownerId: marker?.ownerId,
                                     isPrivate: marker?.isPrivate
                                 })}>
-                                <View className='bg-[#272836] border-[2px] p-3 rounded-lg shadow-lg w-[200px] min-h-24' style={{ borderColor: getMarkerBorderColor(marker.type) }}>
+                                <View className='bg-[#272836] border-[2px] p-3 rounded-lg shadow-lg min-w-[200px] min-h-24' style={{ borderColor: getMarkerBorderColor(marker.type) }}>
                                     <View className="absolute bottom-[5px] left-1/2 -translate-x-1/2">
                                         <View
                                             style={{
