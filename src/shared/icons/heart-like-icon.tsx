@@ -6,7 +6,7 @@ type Props = {
 };
 
 const HeartLikeIcon: React.FC<Props> = ({ active = false, ...props }) => {
-    const fillColor = active ? "#FF5C8A" : "";
+    const fillColor = active ? "#FF5C8A" : "#1B1C1E";
 
     return (
         <Svg

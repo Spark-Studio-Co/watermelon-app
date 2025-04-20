@@ -7,8 +7,8 @@ export const useLikePost = (id: string | null) => {
             const response = await apiClient.post(`/feeds/${id}/like`)
             return response.data
         },
-        onSuccess: () => {
-            console.log("Like successful")
+        onSuccess: (data: any) => {
+            console.log("Like successful", data)
         },
         onError: (error: any) => {
             console.log("Like failed", error?.response?.data)

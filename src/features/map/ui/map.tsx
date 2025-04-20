@@ -3,6 +3,8 @@ import { useEffect, useState, useRef } from "react";
 import { TouchableOpacity, View, Dimensions } from 'react-native';
 import { MapSwitch } from '@/src/shared/ui/map-switch/map-switch';
 import Text from '@/src/shared/ui/text/text';
+//@ts-ignore
+import _ from 'lodash';
 
 import { customMapStyle } from '../config/map-styles';
 
@@ -38,15 +40,14 @@ export const Map = () => {
     const navigation = useNavigation()
     const { data: me } = useGetMe()
     const { open: openPointType } = useVisibleStore('pointType')
-    const { type, setType } = useTypePointStore()
+    const { type } = useTypePointStore()
     const { markerPosition, setMarkerPosition } = useMarkerPositionStore()
     const { region, setRegion, centerOnUser, coordinate } = useUserLocationStore()
-    const [savedMarkers, setSavedMarkers] = useState<MarkerData[]>([]);
     const [selectedMarker, setSelectedMarker] = useState<MarkerData | null>(null);
     const [isPrivate, setIsPrivate] = useState(true);
     const mapRef = useRef<MapView>(null);
 
-    const { setLatitude, setLongitude, setType: setMarkerType, setIsPrivate: setMarkerIsPrivate, setOwnerId } = useMarkerStore()
+    const { setLatitude, setLongitude, setIsPrivate: setMarkerIsPrivate, setOwnerId } = useMarkerStore()
     const { data: markers, refetch } = useMarkersData()
 
     const privateMarkers = markers?.filter((marker: any) => marker.isPrivate === true)
@@ -67,23 +68,6 @@ export const Map = () => {
         }
     }
 
-    const savePoint = () => {
-        if (markerPosition && type) {
-            const pointName = `${type.charAt(0).toUpperCase() + type.slice(1)} Point`;
-
-            const newMarker = {
-                ...markerPosition,
-                type,
-                name: pointName
-            };
-
-
-            setSavedMarkers([...savedMarkers, newMarker]);
-            setMarkerPosition(null);
-            setType('');
-        }
-    };
-
     useEffect(() => {
         if (coordinate) {
             setRegion({
@@ -93,8 +77,9 @@ export const Map = () => {
                 longitudeDelta: isPrivate ? 0.01 : 0.2,
             });
         }
+
         refetch()
-    }, [isPrivate, coordinate]);
+    }, [isPrivate, coordinate])
 
     const renderedMarkerType = (markerType: string) => {
         switch (markerType) {
@@ -110,6 +95,8 @@ export const Map = () => {
     }
 
     const isWin = markers?.auctions?.some((auction: any) => auction.winnerId === null)
+
+    const throttledSetRegion = useRef(_.throttle(setRegion, 200)).current;
 
     return (
         <View style={{ width: width, height: height }}>
@@ -132,9 +119,12 @@ export const Map = () => {
                         });
                     }
                 }}
+                initialRegion={region}
                 style={{ width: width, height: height }}
                 region={region}
-                onRegionChangeComplete={setRegion}
+                onRegionChangeComplete={(r) => {
+                    throttledSetRegion(r);
+                }}
                 showsUserLocation={true}
                 showsMyLocationButton={false}
                 customMapStyle={customMapStyle}

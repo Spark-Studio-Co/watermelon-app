@@ -9,12 +9,21 @@ import MicIcon from '@/src/shared/icons/mic-icon'
 
 import { useCommentsStore } from '../model/comments-store'
 import { useChatStore } from '../../chat/model/chat-store'
+import { useAddComment } from '@/src/entities/feed/api/use-add-comment'
+import { useFeedStore } from '@/src/entities/feed/model/use-feed-store'
+import { useCommentsData } from '@/src/entities/feed/api/use-comments-data'
+import { useQueryClient } from '@tanstack/react-query'
 
 interface IChatInputProps {
     type: string | "comments" | "private" | "group"
 }
 
 export const ChatInput = ({ type }: IChatInputProps) => {
+    const { postId } = useFeedStore()
+    const { mutate: addNewComment } = useAddComment(postId);
+    const { refetch } = useCommentsData(postId)
+    const queryClient = useQueryClient()
+
     const { setMessage } = useChatStore()
     const { addComment } = useCommentsStore()
     const [text, setText] = useState('')
@@ -28,6 +37,16 @@ export const ChatInput = ({ type }: IChatInputProps) => {
         const nickname = `@user1`
 
         type === "private" ? setMessage(text) : addComment({ comment: text, date: time, nickname })
+
+        if (type === "comments") addNewComment({ content: text }, {
+            onSuccess: (data: any) => {
+                console.log("Comment added", data)
+                refetch()
+                queryClient.invalidateQueries({
+                    queryKey: "comments"
+                })
+            }
+        })
 
         setText('')
         Keyboard.dismiss()

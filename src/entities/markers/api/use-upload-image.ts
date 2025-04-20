@@ -7,8 +7,8 @@ export const useUploadImage = () => {
             const response = await apiClient.post('/feeds/upload-feed', FormData,
                 {
                     headers: {
-                        'Content-Type': 'multipart/form-data',
-                    },
+                        'Content-Type': 'multipart/form-data'
+                    }
                 }
             )
             return response.data

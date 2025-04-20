@@ -3,11 +3,26 @@ import { View } from 'react-native'
 import { ScrollView } from 'react-native-gesture-handler'
 import { CommentMessage } from '@/src/features/comments/ui/comment-message'
 
-import { useCommentsStore } from '@/src/features/comments/model/comments-store'
+import { useCommentsData } from '@/src/entities/feed/api/use-comments-data'
+import { useFeedStore } from '@/src/entities/feed/model/use-feed-store'
+import { useEffect } from 'react'
 
+type RouteParams = {
+    id: string
+}
 
-export const CommentsScreen = () => {
-    const { comments } = useCommentsStore()
+export const CommentsScreen = ({ route }: {
+    route: {
+        params: RouteParams
+    }
+}) => {
+    const { id } = route.params;
+    const { data: comments } = useCommentsData(id)
+    const { setPostId } = useFeedStore()
+
+    useEffect(() => {
+        setPostId(id)
+    }, [id])
 
     return (
         <MainLayout isBack title='Комментарии' isChat>
@@ -22,11 +37,19 @@ export const CommentsScreen = () => {
                     showsVerticalScrollIndicator={false}
                 >
                     <View className="flex-1 h-full w-full items-start mt-9 ml-10">
-                        {comments.map((comment, index) => (
-                            <View key={index} className="mb-6 w-[70%]">
-                                <CommentMessage {...comment} />
-                            </View>
-                        ))}
+                        {Array.isArray(comments) && comments?.map((comment: any, index: number) => {
+                            const date = new Date(comment?.createdAt);
+                            const formattedDate = new Intl.DateTimeFormat("ru-RU", {
+                                hour: "2-digit",
+                                minute: "2-digit"
+                            }).format(date);
+
+                            return (
+                                <View key={index} className="mb-6 w-[60%]">
+                                    <CommentMessage nickname={`@${comment?.user?.username}`} comment={comment?.content} date={formattedDate} />
+                                </View>
+                            )
+                        })}
                     </View>
                 </ScrollView>
             </View>
