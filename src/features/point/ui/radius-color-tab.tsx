@@ -4,6 +4,7 @@ import { View } from "react-native"
 import { Checkbox } from "@/src/shared/ui/checkbox/checkbox"
 
 import { useActiveStore } from "@/src/shared/model/use-active-store"
+import { useRadiusStore } from "../model/use-radius-store"
 
 interface IPointSettingsTab {
     color: string | null
@@ -15,9 +16,11 @@ interface IPointSettingsTab {
 
 export const RadiusColorTab = ({ color, description, defaultChoice, onPress, label }: IPointSettingsTab) => {
     const { setActive } = useActiveStore("radiusColor", defaultChoice)
+    const { setColor } = useRadiusStore()
 
     const handleSetActive = () => {
-        setActive(color ?? '') // если null — сохраняем как пустую строку
+        setColor(color ?? "transparent")
+        setActive(color ?? "transparent")
         onPress()
     }
 
@@ -27,7 +30,7 @@ export const RadiusColorTab = ({ color, description, defaultChoice, onPress, lab
                 <Text weight="regular" className="text-white text-[16px]">{label}</Text>
                 <Text weight="regular" className="text-[#6B6B6B] text-[14px]">{description}</Text>
             </View>
-            <Checkbox activeItem={color ?? ''} storeKey="radiusColor" />
+            <Checkbox activeItem={color ?? ''} storeKey="radiusColor" onPress={handleSetActive} />
         </Button>
     )
 }

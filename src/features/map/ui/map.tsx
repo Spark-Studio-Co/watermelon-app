@@ -134,7 +134,7 @@ export const Map = () => {
                 showsTraffic={false}
                 showsIndoors={false}
             >
-                {markers?.map((marker: any, index: number) => (
+                {Array.isArray(markersList) && markersList?.map((marker: any, index: number) => (
                     marker.radius ? (
                         <Circle
                             key={`circle-${marker.id ?? index}`}

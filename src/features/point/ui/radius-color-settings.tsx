@@ -10,6 +10,7 @@ import { useUpdateRadius } from "@/src/entities/radius/api/use-update-radius"
 import { useRadiusData } from "@/src/entities/radius/api/use-radius-data"
 import { useMarkerDataById } from "@/src/entities/markers/api/use-marker-data-by-id"
 import { useMarkerStore } from "@/src/entities/markers/model/use-marker-store"
+import { useRadiusStore } from "../model/use-radius-store"
 
 export const RadiusColorSettings = () => {
     const { id } = useMarkerStore()
@@ -17,17 +18,17 @@ export const RadiusColorSettings = () => {
     const { data: radius } = useRadiusData()
     const { close } = useVisibleStore("radiusColor")
     const { data: markerById } = useMarkerDataById(id)
+    const { color } = useRadiusStore()
 
     const radiusColors = [
-        { label: 'Без цвета', value: null, description: 'Прозрачный радиус' },
-        { label: 'Черный', value: 'black', description: 'Темный цвет для радиуса' },
-        { label: 'Желтый', value: 'yellow', description: 'Яркий цвет для радиуса' },
-        { label: 'Фиолетовый', value: 'purple', description: 'Фиолетовый цвет радиуса' },
-        { label: 'Градиент', value: 'gradient', description: 'Premium градиент для радиуса' },
+        { label: 'Без цвета', value: 'transparent', description: 'Прозрачный радиус' },
+        { label: 'Черный', value: 'rgba(0, 0, 0, 0.6)', description: 'Темный цвет для радиуса' },
+        { label: 'Желтый', value: 'rgba(255, 255, 0, 0.4)', description: 'Яркий цвет для радиуса' },
+        { label: 'Фиолетовый', value: 'rgba(128, 0, 128, 0.4)', description: 'Фиолетовый цвет радиуса' },
+        { label: 'Градиент', value: 'rgba(255, 0, 150, 0.5)', description: 'Premium градиент (массив цветов)' }
     ]
 
     const currentRadius = radius?.find((r: any) => r.id === markerById?.radiusId)
-    const selectedColor = currentRadius?.color ?? radiusColors[0].value
 
     const handleUpdateColor = (color: string | undefined) => {
         if (!currentRadius?.id) return;
@@ -46,7 +47,7 @@ export const RadiusColorSettings = () => {
                             label={item.label}
                             color={item.value}
                             description={item.description}
-                            defaultChoice={selectedColor}
+                            defaultChoice={color}
                             onPress={() => handleUpdateColor(item.value ?? "")}
                         />
                         {index !== radiusColors.length - 1 && (
