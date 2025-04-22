@@ -10,6 +10,7 @@ import { ChatInput } from '@/src/features/comments/ui/chat-input';
 import { ChatTab } from '@/src/features/chat/ui/chat-tab';
 import { ActivityTab } from '@/src/features/activity/ui/activity-tab';
 import { TasksTab } from '@/src/features/tasks/ui/tasks-tab';
+import { BookmarkTab } from '@/src/features/bookmarks/ui/bookmark-tab';
 
 import { hp } from '@/src/shared/utils/resize-dimensions';
 
@@ -31,9 +32,10 @@ interface MainLayoutProps {
     chatInputType?: ChatInputType
     isActivity?: boolean
     isTasks?: boolean
+    isBookmarks?: boolean
 }
 
-export const MainLayout = ({ children, isUserTab, isBack, title, isMap, isWeeklyChallenge, isScrollable = true, isChat = false, chatInputType, isActivity = false, isTasks = false }: MainLayoutProps) => {
+export const MainLayout = ({ children, isUserTab, isBack, title, isMap, isWeeklyChallenge, isScrollable = true, isChat = false, chatInputType, isActivity = false, isTasks = false, isBookmarks = false }: MainLayoutProps) => {
     const navigation = useNavigation()
 
     return (
@@ -46,6 +48,7 @@ export const MainLayout = ({ children, isUserTab, isBack, title, isMap, isWeekly
                 <StatusBar style="light" translucent={true} backgroundColor='transparent' />
                 <SafeAreaView style={{ flex: 1 }}>
                     {isTasks && <TasksTab />}
+                    {isBookmarks && <BookmarkTab />}
                     {isActivity && <ActivityTab />}
                     {chatInputType === 'group' || chatInputType === 'private' && <ChatTab />}
                     {isMap ?

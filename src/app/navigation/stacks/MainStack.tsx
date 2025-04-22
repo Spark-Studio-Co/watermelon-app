@@ -25,6 +25,7 @@ import { FeedScreen } from '../../screens/Main/feed-screen';
 import { ActivityScreen } from '../../screens/Main/activity-screen';
 import { TasksScreen } from '../../screens/Main/tasks-screen';
 import { PrivateChatScreen } from '../../screens/Main/private-chat-screen';
+import { BookmarksScreen } from '../../screens/Main/bookmarks-screen';
 
 export const MainStack = () => {
     return (
@@ -61,6 +62,7 @@ export const MainStack = () => {
             <Stack.Screen name="Activity" component={ActivityScreen} />
             <Stack.Screen name="Tasks" component={TasksScreen} />
             <Stack.Screen name="PrivateChat" component={PrivateChatScreen} />
+            <Stack.Screen name="Bookmarks" component={BookmarksScreen} />
         </Stack.Navigator>
     );
 };

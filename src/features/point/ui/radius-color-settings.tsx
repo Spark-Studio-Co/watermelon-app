@@ -11,8 +11,10 @@ import { useRadiusData } from "@/src/entities/radius/api/use-radius-data"
 import { useMarkerDataById } from "@/src/entities/markers/api/use-marker-data-by-id"
 import { useMarkerStore } from "@/src/entities/markers/model/use-marker-store"
 import { useRadiusStore } from "../model/use-radius-store"
+import { useQueryClient } from "@tanstack/react-query"
 
 export const RadiusColorSettings = () => {
+    const queryClient = useQueryClient()
     const { id } = useMarkerStore()
     const { mutate } = useUpdateRadius()
     const { data: radius } = useRadiusData()
@@ -34,6 +36,10 @@ export const RadiusColorSettings = () => {
         if (!currentRadius?.id) return;
 
         mutate({ id: currentRadius.id, color })
+
+        queryClient.invalidateQueries({
+            queryKey: "markers"
+        })
     }
 
     return (
