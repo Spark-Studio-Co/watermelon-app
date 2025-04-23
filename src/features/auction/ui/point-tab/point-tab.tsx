@@ -30,19 +30,19 @@ export const PointTab = ({ type, name, subscribers, views, members }: IPointTabP
                         <Text weight="regular" className="text-[#5E6272] text-[11.33px] capitalize">{type}</Text>
                     </View>
                 </View>
-                {(type === "Premium" || type === "Standard") && (
+                {(type === "premium" || type === "standard") && (
                     <View className="flex flex-col ml-[30px]">
                         <Text weight="regular" className="text-white text-[15.1px]">{subscribers || 0}</Text>
                         <Text weight="regular" className="text-[#5E6272] text-[11.33px]">Subscribers</Text>
                     </View>
                 )}
-                {(type === "Premium" || type === "Standard") && (
+                {(type === "premium" || type === "standard") && (
                     <View className="flex flex-col ml-[30px]">
                         <Text weight="regular" className="text-white text-[15.1px]">{views || 0}</Text>
                         <Text weight="regular" className="text-[#5E6272] text-[11.33px]">Views</Text>
                     </View>
                 )}
-                {type === "Chat" && (
+                {type === "chat" && (
                     <View className="flex flex-col ml-[30px]">
                         <Text weight="regular" className="text-white text-[15.1px]">{members || 0}</Text>
                         <Text weight="regular" className="text-[#5E6272] text-[11.33px]">Members</Text>

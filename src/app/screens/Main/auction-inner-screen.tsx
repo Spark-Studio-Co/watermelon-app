@@ -6,15 +6,21 @@ import { Button } from "@/src/shared/ui/button/button"
 import { BetPlaceTab } from "@/src/features/auction/ui/bet-place-tab/bet-place-tab"
 import { AuctionOfferModal } from "@/src/features/auction/ui/auction-offer-modal/auction-offer-modal"
 import { WinModal } from "@/src/features/auction/ui/win-modal/win-modal"
-import { useNavigation } from "@react-navigation/native"
 
 import { useBidsData } from "@/src/entities/auction/api/use-bids-data"
 import { useMakeBid } from "@/src/entities/auction/api/use-make-bid"
+import { useQueryClient } from "@tanstack/react-query"
+import { useNavigation } from "@react-navigation/native"
+import { useAuctionsData } from "@/src/entities/auction/api/use-auctions-data"
+
 
 export const AuctionInnerScreen = ({ route }: { route: { params: { id: string, name: string, start: number, startDate: string, endDate: string } } }) => {
+    const queryClient = useQueryClient();
     const { id, name, start, startDate, endDate } = route.params
     const { data: bids, refetch } = useBidsData(id)
     const { mutate: makeBid } = useMakeBid()
+    const { refetch: auctionsRefetch } = useAuctionsData()
+
 
     const handleMakeBid = (bidAmount: number) => {
         makeBid({ auctionId: id, bidAmount }, {
@@ -29,12 +35,14 @@ export const AuctionInnerScreen = ({ route }: { route: { params: { id: string, n
     }
 
     useEffect(() => {
-        const refreshInterval = setInterval(() => {
-            refetch();
-        }, 3000);
+        queryClient.invalidateQueries(
+            {
+                queryKey: "auctions"
+            }
+        )
+        auctionsRefetch()
+    }, [])
 
-        return () => clearInterval(refreshInterval);
-    }, [refetch])
     const navigation = useNavigation()
 
     const calculateTimeLeft = () => {

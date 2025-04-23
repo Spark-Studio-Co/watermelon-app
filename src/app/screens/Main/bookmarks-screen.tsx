@@ -4,6 +4,7 @@ import { ScrollView, View } from 'react-native'
 import { SavedPointTab } from '@/src/features/bookmarks/ui/saved-point-tab'
 
 import { useActiveStore } from '@/src/shared/model/use-active-store'
+import { useMarkersData } from '@/src/entities/markers/api/use-markers-data'
 
 const onSoldPointTabs = [
     {
@@ -93,20 +94,21 @@ const myBetPointTabs = [
 
 export const BookmarksScreen = () => {
     const { active } = useActiveStore('bookmarks', 'Point')
+    const { data: markers } = useMarkersData()
 
     return (
         <MainLayout isBookmarks>
             <ScrollView
                 showsVerticalScrollIndicator={false}
-                style={{ width: '90%', margin: 'auto' }}            >
-                {active === 'Point' && onSoldPointTabs.map((tab, index) => (
+                style={{ width: '95%', margin: 'auto' }}            >
+                {active === 'Point' && markers?.map((marker: any, index: number) => (
                     <View key={index} className="mb-4">
                         <SavedPointTab
-                            type={tab.type}
-                            name={tab.name}
-                            subscribers={tab.subscribers}
-                            views={tab.views}
-                            members={tab.members}
+                            image={marker.image}
+                            type={marker.type}
+                            name={marker.name ?? `Point #${index}`}
+                            subscribers={marker?._count.followers}
+                            views={marker.views ?? 0}
                         />
                     </View>
                 ))}

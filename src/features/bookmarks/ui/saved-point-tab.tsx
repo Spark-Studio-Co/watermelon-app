@@ -8,10 +8,11 @@ interface IPointTabProps {
     subscribers?: number | null
     views?: number | null
     members?: number | null
+    image?: string
 }
 
 
-export const SavedPointTab = ({ type, name, subscribers, views, members }: IPointTabProps) => {
+export const SavedPointTab = ({ type, name, subscribers, views, members, image }: IPointTabProps) => {
     return (
         <View className={`w-full flex justify-center pl-[15px] border-[0.94px] rounded-[15.1px] h-[76.46564483642578px] ${type.toLowerCase() === "premium" ? "border-[#A009CD] bg-[#181A20]" : type === "chat" ? "border-[#93E0FF] bg-[#181A20]" : "border-[#262A34] bg-[#262A34]"}`}>
             <View className='flex flex-row'>
@@ -21,7 +22,7 @@ export const SavedPointTab = ({ type, name, subscribers, views, members }: IPoin
                     >
                         <Image
                             className='w-full h-full rounded-full'
-                            source={require("../../../images/user_image.png")}
+                            source={image ? { uri: image } : require("../../../images/user_image.png")}
                         />
                     </View>
                     <View className="flex flex-col ml-[15px]">
@@ -29,19 +30,19 @@ export const SavedPointTab = ({ type, name, subscribers, views, members }: IPoin
                         <Text weight="regular" className="text-[#5E6272] text-[11.33px] capitalize">{type}</Text>
                     </View>
                 </View>
-                {(type === "Premium" || type === "Standard") && (
+                {(type === "premium" || type === "standard") && (
                     <View className="flex flex-col ml-[30px]">
                         <Text weight="regular" className="text-white text-[15.1px]">{subscribers || 0}</Text>
                         <Text weight="regular" className="text-[#5E6272] text-[11.33px]">Subscribers</Text>
                     </View>
                 )}
-                {(type === "Premium" || type === "Standard") && (
+                {(type === "premium" || type === "standard") && (
                     <View className="flex flex-col ml-[30px]">
                         <Text weight="regular" className="text-white text-[15.1px]">{views || 0}</Text>
                         <Text weight="regular" className="text-[#5E6272] text-[11.33px]">Views</Text>
                     </View>
                 )}
-                {type === "Chat" && (
+                {type === "chat" && (
                     <View className="flex flex-col ml-[30px]">
                         <Text weight="regular" className="text-white text-[15.1px]">{members || 0}</Text>
                         <Text weight="regular" className="text-[#5E6272] text-[11.33px]">Members</Text>

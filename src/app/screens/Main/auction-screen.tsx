@@ -21,7 +21,6 @@ const tabs = [
     "My bet"
 ]
 
-
 const onSoldPointTabs = [
     {
         type: "Premium",
@@ -216,7 +215,7 @@ export const AuctionScreen = () => {
                                         type={auction.marker?.type}
                                         name={`Point #${index + 1}`}
                                         subscribers={auction.subscribers}
-                                        views={auction.views}
+                                        views={auction.marker?.views}
                                         members={auction.members}
                                     />
                                 </View>
