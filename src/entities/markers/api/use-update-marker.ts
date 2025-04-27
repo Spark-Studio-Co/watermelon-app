@@ -6,8 +6,12 @@ export const useUpdateMarker = (id: string) => {
     return useMutation<void, AxiosError, FormData>({
         mutationKey: ['updateMarker', id],
         mutationFn: async (formData: FormData) => {
-            const response = await apiClient.patch(`/markers/${id}`, formData);
-            return response.data;
+            try {
+                const response = await apiClient.patch(`/markers/${id}`, formData);
+                return response.data
+            } catch (error: any) {
+                console.error(error?.response?.data)
+            };
         },
     });
 };

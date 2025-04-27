@@ -22,8 +22,8 @@ type RouteParams = {
 
 export const FullPostScreen = ({ route }: FullPostProps) => {
     const { id } = route.params as RouteParams
-    const { mutate: likePost } = useLikePost(id)
-    const { mutate: unlikePost } = useUnlikePost(id)
+    const { mutate: likePost } = useLikePost()
+    const { mutate: unlikePost } = useUnlikePost()
     const { data: publications } = usePublicationsData(id)
     const navigation = useNavigation()
 
@@ -60,11 +60,11 @@ export const FullPostScreen = ({ route }: FullPostProps) => {
         if (liked) {
             setLiked(false)
             setLikesCount(prev => prev - 1)
-            unlikePost()
+            unlikePost(id)
         } else {
             setLiked(true)
             setLikesCount(prev => prev + 1)
-            likePost()
+            likePost(id)
         }
     }
 

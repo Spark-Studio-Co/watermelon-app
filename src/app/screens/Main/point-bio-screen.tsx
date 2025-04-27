@@ -126,7 +126,6 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
       setPostImage(null);
     }
   };
-
   const createPost = () => {
     const formData = new FormData();
 
@@ -145,19 +144,17 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
       formData.append("caption", caption ?? '');
       formData.append("markerId", markerId);
 
-      console.log(formData);
-
-      uploadImage(formData);
-
-      setTimeout(() => {
-        clearImage();
-        setPhotoUri(null);
-        setCaption(null)
-        setActive("Публикации");
-      }, 500);
-
-      queryClient.invalidateQueries({
-        queryKey: "publications",
+      uploadImage(formData, {
+        onSuccess: () => {
+          setTimeout(() => {
+            queryClient.invalidateQueries({ queryKey: ["personalized-pub"] });
+            refetch();
+            clearImage();
+            setPhotoUri(null);
+            setCaption(null);
+            setActive("Публикации");
+          }, 1500);
+        },
       });
     }
   };

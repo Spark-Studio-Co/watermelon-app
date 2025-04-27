@@ -1,6 +1,7 @@
 import React from 'react'
 import { View, Image } from 'react-native'
 import Text from '@/src/shared/ui/text/text'
+import { Button } from '@/src/shared/ui/button/button'
 
 interface IPointTabProps {
     type: string | "Premium" | "Chat" | "Standard"
@@ -9,12 +10,13 @@ interface IPointTabProps {
     views?: number | null
     members?: number | null
     image?: string
+    onPress?: () => void
 }
 
 
-export const SavedPointTab = ({ type, name, subscribers, views, members, image }: IPointTabProps) => {
+export const SavedPointTab = ({ type, name, subscribers, views, members, image, onPress }: IPointTabProps) => {
     return (
-        <View className={`w-full flex justify-center pl-[15px] border-[0.94px] rounded-[15.1px] h-[76.46564483642578px] ${type.toLowerCase() === "premium" ? "border-[#A009CD] bg-[#181A20]" : type === "chat" ? "border-[#93E0FF] bg-[#181A20]" : "border-[#262A34] bg-[#262A34]"}`}>
+        <Button onPress={onPress} className={`w-full flex justify-center pl-[15px] border-[0.94px] rounded-[15.1px] h-[76.46564483642578px] ${type.toLowerCase() === "premium" ? "border-[#A009CD] bg-[#181A20]" : type === "chat" ? "border-[#93E0FF] bg-[#181A20]" : "border-[#262A34] bg-[#262A34]"}`}>
             <View className='flex flex-row'>
                 <View className="flex flex-row items-center">
                     <View
@@ -49,6 +51,6 @@ export const SavedPointTab = ({ type, name, subscribers, views, members, image }
                     </View>
                 )}
             </View>
-        </View>
+        </Button>
     )
 }

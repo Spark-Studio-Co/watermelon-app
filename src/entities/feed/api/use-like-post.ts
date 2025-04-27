@@ -1,9 +1,9 @@
 import { apiClient } from "@/src/app/config/apiClient";
 import { useMutation } from "@tanstack/react-query";
 
-export const useLikePost = (id: string | null) => {
+export const useLikePost = () => {
     return useMutation({
-        mutationFn: async () => {
+        mutationFn: async (id: string) => {
             const response = await apiClient.post(`/feeds/${id}/like`)
             return response.data
         },

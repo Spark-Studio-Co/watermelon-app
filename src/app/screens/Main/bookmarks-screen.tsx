@@ -5,6 +5,7 @@ import { SavedPointTab } from '@/src/features/bookmarks/ui/saved-point-tab'
 
 import { useActiveStore } from '@/src/shared/model/use-active-store'
 import { useMarkersData } from '@/src/entities/markers/api/use-markers-data'
+import { useNavigation } from '@react-navigation/native'
 
 
 const myBetPointTabs = [
@@ -54,6 +55,7 @@ const myBetPointTabs = [
 export const BookmarksScreen = () => {
     const { active } = useActiveStore('bookmarks', 'Point')
     const { data: markers } = useMarkersData()
+    const navigation = useNavigation();
 
     return (
         <MainLayout isBookmarks>
@@ -64,6 +66,8 @@ export const BookmarksScreen = () => {
                 {active === 'Point' && markers?.map((marker: any, index: number) => (
                     <View key={index} className="mb-4">
                         <SavedPointTab
+                            //@ts-ignore
+                            onPress={() => navigation.navigate("PointBio" as never, { id: marker?.id, ownerId: marker?.ownerId })}
                             image={marker.image}
                             type={marker.type}
                             name={marker.name ?? `Point #${index}`}

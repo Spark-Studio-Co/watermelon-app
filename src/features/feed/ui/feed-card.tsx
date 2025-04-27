@@ -16,7 +16,6 @@ interface IFeedCardProps {
     text?: string
     likes?: number
     views?: number
-    comments?: number
     active?: boolean
     onPress?: () => void
     onLike: () => void
@@ -24,7 +23,7 @@ interface IFeedCardProps {
 
 
 
-export const FeedCard = ({ username, date, image, text, likes, views, comments, onPress, onLike, active }: IFeedCardProps) => {
+export const FeedCard = ({ username, date, image, text, likes, views, onPress, onLike, active }: IFeedCardProps) => {
     const navigation = useNavigation()
     const [isFullText, setIsFullText] = useState(false)
 
@@ -38,9 +37,7 @@ export const FeedCard = ({ username, date, image, text, likes, views, comments, 
                 <Text weight="regular" className="text-white text-[17.4px]">{username}</Text>
                 <Text weight="regular" className="text-white text-[12px]">{date}</Text>
             </View>
-            <Button onPress={() => navigation.navigate(
-                //@ts-ignore
-                'FullPost' as never, { imageUri: image, storeKey: 'feed' })}>
+            <Button onPress={onPress}>
                 <Image
                     source={{ uri: image || '' }}
                     className="w-full h-[309px] rounded-[15px] mt-2.5"
@@ -62,7 +59,6 @@ export const FeedCard = ({ username, date, image, text, likes, views, comments, 
                         <Button onPress={onPress} variant="custom" className="w-[32.822383880615234px] h-[32.822383880615234px] rounded-[7.77px] flex items-center justify-center">
                             <CommentIcon />
                         </Button>
-                        <Text weight="regular" className="text-white text-[20px]">{comments}</Text>
                     </View>
                 </View>
             </View>
