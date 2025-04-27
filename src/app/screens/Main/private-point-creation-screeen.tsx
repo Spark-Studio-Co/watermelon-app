@@ -83,6 +83,7 @@ export const PrivatePointCreationScreen = () => {
         if (latitude) data.append("latitude", String(latitude));
         if (longitude) data.append("longitude", String(longitude));
         if (ownerId) data.append("ownerId", ownerId)
+        data.append("startingBid", '0')
         data.append("isPrivate", String(isPrivate));
 
         createPoint(data, {
@@ -152,7 +153,7 @@ export const PrivatePointCreationScreen = () => {
                 </View>
                 <View className="mt-10 mb-9 flex items-center justify-center">
                     <Button
-                        onPress={() => handleSubmit()}
+                        onPress={handleSubmit}
                         variant="custom"
                         className='w-[134px] py-3.5 rounded-[6px] bg-[#14A278] flex items-center justify-center'>
                         <Text weight="regular" className="text-white text-[16px]">CREATE</Text>

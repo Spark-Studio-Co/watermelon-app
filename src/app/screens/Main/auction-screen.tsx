@@ -168,15 +168,19 @@ const styles = StyleSheet.create({
 export const AuctionScreen = () => {
     const queryClient = useQueryClient()
     const [filterMethod, setFilterMethod] = useState<AuctionSort | null>()
-    const { data: auctions, isLoading } = useAuctionsData(undefined, filterMethod)
+    const { data: auctions, isLoading, refetch } = useAuctionsData(undefined, filterMethod)
     const navigation = useNavigation()
-    const { active, toggle } = useActiveStore('auction', 'New')
+    const { active, setActive } = useActiveStore('auction', 'New')
     const [modalVisible, setModalVisible] = useState(false)
     const [selectedFilter, setSelectedFilter] = useState(2)
 
     const toggleModal = () => {
         setModalVisible(!modalVisible)
     }
+
+    useEffect(() => {
+        refetch()
+    }, [auctions])
 
     return (
         <MainLayout isScrollable={false}>
@@ -194,7 +198,7 @@ export const AuctionScreen = () => {
                 <View className='flex flex-row items-center justify-between w-[80%] mx-auto mt-7'>
                     {tabs.map((tab, index) => (
                         <View key={index} className="flex flex-col items-center">
-                            <Text weight="regular" className="text-white text-[15px] mb-[3px]" onPress={() => toggle(tab)}>{tab}</Text>
+                            <Text weight="regular" className="text-white text-[15px] mb-[3px]" onPress={() => setActive(tab)}>{tab}</Text>
                             {active === tab && <View className="w-[59px] h-[2px] rounded-[5px] bg-white" />}
                         </View>
                     ))}

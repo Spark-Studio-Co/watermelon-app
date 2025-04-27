@@ -5,12 +5,23 @@ import { Button } from "@/src/shared/ui/button/button"
 import CloseModalIcon from "@/src/shared/icons/close-modal-icon"
 import WinIcon from "@/src/shared/icons/win-icon"
 
+import { useNavigation } from "@react-navigation/native"
+
 interface WinModalProps {
     visible: boolean
     onClose: () => void
+    id: string | null
+    name: string
 }
 
-export const WinModal = ({ visible, onClose }: WinModalProps) => {
+export const WinModal = ({ visible, onClose, id, name }: WinModalProps) => {
+    const navigation = useNavigation()
+
+    const handlePointNavigate = () => {
+        onClose()
+        //@ts-ignore
+        navigation.navigate("GlobalPointCreation" as never, { id: id, name: name })
+    }
 
     return (
         <Modal
@@ -35,7 +46,7 @@ export const WinModal = ({ visible, onClose }: WinModalProps) => {
                         Наблюдайте за изменениями аукциона в разделе мои ставки
                     </Text>
 
-                    <Button variant="custom" className="bg-[#343434] mt-6 rounded-[10px] w-full flex items-center justify-center h-[54px] mx-4" onPress={onClose}>
+                    <Button variant="custom" className="bg-[#343434] mt-6 rounded-[10px] w-full flex items-center justify-center h-[54px] mx-4" onPress={handlePointNavigate}>
                         <Text weight="medium" className="text-white text-[20px]">
                             Перейти
                         </Text>

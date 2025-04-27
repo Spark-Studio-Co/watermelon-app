@@ -6,47 +6,6 @@ import { SavedPointTab } from '@/src/features/bookmarks/ui/saved-point-tab'
 import { useActiveStore } from '@/src/shared/model/use-active-store'
 import { useMarkersData } from '@/src/entities/markers/api/use-markers-data'
 
-const onSoldPointTabs = [
-    {
-        type: "Premium",
-        name: "Hustle",
-        subscribers: 80,
-        views: 12
-    },
-    {
-        type: "Chat",
-        name: "El ",
-        members: 11
-    },
-    {
-        type: "Standard",
-        name: "New York"
-    },
-    {
-        type: "Premium",
-        name: "Rio de Janeiro"
-    },
-    {
-        type: "Chat",
-        name: "El Diablo"
-    },
-    {
-        type: "Standard",
-        name: "New York"
-    },
-    {
-        type: "Premium",
-        name: "Rio de Janeiro"
-    },
-    {
-        type: "Chat",
-        name: "El Diablo"
-    },
-    {
-        type: "Standard",
-        name: "New York"
-    },
-]
 
 const myBetPointTabs = [
     {
@@ -100,7 +59,8 @@ export const BookmarksScreen = () => {
         <MainLayout isBookmarks>
             <ScrollView
                 showsVerticalScrollIndicator={false}
-                style={{ width: '95%', margin: 'auto' }}            >
+                style={{ width: '95%', margin: 'auto' }}
+            >
                 {active === 'Point' && markers?.map((marker: any, index: number) => (
                     <View key={index} className="mb-4">
                         <SavedPointTab

@@ -10,9 +10,8 @@ import { WinModal } from "@/src/features/auction/ui/win-modal/win-modal"
 import { useBidsData } from "@/src/entities/auction/api/use-bids-data"
 import { useMakeBid } from "@/src/entities/auction/api/use-make-bid"
 import { useQueryClient } from "@tanstack/react-query"
-import { useNavigation } from "@react-navigation/native"
 import { useAuctionsData } from "@/src/entities/auction/api/use-auctions-data"
-
+import { useAuctionWin } from "@/src/entities/auction/api/use-auction-win"
 
 export const AuctionInnerScreen = ({ route }: { route: { params: { id: string, name: string, start: number, startDate: string, endDate: string } } }) => {
     const queryClient = useQueryClient();
@@ -20,18 +19,24 @@ export const AuctionInnerScreen = ({ route }: { route: { params: { id: string, n
     const { data: bids, refetch } = useBidsData(id)
     const { mutate: makeBid } = useMakeBid()
     const { refetch: auctionsRefetch } = useAuctionsData()
+    const { data: isWin } = useAuctionWin(id)
 
 
     const handleMakeBid = (bidAmount: number) => {
+        if (timeLeft.hours === 0 && timeLeft.minutes === 0 && timeLeft.seconds === 0) {
+            console.warn('⛔ Нельзя сделать ставку: таймер истёк.');
+            return;
+        }
+
         makeBid({ auctionId: id, bidAmount }, {
             onSuccess: () => {
-                console.log('Bid made successfully')
-                refetch()
+                console.log('✅ Ставка успешно сделана');
+                refetch();
             },
             onError: (error) => {
-                console.error('Error making bid:', error)
+                console.error('❌ Ошибка при ставке:', error);
             }
-        })
+        });
     }
 
     useEffect(() => {
@@ -41,9 +46,11 @@ export const AuctionInnerScreen = ({ route }: { route: { params: { id: string, n
             }
         )
         auctionsRefetch()
-    }, [])
 
-    const navigation = useNavigation()
+        if (isWin === true) {
+            setWinModalVisible(true)
+        }
+    }, [bids, isWin])
 
     const calculateTimeLeft = () => {
         try {
@@ -82,9 +89,6 @@ export const AuctionInnerScreen = ({ route }: { route: { params: { id: string, n
 
     const handleCloseWinModal = () => {
         setWinModalVisible(false)
-        setTimeout(() => {
-            navigation.navigate("GlobalPointCreation" as never)
-        }, 500)
     }
 
     useEffect(() => {
@@ -159,8 +163,9 @@ export const AuctionInnerScreen = ({ route }: { route: { params: { id: string, n
                     <Text weight="regular" className="text-white text-[24px] ml-1">{start}</Text>
                     <Button
                         variant="custom"
-                        className="bg-[#14A278] rounded-[6px] ml-14 w-[132px] h-[42px] flex items-center justify-center"
+                        className={`rounded-[6px] ml-14 w-[132px] h-[42px] flex items-center justify-center bg-[#14A278] ${timeLeft.hours === 0 && timeLeft.minutes === 0 && timeLeft.seconds === 0 ? 'opacity-40' : 'opacity-100'}`}
                         onPress={handlePlaceOffer}
+                        disabled={timeLeft.hours === 0 && timeLeft.minutes === 0 && timeLeft.seconds === 0}
                     >
                         <Text weight="regular" className="text-white text-[16px]">Place Offer</Text>
                     </Button>
@@ -244,6 +249,8 @@ export const AuctionInnerScreen = ({ route }: { route: { params: { id: string, n
                 }}
             />
             <WinModal
+                name={name}
+                id={isWin?.markerId}
                 visible={winModalVisible}
                 onClose={handleCloseWinModal}
             />

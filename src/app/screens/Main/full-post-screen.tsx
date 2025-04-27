@@ -85,7 +85,7 @@ export const FullPostScreen = ({ route }: FullPostProps) => {
                         </View>
                         <View className="flex flex-row items-center gap-x-1.5">
                             <ViewsIcon />
-                            <Text weight="regular" className="text-white text-[20px]">{publications?.comments.length}</Text>
+                            <Text weight="regular" className="text-white text-[20px]">{publications?.comments?.length}</Text>
                         </View>
                     </View>
                     <Button variant="custom" className="w-[33px] h-[33px] rounded-[7.77px] flex items-center justify-center">

@@ -34,8 +34,8 @@ import { useMarkerDataById } from "@/src/entities/markers/api/use-marker-data-by
 import { useGetMe } from "@/src/entities/users/api/use-get-me";
 import { useMarkerStore } from "@/src/entities/markers/model/use-marker-store";
 import { useUploadImage } from "@/src/entities/markers/api/use-upload-image";
-import { usePrivatePublicationsData } from "@/src/entities/markers/api/use-private-publications-data";
 import { useQueryClient } from "@tanstack/react-query";
+import { usePersonalizedPublicationsData } from "@/src/entities/markers/api/use-personalized-publications-data";
 
 type PointBioRouteProp = {
   route: RouteProp<any, any>;
@@ -48,26 +48,21 @@ type RouteParams = {
 };
 
 export const PointBioScreen = ({ route }: PointBioRouteProp) => {
+  const navigation = useNavigation();
+  const bioInputRef = useRef(null);
   const queryClient = useQueryClient();
-  const { id, ownerId, isPrivate } = route.params as RouteParams;
+  const { id: markerId, ownerId, isPrivate } = route.params as RouteParams;
+
   const {
     data: publications,
     isLoading,
     refetch,
-  } = usePrivatePublicationsData(id);
+  } = usePersonalizedPublicationsData(markerId);
+
   const { mutate: uploadImage } = useUploadImage();
   const { setId, setIsPrivate } = useMarkerStore();
-
-  useEffect(() => {
-    setId(id);
-    setIsPrivate(isPrivate);
-  }, [id]);
-
-  const { data: marker } = useMarkerDataById(id);
+  const { data: marker } = useMarkerDataById(markerId);
   const { data: me } = useGetMe();
-
-  const bioInputRef = useRef(null);
-  const navigation = useNavigation();
   const { open: openPost } = useVisibleStore("post");
   const { open: openChoice, close: closeChoice } =
     useVisibleStore("cameraChoice");
@@ -78,11 +73,16 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
   const { open: openSettings } = useVisibleStore("pointSettings");
   const [permission, requestPermission] = useCameraPermissions();
   const { image, setImage: setPostImage, clearImage } = useCameraStore("post");
-  const [caption, setCaption] = useState("");
+  const [caption, setCaption] = useState<string | null>();
 
   const buttons = ["bio", "Публикации"];
 
-  const alternatingHeightsImages = publications?.map(
+  useEffect(() => {
+    setId(markerId);
+    setIsPrivate(isPrivate);
+  }, [markerId]);
+
+  const alternatingHeightsImages = Array.isArray(publications) && publications?.map(
     (item: any, index: number) => {
       const isEven = index % 2 === 0;
 
@@ -119,7 +119,6 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
       exif: false,
     });
     closeChoice();
-    refetch();
 
     if (!result.canceled && result.assets?.length) {
       setPostImage(result.assets[0].uri);
@@ -143,30 +142,29 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
         type: mimeType,
       } as any);
 
-      formData.append("caption", caption);
-      formData.append("markerId", id);
+      formData.append("caption", caption ?? '');
+      formData.append("markerId", markerId);
 
       console.log(formData);
 
       uploadImage(formData);
 
       setTimeout(() => {
-        refetch();
         clearImage();
         setPhotoUri(null);
+        setCaption(null)
+        setActive("Публикации");
       }, 500);
 
       queryClient.invalidateQueries({
-        queryKey: "private-publications",
+        queryKey: "publications",
       });
-
-      setActive("Публикации");
     }
   };
 
   useEffect(() => {
     refetch();
-  }, [publications]);
+  }, [publications, active === "Публикации"]);
 
   return (
     <MainLayout>
@@ -312,7 +310,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
             <Input
               ref={bioInputRef}
               returnKeyType="done"
-              value={caption}
+              value={caption ?? ''}
               multiline
               onChangeText={setCaption}
               placeholder="Ваше сообщение..."

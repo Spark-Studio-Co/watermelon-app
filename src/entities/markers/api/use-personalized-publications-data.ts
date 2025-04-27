@@ -1,12 +1,12 @@
 import { apiClient } from "@/src/app/config/apiClient";
 import { useQuery } from "@tanstack/react-query";
 
-export const usePublicationsData = (id?: string) => {
+export const usePersonalizedPublicationsData = (markerId?: string) => {
     return useQuery({
-        queryKey: ['publicationsId', id],
+        queryKey: ['personalized-pub', markerId],
         queryFn: async ({ queryKey }) => {
-            const [_, id] = queryKey;
-            const url = `/feeds/${id}`;
+            const [_, markerId] = queryKey;
+            const url = `/feeds/personalized/${markerId}`;
             const response = await apiClient.get(url);
             return response.data;
         },

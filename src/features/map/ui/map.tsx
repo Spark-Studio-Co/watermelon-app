@@ -94,7 +94,6 @@ export const Map = () => {
         }
     }
 
-    const isWin = markers?.auctions?.some((auction: any) => auction.winnerId === null)
 
     const throttledSetRegion = useRef(_.throttle(setRegion, 200)).current;
 
@@ -162,9 +161,9 @@ export const Map = () => {
                     >
                         <View
                             className='bg-[#2E2E2E] w-[25px] h-[25px] border-[2px] rounded-full'
-                            style={{ borderColor: !isWin && !isPrivate ? 'gray' : getMarkerBorderColor(marker.type) }}
+                            style={{ borderColor: !marker.isWon && !isPrivate ? 'gray' : getMarkerBorderColor(marker.type) }}
                         />
-                        {!isWin && !isPrivate ? null : (
+                        {!marker.isWon && !isPrivate ? null : (
                             <Callout tooltip onPress={() =>
                                 //@ts-ignore
                                 navigation.navigate("PointBio" as never, {
