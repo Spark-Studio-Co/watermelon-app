@@ -24,7 +24,6 @@ interface IFeedCardProps {
 
 
 export const FeedCard = ({ username, date, image, text, likes, views, onPress, onLike, active }: IFeedCardProps) => {
-    const navigation = useNavigation()
     const [isFullText, setIsFullText] = useState(false)
 
     const handleTextToggle = () => {
