@@ -50,7 +50,7 @@ export const Map = () => {
     const { setLatitude, setLongitude, setIsPrivate: setMarkerIsPrivate, setOwnerId } = useMarkerStore()
     const { data: markers, refetch } = useMarkersData()
 
-    const privateMarkers = markers?.filter((marker: any) => marker.isPrivate === true)
+    const privateMarkers = markers?.filter((marker: any) => marker.isPrivate === true && marker.ownerId === me?.id)
     const publicMarkers = markers?.filter((marker: any) => marker.isPrivate === false)
 
     const markersList = isPrivate ? privateMarkers : publicMarkers;

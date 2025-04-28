@@ -88,7 +88,7 @@ export const FeedScreen = () => {
                     return (
                         <View key={index} className="mb-6">
                             <FeedCard
-                                username={`@${post?.ownerUsername || "Unknown"}`}
+                                username={`@${post?.ownerUsername === '' ? 'username' : post?.ownerUsername}`}
                                 date={formattedDate}
                                 image={post?.image}
                                 text={post?.caption}

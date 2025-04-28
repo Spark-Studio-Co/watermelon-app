@@ -7,7 +7,6 @@ import { useNavigation } from "@react-navigation/native";
 import { useSendVerificationStore } from "@/src/entities/registration/model/send-verification-store";
 import { StepsIndicator } from "@/src/shared/ui/steps-indicator/steps-indicator";
 import { useActiveStore } from "@/src/shared/model/use-active-store";
-import { hp } from "@/src/shared/utils/resize-dimensions";
 
 import { useSendVerification } from "@/src/entities/registration/api/use-send-verification";
 
@@ -25,7 +24,7 @@ export const RegistrationForm = () => {
             return;
         }
 
-        mutate({ email, secretKey }, {
+        mutate({ email }, {
             onSuccess: () => {
                 navigation.navigate("CodeConfirmation" as never);
                 setActive('CodeConfirmation');

@@ -20,9 +20,10 @@ interface IPointBioTab {
     nickname: string
     image?: string | null
     onPress?: () => void
+    isSettingsVisible: boolean
 }
 
-export const PointBioTab = ({ pointname, nickname, onPress }: Omit<IPointBioTab, 'image'>) => {
+export const PointBioTab = ({ pointname, nickname, onPress, isSettingsVisible }: Omit<IPointBioTab, 'image'>) => {
     const { setImage } = useCameraStore('pointImage');
     const { id } = useMarkerStore();
     const queryClient = useQueryClient();
@@ -85,24 +86,35 @@ export const PointBioTab = ({ pointname, nickname, onPress }: Omit<IPointBioTab,
 
     return (
         <View className="flex flex-row items-center justify-center gap-x-10 mt-8">
-            <Button
-                onPress={openChoice}
-                style={{ height: 96, width: 96 }}
-            >
-                <Image
-                    className='w-full h-full rounded-full'
-                    source={marker?.image ? { uri: marker.image + `?t=${Date.now()}` } : require("../../../images/user_image.png")}
-                />
-            </Button>
+            {isSettingsVisible ? (
+                <Button
+                    onPress={openChoice}
+                    style={{ height: 96, width: 96 }}
+                >
+                    <Image
+                        className='w-full h-full rounded-full'
+                        source={marker?.image ? { uri: marker.image + `?t=${Date.now()}` } : require("../../../images/user_image.png")}
+                    />
+                </Button>
+            ) : (
+                <View
+                    style={{ height: 96, width: 96 }}
+                >
+                    <Image
+                        className='w-full h-full rounded-full'
+                        source={marker?.image ? { uri: marker.image + `?t=${Date.now()}` } : require("../../../images/user_image.png")}
+                    />
+                </View>
+            )}
             <View className="flex flex-col gap-y-2">
                 <Text weight="regular" className="text-white text-[24px]">{pointname}</Text>
                 <View className="flex flex-row items-center gap-x-2">
                     <Text weight="regular" className="text-white text-[14px]">@{nickname}</Text>
                 </View>
             </View>
-            <Button variant="custom" onPress={onPress}>
+            {isSettingsVisible && <Button variant="custom" onPress={onPress}>
                 <GearIcon />
-            </Button>
+            </Button>}
 
             <ModalWrapper storeKey="pointChoice">
                 <View className=" bg-[#38373A] w-[90%] px-8 rounded-lg">

@@ -4,7 +4,7 @@ import { ISendVerificationRDO } from "./rdo/send-verification.rdo";
 
 export const sendVerification = async (data: ISendVerificationRDO) => {
     try {
-        const response = await apiClient.post("/api/auth/send-verification", data)
+        const response = await apiClient.post("/auth/send-verification", data)
         console.log("Email sent", response.data)
         return response.data
     } catch (error: any) {

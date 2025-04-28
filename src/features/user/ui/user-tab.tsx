@@ -8,7 +8,7 @@ export const UserTab = () => {
 
     return (
         <View className="flex flex-row items-start justify-between w-[90%] m-auto my-4">
-            <Text weight="regular" className="text-white text-[24px]"><Text weight="bold">Hello,</Text> {me?.name ?? "User name"}</Text>
+            <Text weight="regular" className="text-white text-[24px]"><Text weight="bold">Hello,</Text> {me?.name === "" ? "User name" : me?.name}</Text>
             <View
                 style={{ height: 70, width: 70 }}
             >

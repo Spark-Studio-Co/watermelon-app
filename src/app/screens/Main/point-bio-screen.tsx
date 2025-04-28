@@ -167,6 +167,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
     <MainLayout>
       <View className="w-[80%] mx-auto mt-4">
         <PointBioTab
+          isSettingsVisible={ownerId === me?.id}
           pointname={marker?.name}
           nickname="point_name"
           onPress={openSettings}
@@ -245,7 +246,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
             </Button>
           </View>
         ))}
-        <TouchableOpacity
+        {ownerId === me?.id && <TouchableOpacity
           onPress={() => setActive("post")}
           style={{
             backgroundColor: "#5992FF",
@@ -263,7 +264,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
           }}
         >
           <PlusIcon color="white" />
-        </TouchableOpacity>
+        </TouchableOpacity>}
       </View>
       <View className="w-[95%] mx-auto flex flex-col mt-6">
         {active === "bio" && (
