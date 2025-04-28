@@ -6,6 +6,7 @@ import { Button } from "@/src/shared/ui/button/button"
 import { BetPlaceTab } from "@/src/features/auction/ui/bet-place-tab/bet-place-tab"
 import { AuctionOfferModal } from "@/src/features/auction/ui/auction-offer-modal/auction-offer-modal"
 import { WinModal } from "@/src/features/auction/ui/win-modal/win-modal"
+import { Alert } from "react-native"
 
 import { useBidsData } from "@/src/entities/auction/api/use-bids-data"
 import { useMakeBid } from "@/src/entities/auction/api/use-make-bid"
@@ -24,7 +25,11 @@ export const AuctionInnerScreen = ({ route }: { route: { params: { id: string, n
 
     const handleMakeBid = (bidAmount: number) => {
         if (timeLeft.hours === 0 && timeLeft.minutes === 0 && timeLeft.seconds === 0) {
-            console.warn('⛔ Нельзя сделать ставку: таймер истёк.');
+            Alert.alert('Ошибка', '⛔ Нельзя сделать ставку: таймер истёк.');
+            return;
+        }
+
+        if (bidAmount < start) {
             return;
         }
 
@@ -247,6 +252,7 @@ export const AuctionInnerScreen = ({ route }: { route: { params: { id: string, n
                     handleMakeBid(points)
                     setOfferModalVisible(false);
                 }}
+                start={start}
             />
             <WinModal
                 name={name}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react"
-import { View, Modal } from "react-native"
+import { View, Modal, Alert } from "react-native"
 import Text from "@/src/shared/ui/text/text"
 import { Button } from "@/src/shared/ui/button/button"
 import { Input } from "@/src/shared/ui/input/input"
@@ -15,10 +15,11 @@ interface AuctionOfferModalProps {
     onClose: () => void
     onSaveOffer: (points: number) => void
     name: string
+    start: number
 }
 
-export const AuctionOfferModal = ({ visible, onClose, onSaveOffer, name }: AuctionOfferModalProps) => {
-    const { setOffer, offer } = usePlaceOfferStore()
+export const AuctionOfferModal = ({ visible, onClose, onSaveOffer, name, start }: AuctionOfferModalProps) => {
+    const { setOffer } = usePlaceOfferStore()
     const { active, toggle } = useActiveStore('offer', '')
     const [activeOffer, setActiveOffer] = useState('')
     const [value, setValue] = useState('')
@@ -34,9 +35,16 @@ export const AuctionOfferModal = ({ visible, onClose, onSaveOffer, name }: Aucti
     const currentTime = now.toTimeString().split(' ')[0].substring(0, 5)
 
     const handleMakeOffer = () => {
+        const offerPoints = Number(activeOffer || value);
+
+        if (offerPoints < start) {
+            Alert.alert('Ошибка', `⛔ Ставка должна быть не меньше стартовой цены: минимум ${start} очков.`);
+            return;
+        }
+
         if (isOfferSet && (activeOffer || value)) {
             const updatedOffer = {
-                points: Number(activeOffer || value),
+                points: offerPoints,
                 date: currentDate,
                 time: currentTime
             }
