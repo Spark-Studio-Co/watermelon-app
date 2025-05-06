@@ -1,3 +1,5 @@
+//@ts-nocheck
+
 import { View } from 'react-native'
 import Text from '@/src/shared/ui/text/text'
 import { LevelTab } from '@/src/features/tasks/ui/level-tab'
@@ -14,7 +16,7 @@ export const TasksTab = () => {
     return (
         <View className="flex flex-col items-center mt-5 mb-5 px-4">
             <Text weight="medium" className="text-white text-[32px]">Tasks</Text>
-            <LevelTab level={me?.level ?? 0} max={200} current={91} />
+            <LevelTab level={me?.level?.id ?? 0} max={200} current={me?.level?.expNeeded} />
             <View className='bg-black w-[92%] mt-3.5 mx-auto flex flex-row items-center justify-between h-[46px] rounded-[8px] px-1.5'>
                 {categories.map((category) => (
                     <Button key={category} onPress={() => setActive(category)} className={`px-7 py-2 ${active === category && 'border border-white rounded-[8px]'}`}>

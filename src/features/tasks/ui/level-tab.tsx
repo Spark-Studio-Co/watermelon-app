@@ -14,7 +14,7 @@ export const LevelTab = ({ level, max, current }: ILevelTabProps) => {
     return (
         <View className="flex flex-col items-center rounded-full mt-8 relative">
             <View
-                style={{ height: 116, width: 382, position: 'relative' }}
+                style={{ height: 108, width: 346, position: 'relative' }}
             >
                 <Image
                     className='w-full h-full rounded-[10px]'
