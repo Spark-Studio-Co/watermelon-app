@@ -71,7 +71,7 @@ export const SettingsScreen = () => {
         <MainLayout>
             <View className="flex flex-col mx-auto mt-5">
                 <Text weight="medium" className="text-white text-[22px]">Settings</Text>
-                <UserSettingsTab username={me?.name ? me?.name : 'User Name'} nickname={me?.username ? me?.username : "user_name"} lvl={me?.level ? me?.level : 0} />
+                <UserSettingsTab username={me?.name ? me?.name : 'User Name'} nickname={me?.username ? me?.username : "user_name"} lvl={me?.level?.id ? me?.level?.id : 0} />
                 <View className="flex flex-row w-full justify-center mt-6">
                     <View className="flex-1 flex flex-row gap-x-4 items-center justify-center">
                         {buttons.map((button) => (

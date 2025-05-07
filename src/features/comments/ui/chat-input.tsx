@@ -8,7 +8,6 @@ import RightArrowIcon from '@/src/shared/icons/right-arrow-icon'
 import MicIcon from '@/src/shared/icons/mic-icon'
 
 import { useCommentsStore } from '../model/comments-store'
-import { useChatStore } from '../../chat/model/chat-store'
 import { useAddComment } from '@/src/entities/feed/api/use-add-comment'
 import { useFeedStore } from '@/src/entities/feed/model/use-feed-store'
 import { useCommentsData } from '@/src/entities/feed/api/use-comments-data'
@@ -16,41 +15,42 @@ import { useQueryClient } from '@tanstack/react-query'
 
 interface IChatInputProps {
     type: string | "comments" | "private" | "group"
+    onSend?: (text: string) => void;
 }
 
-export const ChatInput = ({ type }: IChatInputProps) => {
+export const ChatInput = ({ type, onSend }: IChatInputProps) => {
     const { postId } = useFeedStore()
     const { mutate: addNewComment } = useAddComment(postId);
     const { refetch } = useCommentsData(postId)
     const queryClient = useQueryClient()
 
-    const { setMessage } = useChatStore()
     const { addComment } = useCommentsStore()
     const [text, setText] = useState('')
 
     const handleAddComment = () => {
-        if (!text.trim()) return
+        if (!text.trim()) return;
 
-        const date = new Date()
-        const time = `${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`
+        const date = new Date();
+        const time = `${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
+        const nickname = `@user1`;
 
-        const nickname = `@user1`
+        if (type === "private" || type === "group") {
+            onSend?.(text);
+        } else {
+            addComment({ comment: text, date: time, nickname });
 
-        type === "private" ? setMessage(text) : addComment({ comment: text, date: time, nickname })
+            addNewComment({ content: text }, {
+                onSuccess: (data: any) => {
+                    console.log("Comment added", data);
+                    refetch();
+                    queryClient.invalidateQueries({ queryKey: "comments" });
+                }
+            });
+        }
 
-        if (type === "comments") addNewComment({ content: text }, {
-            onSuccess: (data: any) => {
-                console.log("Comment added", data)
-                refetch()
-                queryClient.invalidateQueries({
-                    queryKey: "comments"
-                })
-            }
-        })
-
-        setText('')
-        Keyboard.dismiss()
-    }
+        setText('');
+        Keyboard.dismiss();
+    };
 
 
     return (

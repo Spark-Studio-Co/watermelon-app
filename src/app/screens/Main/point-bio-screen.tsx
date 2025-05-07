@@ -25,7 +25,7 @@ import CameraIcon from "@/src/shared/icons/camera-icon";
 import { usePointBioStore } from "@/src/features/point/model/point-bio-store";
 import { useActiveStore } from "@/src/shared/model/use-active-store";
 import { useVisibleStore } from "@/src/shared/model/use-visible-store";
-import { RouteProp, useNavigation } from "@react-navigation/native";
+import { RouteProp, useNavigation, NavigationProp } from "@react-navigation/native";
 import { hp } from "@/src/shared/utils/resize-dimensions";
 import { useEffect, useRef, useState } from "react";
 import { useCameraPermissions } from "expo-camera";
@@ -36,6 +36,8 @@ import { useMarkerStore } from "@/src/entities/markers/model/use-marker-store";
 import { useUploadImage } from "@/src/entities/markers/api/use-upload-image";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePersonalizedPublicationsData } from "@/src/entities/markers/api/use-personalized-publications-data";
+import { useGetUsers } from "@/src/entities/users/api/use-get-users";
+import { useChatStore } from "@/src/features/chat/model/chat-store";
 
 type PointBioRouteProp = {
   route: RouteProp<any, any>;
@@ -47,8 +49,14 @@ type RouteParams = {
   isPrivate: boolean;
 };
 
+// Define navigation type
+type RootStackParamList = {
+  PrivateChat: { avatar: any } | undefined;
+  [key: string]: object | undefined;
+};
+
 export const PointBioScreen = ({ route }: PointBioRouteProp) => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const bioInputRef = useRef(null);
   const queryClient = useQueryClient();
   const { id: markerId, ownerId, isPrivate } = route.params as RouteParams;
@@ -59,6 +67,8 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
     refetch,
   } = usePersonalizedPublicationsData(markerId);
 
+  const { setName, setAvatar } = useChatStore()
+  const { data: userById, refetch: refetchUsersData } = useGetUsers(ownerId)
   const { mutate: uploadImage } = useUploadImage();
   const { setId, setIsPrivate } = useMarkerStore();
   const { data: marker } = useMarkerDataById(markerId);
@@ -163,6 +173,9 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
     refetch();
   }, [publications, active === "Публикации"]);
 
+  const sorted = [me?.id, ownerId].sort();
+  const chatId = `chat-${markerId}-${sorted.join('-')}`;
+
   return (
     <MainLayout>
       <View className="w-[80%] mx-auto mt-4">
@@ -174,7 +187,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
         />
       </View>
       <View className="flex flex-row items-center mt-12 w-[90%] mx-auto relative">
-        {ownerId === me?.id ? (
+        {!ownerId === me?.id ? (
           <View className="ml-10" />
         ) : (
           <>
@@ -184,7 +197,18 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
               </Text>
             </Button>
             <Button
-              onPress={() => navigation.navigate("PrivateChat" as never)}
+              onPress={() => {
+                refetchUsersData()
+                setName(userById?.name ?? 'User Name')
+                setAvatar(userById?.avatar)
+                //@ts-ignore
+                navigation.navigate("PrivateChat" as never, {
+                  chatId: chatId,
+                  participants: [me?.id, ownerId],
+                  avatar: userById?.avatar,
+                  name: userById?.name,
+                });
+              }}
               variant="custom"
               className="w-[32.822383880615234px] h-[32.822383880615234px] bg-[#8888882E] rounded-[7.77px] border-[0.86px] border-[#888888] flex items-center justify-center ml-2"
             >

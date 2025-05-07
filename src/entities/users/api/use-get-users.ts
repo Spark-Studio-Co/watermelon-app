@@ -3,11 +3,12 @@ import { apiClient } from "@/src/app/config/apiClient";
 
 import { IGetUsersRDO } from "./rdo/get-users.rdo";
 
-export const useGetUsers = () => {
+export const useGetUsers = (id?: string) => {
     return useQuery<IGetUsersRDO>({
-        queryKey: ["users"],
+        queryKey: id ? ["usersById", id] : ["users"],
         queryFn: async () => {
-            const response = await apiClient.get("/users")
+            const url = id ? `/users/${id}` : '/users'
+            const response = await apiClient.get(url)
             return response.data
         },
         staleTime: 1000 * 60 * 5,

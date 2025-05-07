@@ -47,7 +47,7 @@ export const Map = () => {
     const [isPrivate, setIsPrivate] = useState(true);
     const mapRef = useRef<MapView>(null);
 
-    const { setLatitude, setLongitude, setIsPrivate: setMarkerIsPrivate, setOwnerId } = useMarkerStore()
+    const { ownerId, setLatitude, setLongitude, setIsPrivate: setMarkerIsPrivate, setOwnerId } = useMarkerStore()
     const { data: markers, refetch } = useMarkersData()
 
     const privateMarkers = markers?.filter((marker: any) => marker.isPrivate === true && marker.ownerId === me?.id)
@@ -77,7 +77,6 @@ export const Map = () => {
                 longitudeDelta: isPrivate ? 0.01 : 0.2,
             });
         }
-
         refetch()
     }, [isPrivate, coordinate])
 
@@ -107,7 +106,10 @@ export const Map = () => {
                     setLatitude(pressCoordinate.latitude);
                     setLongitude(pressCoordinate.longitude);
                     setMarkerIsPrivate(isPrivate);
-                    setOwnerId(me?.id ?? '')
+                    //@ts-ignore
+                    setOwnerId(me?.id); // Now we're sure me.id exists
+
+                    console.log(ownerId)
 
                     if (!isPrivate) {
                         openPointType();

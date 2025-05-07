@@ -6,6 +6,7 @@ import BigThreeDots from "@/src/shared/icons/bit-three-dot-icon"
 import BackArrowIcon from "@/src/shared/icons/back-arrow-icon"
 
 import { useChatStore } from "../model/chat-store"
+import { useChatStore as temporaryChatStore } from "../model/chat-store"
 
 
 interface IChatTabProps {
@@ -13,7 +14,6 @@ interface IChatTabProps {
 }
 
 export const ChatTab = ({ isGlobal }: IChatTabProps) => {
-
     const { avatar, name, status, members, onlineAmount } = useChatStore()
 
     return (

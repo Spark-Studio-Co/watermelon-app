@@ -33,9 +33,10 @@ interface MainLayoutProps {
     isActivity?: boolean
     isTasks?: boolean
     isBookmarks?: boolean
+    onSend?: (text: string) => void;
 }
 
-export const MainLayout = ({ children, isUserTab, isBack, title, isMap, isWeeklyChallenge, isScrollable = true, isChat = false, chatInputType, isActivity = false, isTasks = false, isBookmarks = false }: MainLayoutProps) => {
+export const MainLayout = ({ children, isUserTab, isBack, title, isMap, isWeeklyChallenge, isScrollable = true, isChat = false, chatInputType, isActivity = false, isTasks = false, isBookmarks = false, onSend }: MainLayoutProps) => {
     const navigation = useNavigation()
 
     return (
@@ -79,7 +80,7 @@ export const MainLayout = ({ children, isUserTab, isBack, title, isMap, isWeekly
                                     {children}
                                 </ScrollView>
                                 {!isBack && <BottomNavigationPanel />}
-                                {isChat && <ChatInput type={chatInputType || 'comments'} />}
+                                {isChat && <ChatInput type={chatInputType || 'comments'} onSend={onSend} />}
                             </>
                             :
                             <>

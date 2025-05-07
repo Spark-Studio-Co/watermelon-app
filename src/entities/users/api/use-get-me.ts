@@ -7,7 +7,7 @@ export const useGetMe = () => {
     return useQuery<IUserMeRDO>({
         queryKey: ['userMe'],
         queryFn: async () => {
-            const response = await apiClient.get("/users/me")
+            const response = await apiClient.get("/users/get/me")
             return response.data
         },
         staleTime: 1000 * 60 * 5,
