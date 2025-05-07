@@ -51,7 +51,7 @@ export const MainLayout = ({ children, isUserTab, isBack, title, isMap, isWeekly
                     {isTasks && <TasksTab />}
                     {isBookmarks && <BookmarkTab />}
                     {isActivity && <ActivityTab />}
-                    {chatInputType === 'group' || chatInputType === 'private' && <ChatTab />}
+                    {(chatInputType === 'group' || chatInputType === 'private') && <ChatTab />}
                     {isMap ?
                         <>
                             <View>

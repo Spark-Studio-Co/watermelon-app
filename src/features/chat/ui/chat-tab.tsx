@@ -14,7 +14,8 @@ interface IChatTabProps {
 }
 
 export const ChatTab = ({ isGlobal }: IChatTabProps) => {
-    const { avatar, name, status, members, onlineAmount } = useChatStore()
+    const { avatar, name, members, onlineAmount } = useChatStore()
+    const { status } = temporaryChatStore()
 
     return (
         <View className={`${isGlobal ? 'w-[95%]' : 'w-[90%]'} flex flex-row justify-between ml-auto pr-8 items-center h-[54px] mb-8 mt-10`}>
