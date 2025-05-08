@@ -13,7 +13,7 @@ import { useEffect } from 'react'
 
 export const SearchFriendsScreen = () => {
     const { setActive, active } = useActiveFriendsStore()
-    const { data: friends = [] } = useGetUsers()
+    const { data: friends } = useGetUsers(undefined, true)
     const { data: me } = useGetMe()
     const { mutate: sendFriendRequest } = useSendFriendRequest()
 
@@ -21,7 +21,6 @@ export const SearchFriendsScreen = () => {
         setActive(receiverId, true);
         sendFriendRequest(receiverId)
     }
-
 
     const formattedFriends = Array.isArray(friends)
         ? friends.filter((friend: IGetUsersRDO) => friend.id !== me?.id)

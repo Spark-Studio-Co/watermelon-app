@@ -58,7 +58,7 @@ export const MyFriendsScreen = () => {
                 {Array.isArray(friends) && friends?.map((friend: any, index: number) => {
                     return (
                         <View key={index}>
-                            <FriendTab avatar={friend.avatar} username={friend.name} nickname={friend.username === "" ? "@user_name" : `@${friend.nickname}`} onPress={() => handleChatNavigate(friend.id)} />
+                            <FriendTab avatar={friend.avatar} username={friend.name} nickname={friend.username === "" ? "@user_name" : `@${friend.username}`} onPress={() => handleChatNavigate(friend.id)} />
                             <View className={`bg-white w-full h-0.5 mt-6 mb-4 ${index === friends.length - 1 && 'hidden'}`} />
                         </View>
                     )
