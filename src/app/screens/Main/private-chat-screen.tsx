@@ -11,14 +11,13 @@ export const PrivateChatScreen = () => {
     const userId = me?.id;
     const route = useRoute();
 
-    const { chatId, participants, avatar, name } = route.params as {
+    const { chatId, participants } = route.params as {
         chatId: string;
         participants: string[];
-        avatar: string;
-        name: string;
     };
 
     const {
+        name, avatar,
         messages,
         connect,
         disconnect,

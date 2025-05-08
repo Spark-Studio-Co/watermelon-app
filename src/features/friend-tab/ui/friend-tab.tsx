@@ -1,9 +1,17 @@
 import { View, Image } from "react-native"
 import Text from "@/src/shared/ui/text/text"
 import { Button } from "@/src/shared/ui/button/button"
+
+import { useFriendRequestAction } from "@/src/entities/friends/api/use-friend-request-action"
+import { useQueryClient } from "@tanstack/react-query"
+
+import { RequestAction } from "@/src/entities/friends/api/use-friend-request-action"
+
 import AddIcon from "@/src/shared/icons/add-icon"
 import UserMessageIcon from "@/src/shared/icons/user-message-icon"
 import CheckMarkIcon from "@/src/shared/icons/check-mark-icon"
+import CircleMinus from "@/src/shared/icons/circle-minus"
+import CirclePlus from "@/src/shared/icons/circle-plus"
 
 interface IFriendTabProps {
     avatar: string | null;
@@ -12,6 +20,8 @@ interface IFriendTabProps {
     isAddToFriends?: boolean;
     onPress?: () => void;
     isAdded?: boolean;
+    isIncoming?: boolean
+    id?: string | null | undefined
 }
 
 export const FriendTab = ({
@@ -21,13 +31,42 @@ export const FriendTab = ({
     onPress,
     isAddToFriends = false,
     isAdded = false,
+    isIncoming = false,
+    id,
 }: IFriendTabProps) => {
+    const queryClient = useQueryClient()
+    const { mutate: requestAction } = useFriendRequestAction()
 
     const fullAvatar = avatar
         ? avatar.startsWith("http")
             ? avatar
             : `https://${avatar}`
         : null;
+
+
+    const handleRequestAction = (id: string, accept: RequestAction) => {
+        requestAction(
+            { id: id, accept: accept },
+            {
+                onSuccess: () => {
+                    const keysToInvalidate = [
+                        ["myFriends"],
+                        ["friendsIncoming"],
+                    ]
+
+                    keysToInvalidate.forEach((key) =>
+                        queryClient.invalidateQueries({ queryKey: key })
+                    )
+
+                    console.log('friend action is success')
+                },
+                onError: (error: any) => {
+                    console.log(error.response.data)
+                }
+            }
+        )
+    }
+
 
     return (
         <View className="flex flex-row justify-between w-full items-center">
@@ -48,14 +87,25 @@ export const FriendTab = ({
                     </Text>
                 </View>
             </View>
-
-            {isAdded ? (
-                <CheckMarkIcon />
-            ) : (
-                <Button variant="custom" onPress={onPress}>
-                    {isAddToFriends ? <AddIcon /> : <UserMessageIcon />}
-                </Button>
-            )}
+            {
+                isIncoming ?
+                    <View className="flex flex-row gap-x-2.5">
+                        <Button variant="custom" onPress={() => handleRequestAction(id as string, true)}>
+                            <CirclePlus />
+                        </Button>
+                        <Button variant="custom" onPress={() => handleRequestAction(id as string, false)}>
+                            <CircleMinus />
+                        </Button>
+                    </View>
+                    :
+                    isAdded ? (
+                        <CheckMarkIcon />
+                    ) : (
+                        <Button variant="custom" onPress={onPress}>
+                            {isAddToFriends ? <AddIcon /> : <UserMessageIcon />}
+                        </Button>
+                    )
+            }
         </View>
     );
 };

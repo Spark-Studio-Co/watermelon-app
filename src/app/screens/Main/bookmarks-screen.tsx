@@ -4,7 +4,7 @@ import { ScrollView, View } from 'react-native'
 import { SavedPointTab } from '@/src/features/bookmarks/ui/saved-point-tab'
 
 import { useActiveStore } from '@/src/shared/model/use-active-store'
-import { useMarkersData } from '@/src/entities/markers/api/use-markers-data'
+import { useUsersMarkers } from '@/src/entities/markers/api/use-useres-markers'
 import { useNavigation } from '@react-navigation/native'
 
 
@@ -54,7 +54,7 @@ const myBetPointTabs = [
 
 export const BookmarksScreen = () => {
     const { active } = useActiveStore('bookmarks', 'Point')
-    const { data: markers } = useMarkersData()
+    const { data: markers } = useUsersMarkers()
     const navigation = useNavigation();
 
     return (
@@ -71,7 +71,7 @@ export const BookmarksScreen = () => {
                             image={marker.image}
                             type={marker.type}
                             name={marker.name ?? `Point #${index}`}
-                            subscribers={marker?._count.followers}
+                            subscribers={marker?.followersCount}
                             views={marker.views ?? 0}
                         />
                     </View>

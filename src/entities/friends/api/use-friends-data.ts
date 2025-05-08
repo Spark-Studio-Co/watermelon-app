@@ -6,7 +6,7 @@ export const useGetFriends = () => {
     return useQuery({
         queryKey: ["myFriends"],
         queryFn: async () => {
-            const response = await apiClient.get('/users/friends')
+            const response = await apiClient.get('/users/my/friends')
             return response.data
         },
         staleTime: 1000 * 60 * 5,

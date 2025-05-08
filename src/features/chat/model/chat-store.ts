@@ -28,7 +28,7 @@ interface IChatStore {
     setOnlineAmount: (amount: number) => void;
 }
 
-export const useChatStore = create<IChatStore>((set, get) => ({
+export const useChatStore = create<IChatStore>((set) => ({
     avatar: user_image,
     status: 'Offline',
     name: 'Jack Jallenhell',
@@ -38,22 +38,22 @@ export const useChatStore = create<IChatStore>((set, get) => ({
 
     connect: (chatId, userId) => {
         console.log('[connect] Joining room:', chatId);
-        
+
         // First remove any existing listeners to prevent duplicates
         socket.off('connect');
         socket.off('disconnect');
         socket.off('newMessage');
         socket.off('userStatusChanged');
         socket.off('userStatuses');
-        
+
         // Clear existing messages when connecting to a new chat
         set({ messages: [] });
-        
+
         // Connect to socket and join room
         if (!socket.connected) {
             socket.connect();
         }
-        
+
         socket.emit('joinRoom', chatId);
         socket.emit('setUserStatus', { userId, status: 'online' });
         console.log('[connect] Sent user status: online');
@@ -77,7 +77,7 @@ export const useChatStore = create<IChatStore>((set, get) => ({
                 date,
                 isMy: msg.userId === userId,
             };
-            
+
             // Add message to state
             set((state) => {
                 console.log('[Adding message to state]', newMsg);
@@ -104,22 +104,22 @@ export const useChatStore = create<IChatStore>((set, get) => ({
 
     disconnect: (userId) => {
         console.log('[disconnect] Disconnecting user:', userId);
-        
+
         // Send offline status before disconnecting
         socket.emit('setUserStatus', { userId, status: 'offline' });
-        
+
         // Remove all listeners
         socket.off('connect');
         socket.off('disconnect');
         socket.off('newMessage');
         socket.off('userStatusChanged');
         socket.off('userStatuses');
-        
+
         // Disconnect socket
         socket.disconnect();
-        
+
         // Update state
-        set({ 
+        set({
             status: 'Offline',
             messages: [] // Clear messages on disconnect
         });
@@ -132,7 +132,7 @@ export const useChatStore = create<IChatStore>((set, get) => ({
 
     sendMessage: (text, chatId, userId) => {
         console.log('[sendMessage] Sending:', { text, chatId, userId });
-        
+
         // Create a local message object
         const date = new Date().toLocaleTimeString().slice(0, 5);
         const newMsg: Message = {
@@ -140,7 +140,7 @@ export const useChatStore = create<IChatStore>((set, get) => ({
             date,
             isMy: true, // Always mark local messages as mine
         };
-        
+
         // Add message to local state immediately
         set((state) => {
             console.log('[Adding local message to state]', newMsg);
@@ -148,7 +148,7 @@ export const useChatStore = create<IChatStore>((set, get) => ({
                 messages: [...state.messages, newMsg],
             };
         });
-        
+
         // Send message to server
         socket.emit('sendMessage', {
             chatId,

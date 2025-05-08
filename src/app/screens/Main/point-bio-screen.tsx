@@ -88,6 +88,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
   const buttons = ["bio", "Публикации"];
 
   useEffect(() => {
+
     setId(markerId);
     setIsPrivate(isPrivate);
   }, [markerId]);
@@ -187,7 +188,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
         />
       </View>
       <View className="flex flex-row items-center mt-12 w-[90%] mx-auto relative">
-        {!ownerId === me?.id ? (
+        {ownerId === me?.id ? (
           <View className="ml-10" />
         ) : (
           <>
@@ -205,8 +206,6 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
                 navigation.navigate("PrivateChat" as never, {
                   chatId: chatId,
                   participants: [me?.id, ownerId],
-                  avatar: userById?.avatar,
-                  name: userById?.name,
                 });
               }}
               variant="custom"
