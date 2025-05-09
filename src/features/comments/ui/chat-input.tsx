@@ -9,9 +9,9 @@ import MicIcon from '@/src/shared/icons/mic-icon'
 
 import { useCommentsStore } from '../model/comments-store'
 import { useAddComment } from '@/src/entities/feed/api/use-add-comment'
+import { IAddCommentDTO } from '@/src/entities/feed/api/dto/use-add-comment.dto'
 import { useFeedStore } from '@/src/entities/feed/model/use-feed-store'
 import { useCommentsData } from '@/src/entities/feed/api/use-comments-data'
-import { useQueryClient } from '@tanstack/react-query'
 
 interface IChatInputProps {
     type: string | "comments" | "private" | "group"
@@ -22,7 +22,6 @@ export const ChatInput = ({ type, onSend }: IChatInputProps) => {
     const { postId } = useFeedStore()
     const { mutate: addNewComment } = useAddComment(postId);
     const { refetch } = useCommentsData(postId)
-    const queryClient = useQueryClient()
 
     const { addComment } = useCommentsStore()
     const [text, setText] = useState('')
@@ -39,11 +38,10 @@ export const ChatInput = ({ type, onSend }: IChatInputProps) => {
         } else {
             addComment({ comment: text, date: time, nickname });
 
-            addNewComment({ content: text }, {
+            addNewComment({ content: text } as IAddCommentDTO, {
                 onSuccess: (data: any) => {
                     console.log("Comment added", data);
                     refetch();
-                    queryClient.invalidateQueries({ queryKey: "comments" });
                 }
             });
         }
