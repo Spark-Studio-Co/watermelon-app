@@ -3,57 +3,66 @@ import { MainLayout } from "../../layouts/main-layout"
 import { ActivityCard } from "@/src/features/activity/ui/activity-card"
 
 import { useActiveStore } from "@/src/shared/model/use-active-store"
+import { useActivitiesData } from "@/src/entities/activities/api/use-activities-data"
+import { useEffect } from "react"
+
+const formatRelativeTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+
+    const dateWithoutTime = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const nowWithoutTime = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const diffTime = nowWithoutTime.getTime() - dateWithoutTime.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) {
+        return "Today";
+    } else if (diffDays === 1) {
+        return "Yesterday";
+    } else {
+        return `${diffDays} days ago`;
+    }
+};
 
 export const ActivityScreen = () => {
-    const { active } = useActiveStore('activity', 'Global')
+    const { active } = useActiveStore('activity', 'marker_created')
+    const { data: activities } = useActivitiesData()
 
-    type ActivityType = 'Point' | "Friends";
-
-    const global = [
-        {
-            type: 'Point',
-            created: '2 days ago',
-            username: 'Alex Lesly',
-            description: 'Go to Tastak'
-        }
-    ]
-
-    const friends = [
-        {
-            type: 'Friends',
-            created: '2 days ago',
-            username: 'John Doe',
-            description: 'GO TO MANHATTAN'
-        }
-    ]
+    type ActivityType = "marker_created" | "Friends";
 
     return (
         <MainLayout isActivity>
             <View className="flex flex-col items-center mx-auto w-full">
-                {active === 'Global' && (
+                {active === 'marker_created' && (
                     <View className="flex flex-col w-[90%] items-start mt-6">
-                        {global.map((item, index) => (
-                            <ActivityCard
-                                key={index}
-                                type={item.type as ActivityType}
-                                created={item.created}
-                                username={item.username}
-                                description={item.description}
-                            />
+                        {activities?.map((item: any, index: number) => (
+                            item.type === "marker_created" && (
+                                <ActivityCard
+                                    key={index}
+                                    type={item.type as ActivityType}
+                                    created={formatRelativeTime(item.createdAt || item.created)}
+                                    username={item.username}
+                                    description={item.description}
+                                />
+                            )
                         ))}
                     </View>
                 )}
                 {active === 'Friends' && (
-                    <View className="flex flex-col w-[90%] items-end mt-6">
-                        {friends.map((item, index) => (
-                            <ActivityCard
-                                key={index}
-                                type={item.type as ActivityType}
-                                created={item.created}
-                                username={item.username}
-                                description={item.description}
-                            />
-                        ))}
+                    <View className="flex flex-col w-[90%] items-start mt-6">
+                        {activities?.map((item: any, index: number) => (
+                            item.type !== "marker_created" && (
+                                <ActivityCard
+                                    key={index}
+                                    type={item.type as ActivityType}
+                                    created={formatRelativeTime(item.createdAt || item.created)}
+                                    username={item.username}
+                                    description={item.description}
+                                />
+                            )
+                        )
+                        )}
                     </View>
                 )}
             </View>

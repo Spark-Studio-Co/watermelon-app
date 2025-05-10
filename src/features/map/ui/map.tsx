@@ -16,6 +16,8 @@ import { useNavigation } from '@react-navigation/native';
 import { useMarkerStore } from '@/src/entities/markers/model/use-marker-store';
 import { useGetMe } from '@/src/entities/users/api/use-get-me';
 import { useMarkersData } from '@/src/entities/markers/api/use-markers-data';
+import { useChatStore } from '../../chat/model/chat-store';
+import { useMarkerDataById } from '@/src/entities/markers/api/use-marker-data-by-id';
 
 // icons
 import CenterMeIcon from '@/src/shared/icons/center-me-icon';
@@ -37,16 +39,19 @@ type MarkerData = {
 };
 
 export const Map = () => {
+    const mapRef = useRef<MapView>(null);
+    const [selectedMarker, setSelectedMarker] = useState<MarkerData | null>(null);
+    const [stateMarkerById, setStateMarkerById] = useState<string | null>(null)
+    const [isPrivate, setIsPrivate] = useState(true);
+
     const navigation = useNavigation()
     const { data: me } = useGetMe()
+    const { data: markerById } = useMarkerDataById(stateMarkerById)
+    const { setName, setAvatar } = useChatStore()
     const { open: openPointType } = useVisibleStore('pointType')
     const { type } = useTypePointStore()
     const { markerPosition, setMarkerPosition } = useMarkerPositionStore()
     const { region, setRegion, centerOnUser, coordinate } = useUserLocationStore()
-    const [selectedMarker, setSelectedMarker] = useState<MarkerData | null>(null);
-    const [isPrivate, setIsPrivate] = useState(true);
-    const mapRef = useRef<MapView>(null);
-
     const { ownerId, setLatitude, setLongitude, setIsPrivate: setMarkerIsPrivate, setOwnerId } = useMarkerStore()
     const { data: markers, refetch } = useMarkersData()
 
@@ -93,8 +98,14 @@ export const Map = () => {
         }
     }
 
-
     const throttledSetRegion = useRef(_.throttle(setRegion, 200)).current;
+
+    useEffect(() => {
+        if (markerById) {
+            setName(markerById.name);
+            setAvatar(markerById.image);
+        }
+    }, [markerById]);
 
     return (
         <View style={{ width: width, height: height }}>
@@ -166,13 +177,29 @@ export const Map = () => {
                             style={{ borderColor: !marker.isWon && !isPrivate ? 'gray' : getMarkerBorderColor(marker.type) }}
                         />
                         {!marker.isWon && !isPrivate ? null : (
-                            <Callout tooltip onPress={() =>
-                                //@ts-ignore
-                                navigation.navigate("PointBio" as never, {
-                                    id: marker?.id,
-                                    ownerId: marker?.ownerId,
-                                    isPrivate: marker?.isPrivate
-                                })}>
+                            <Callout tooltip onPress={() => {
+                                if (marker.type === "chat") {
+                                    setStateMarkerById(marker.id)
+
+                                    const sorted = [me?.id, marker.id].sort();
+                                    const chatId = `chat-${sorted.join('-')}`;
+
+                                    //@ts-ignore
+                                    navigation.navigate("PrivateChat" as never, {
+                                        chatId: chatId,
+                                        participants: [me?.id, marker.id],
+                                    } as never)
+                                }
+                                else {
+
+                                    //@ts-ignore
+                                    navigation.navigate("PointBio" as never, {
+                                        id: marker?.id,
+                                        ownerId: marker?.ownerId,
+                                        isPrivate: marker?.isPrivate
+                                    })
+                                }
+                            }}>
                                 <View className='bg-[#272836] border-[2px] p-3 rounded-lg shadow-lg min-w-[200px] min-h-24' style={{ borderColor: getMarkerBorderColor(marker.type) }}>
                                     <View className="absolute bottom-[5px] left-1/2 -translate-x-1/2">
                                         <View
@@ -242,6 +269,6 @@ export const Map = () => {
             </View>
             <ModalWrapper isBottomSheet children={<PointTypeContent isPrivateView={!isPrivate} longPressCoordinate={markerPosition} />} storeKey='pointType' />
             <ModalWrapper isBottomSheet children={<BetBottomContent />} storeKey='bet' />
-        </View>
+        </View >
     )
 }

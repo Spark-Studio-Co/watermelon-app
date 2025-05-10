@@ -1,7 +1,7 @@
 import { apiClient } from "@/src/app/config/apiClient";
 import { useQuery } from "@tanstack/react-query";
 
-export const useMarkerDataById = (id: string) => {
+export const useMarkerDataById = (id: string | null) => {
     return useQuery({
         queryKey: ['markerById', id],
         queryFn: async ({ queryKey }) => {

@@ -65,26 +65,30 @@ export const BookmarksScreen = () => {
             >
                 {active === 'Point' && markers?.map((marker: any, index: number) => (
                     <View key={index} className="mb-4">
-                        <SavedPointTab
-                            //@ts-ignore
-                            onPress={() => navigation.navigate("PointBio" as never, { id: marker?.id, ownerId: marker?.ownerId })}
-                            image={marker.image}
-                            type={marker.type}
-                            name={marker.name ?? `Point #${index}`}
-                            subscribers={marker?.followersCount}
-                            views={marker.views ?? 0}
-                        />
+                        {(marker.type !== "chat") &&
+                            <SavedPointTab
+                                //@ts-ignore
+                                onPress={() => navigation.navigate("PointBio" as never, { id: marker?.id, ownerId: marker?.ownerId })}
+                                image={marker.image}
+                                type={marker.type}
+                                name={marker.name ?? `Point #${index}`}
+                                subscribers={marker?.followersCount}
+                                views={marker.views ?? 0}
+                            />}
                     </View>
                 ))}
-                {active === 'Chats' && myBetPointTabs.map((tab, index) => (
+                {active === 'Chats' && markers?.map((marker: any, index: number) => (
                     <View key={index} className="mb-4">
-                        <SavedPointTab
-                            type='chat'
-                            name={tab.name}
-                            subscribers={tab.subscribers}
-                            views={tab.views}
-                            members={tab.members}
-                        />
+                        {(marker.type === "chat") &&
+                            <SavedPointTab
+                                //@ts-ignore
+                                onPress={() => navigation.navigate("PointBio" as never, { id: marker?.id, ownerId: marker?.ownerId })}
+                                image={marker.image}
+                                type={marker.type}
+                                name={marker.name ?? `Point #${index}`}
+                                subscribers={marker?.followersCount}
+                                views={marker.views ?? 0}
+                            />}
                     </View>
                 ))}
             </ScrollView>
