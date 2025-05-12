@@ -122,7 +122,6 @@ export const useChatStore = create<IChatStore>((set, get) => ({
 
         fetchMessages();
 
-
         socket.on("newMessage", (msg) => {
             if (msg.chatId && msg.chatId !== get().currentChatId) return;
 
@@ -130,18 +129,20 @@ export const useChatStore = create<IChatStore>((set, get) => ({
                 id: msg.id || `temp-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
                 text: msg.text,
                 date: new Date(msg.sentAt || Date.now()).toLocaleTimeString().slice(0, 5),
-                isMy: msg.userId === userId,
+                isMy: msg.user?.id === userId,
                 sentAt: msg.sentAt || Date.now(),
                 userId: msg.userId,
                 chatId: msg.chatId || get().currentChatId,
             };
 
             set((state) => {
-                const existingIndex = state.messages.findIndex(
-                    (m) =>
+                const existingIndex = state.messages.findIndex((m) =>
+                    (m.id && newMsg.id && m.id === newMsg.id) ||
+                    (
                         m.text === newMsg.text &&
                         m.userId === newMsg.userId &&
                         Math.abs((m.sentAt || 0) - (newMsg.sentAt || 0)) < 5000
+                    )
                 );
 
                 if (existingIndex !== -1) {
@@ -164,7 +165,7 @@ export const useChatStore = create<IChatStore>((set, get) => ({
                 id: msg.id || `temp-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
                 text: msg.text,
                 date: new Date(msg.sentAt || Date.now()).toLocaleTimeString().slice(0, 5),
-                isMy: msg.userId === userId,
+                isMy: msg.user.id === userId,
                 sentAt: msg.sentAt || Date.now(),
                 userId: msg.userId,
                 chatId: msg.chatId || get().currentChatId,
@@ -247,7 +248,6 @@ export const useChatStore = create<IChatStore>((set, get) => ({
     },
 
     _sendMessageImpl: (text, chatId, userId, receiverId) => {
-
 
         socket.emit("sendMessage", {
             text,

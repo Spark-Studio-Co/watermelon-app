@@ -20,7 +20,7 @@ export const PrivateChatScreen = () => {
     chatType: string
   };
 
-  const { avatar, messages, connect, disconnect, sendMessage, getStatuses } =
+  const { avatar, messages, connect, disconnect, sendMessage, getStatuses, sendGroupMessage } =
     useChatStore();
 
   // Connect to chat and fetch messages
@@ -74,7 +74,6 @@ export const PrivateChatScreen = () => {
     );
   }, [messages]);
 
-  // Function to send a message
   const handleSendMessage = useCallback(
     (text: string) => {
       if (!text.trim()) {
@@ -92,25 +91,28 @@ export const PrivateChatScreen = () => {
         return;
       }
 
-      // Find the receiverId (the other participant in the chat)
-      const receiverId = participants.find(id => id !== userId);
-
-      if (!receiverId) {
-        console.error("[PrivateChatScreen] Error: Could not determine receiverId!");
-        // Continue anyway, as we might still be able to send the message
-      }
-
-      console.log("[PrivateChatScreen] Sending message with params:", {
+      // Для дебага
+      console.log("[PrivateChatScreen] Sending message:", {
         text,
         chatId,
         userId,
-        receiverId
+        chatType,
       });
 
-      // Call the sendMessage function with all required parameters including receiverId
-      sendMessage(text, chatId, userId, receiverId);
+      if (chatType === "group") {
+        sendGroupMessage(text, chatId, userId);
+      } else {
+        const receiverId = participants.find(id => id !== userId);
+
+        if (!receiverId) {
+          console.error("[PrivateChatScreen] Error: Could not determine receiverId!");
+          return;
+        }
+
+        sendMessage(text, chatId, userId, receiverId);
+      }
     },
-    [sendMessage, userId, chatId, participants]
+    [sendMessage, sendGroupMessage, userId, chatId, participants, chatType]
   );
 
   if (isLoadingMe || !me) {
