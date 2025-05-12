@@ -5,8 +5,8 @@ import { ChatMessage } from "@/src/features/chat/ui/chat-message";
 import { useChatStore } from "@/src/features/chat/model/chat-store";
 import { useGetMe } from "@/src/entities/users/api/use-get-me";
 import { useRoute } from "@react-navigation/native";
-import { getChatMessages } from "@/src/features/chat/api/chat-api";
-import { socket } from "@/src/features/chat/api/socket";
+
+import { ChatInputType } from "../../layouts/main-layout";
 
 export const PrivateChatScreen = () => {
   const { data: me, isLoading: isLoadingMe } = useGetMe();
@@ -14,9 +14,10 @@ export const PrivateChatScreen = () => {
   const route = useRoute();
   const [isLoading, setIsLoading] = useState(true);
 
-  const { chatId, participants } = route.params as {
+  const { chatId, participants, chatType } = route.params as {
     chatId: string;
     participants: string[];
+    chatType: string
   };
 
   const { avatar, messages, connect, disconnect, sendMessage, getStatuses } =
@@ -53,8 +54,6 @@ export const PrivateChatScreen = () => {
 
     setupChat();
 
-    // We don't need to set up socket listeners here as they're already in the store
-    // This prevents duplicate message handling
 
     // Cleanup on unmount
     return () => {
@@ -78,11 +77,40 @@ export const PrivateChatScreen = () => {
   // Function to send a message
   const handleSendMessage = useCallback(
     (text: string) => {
-      if (!text.trim() || !userId || !chatId) return;
-      console.log("[PrivateChatScreen] Sending message:", text);
-      sendMessage(text, chatId, userId);
+      if (!text.trim()) {
+        console.log("[PrivateChatScreen] Empty message, not sending");
+        return;
+      }
+
+      if (!userId) {
+        console.error("[PrivateChatScreen] Error: userId is undefined!");
+        return;
+      }
+
+      if (!chatId) {
+        console.error("[PrivateChatScreen] Error: chatId is undefined!");
+        return;
+      }
+
+      // Find the receiverId (the other participant in the chat)
+      const receiverId = participants.find(id => id !== userId);
+
+      if (!receiverId) {
+        console.error("[PrivateChatScreen] Error: Could not determine receiverId!");
+        // Continue anyway, as we might still be able to send the message
+      }
+
+      console.log("[PrivateChatScreen] Sending message with params:", {
+        text,
+        chatId,
+        userId,
+        receiverId
+      });
+
+      // Call the sendMessage function with all required parameters including receiverId
+      sendMessage(text, chatId, userId, receiverId);
     },
-    [sendMessage, chatId, userId]
+    [sendMessage, userId, chatId, participants]
   );
 
   if (isLoadingMe || !me) {
@@ -97,7 +125,7 @@ export const PrivateChatScreen = () => {
   }
 
   return (
-    <MainLayout isChat chatInputType="private" onSend={handleSendMessage}>
+    <MainLayout isChat chatInputType={chatType as ChatInputType} onSend={handleSendMessage}>
       {isLoading ? (
         <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="small" color="#0000ff" />

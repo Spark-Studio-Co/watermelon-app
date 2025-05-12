@@ -180,6 +180,7 @@ export const AuctionScreen = () => {
 
     useEffect(() => {
         refetch()
+        // console.table(auctions)
     }, [auctions])
 
     return (

@@ -18,6 +18,7 @@ import { useGetMe } from '@/src/entities/users/api/use-get-me';
 import { useMarkersData } from '@/src/entities/markers/api/use-markers-data';
 import { useChatStore } from '../../chat/model/chat-store';
 import { useMarkerDataById } from '@/src/entities/markers/api/use-marker-data-by-id';
+import { useGetUsers } from '@/src/entities/users/api/use-get-users';
 
 // icons
 import CenterMeIcon from '@/src/shared/icons/center-me-icon';
@@ -48,6 +49,8 @@ export const Map = () => {
     const { data: me } = useGetMe()
     const { data: markerById } = useMarkerDataById(stateMarkerById)
     const { setName, setAvatar } = useChatStore()
+    const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
+    const { refetch: refetchUserData } = useGetUsers(selectedUserId || undefined)
     const { open: openPointType } = useVisibleStore('pointType')
     const { type } = useTypePointStore()
     const { markerPosition, setMarkerPosition } = useMarkerPositionStore()
@@ -59,6 +62,49 @@ export const Map = () => {
     const publicMarkers = markers?.filter((marker: any) => marker.isPrivate === false)
 
     const markersList = isPrivate ? privateMarkers : publicMarkers;
+
+    const handleChatNavigate = (id: string | null) => {
+        if (!id || !me?.id) return;
+
+        console.log('Navigating to chat for marker ID:', id);
+
+        // Set basic chat info
+        if (markerById) {
+            setName(markerById.name ?? 'Chat');
+            setAvatar(markerById.image);
+        } else {
+            setName('Chat');
+        }
+
+        // Determine the chat ID
+        let chatId;
+        if (markerById?.chats && markerById.chats.length > 0) {
+            chatId = markerById.chats[0].id;
+            console.log('Using existing chat ID from marker:', chatId);
+        } else {
+            chatId = `chat-${id}`;
+            console.log('Generated chat ID:', chatId);
+        }
+
+        // Create participants array
+        const participants = [me.id, id];
+
+        console.log('Navigating to PrivateChat with:', { chatId, participants });
+
+        // @ts-ignore - Ignore type checking for navigation
+        navigation.navigate('PrivateChat', {
+            chatId,
+            participants,
+            chatType: "group"
+        });
+
+        // Connect to chat room after navigation
+        setTimeout(() => {
+            console.log('Connecting to chat room:', chatId);
+            const { connect } = useChatStore.getState();
+            connect(chatId, me.id);
+        }, 100);
+    };
 
     const getMarkerBorderColor = (pointType: string) => {
         switch (pointType) {
@@ -180,15 +226,7 @@ export const Map = () => {
                             <Callout tooltip onPress={() => {
                                 if (marker.type === "chat") {
                                     setStateMarkerById(marker.id)
-
-                                    const sorted = [me?.id, marker.id].sort();
-                                    const chatId = `chat-${sorted.join('-')}`;
-
-                                    //@ts-ignore
-                                    navigation.navigate("PrivateChat" as never, {
-                                        chatId: chatId,
-                                        participants: [me?.id, marker.id],
-                                    } as never)
+                                    handleChatNavigate(marker.id)
                                 }
                                 else {
 
@@ -200,7 +238,7 @@ export const Map = () => {
                                     })
                                 }
                             }}>
-                                <View className='bg-[#272836] border-[2px] p-3 rounded-lg shadow-lg min-w-[200px] min-h-24' style={{ borderColor: getMarkerBorderColor(marker.type) }}>
+                                <View className='bg-[#272836] border-[2px] p-3 rounded-lg shadow-lg min-w-[220px] min-h-24' style={{ borderColor: getMarkerBorderColor(marker.type) }}>
                                     <View className="absolute bottom-[5px] left-1/2 -translate-x-1/2">
                                         <View
                                             style={{
@@ -236,7 +274,7 @@ export const Map = () => {
                                     <View className='items-start w-full justify-between flex-row'>
                                         <View className='flex flex-col'>
                                             <View className='flex-row items-center mb-1'>
-                                                <Text weight="medium" className='text-white text-[20px]'>{marker.name}</Text>
+                                                <Text weight="medium" className='text-white text-[20px] whitespace-pre-wrap'>{marker.name}</Text>
                                             </View>
                                             <Text weight="regular" className='text-[#817E7E] text-[12px]'>{renderedMarkerType(marker.type)}</Text>
                                         </View>

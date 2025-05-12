@@ -1,7 +1,7 @@
 import { Input } from '@/src/shared/ui/input/input'
 import { MainLayout } from '../../layouts/main-layout'
 import { View } from 'react-native'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { FriendTab } from '@/src/features/friend-tab/ui/friend-tab'
 
 import { useGetFriends } from '@/src/entities/friends/api/use-friends-data'
@@ -10,6 +10,7 @@ import { useGetUsers } from '@/src/entities/users/api/use-get-users'
 import { useNavigation } from '@react-navigation/native'
 import { useChatStore } from '@/src/features/chat/model/chat-store'
 import { useGetMe } from '@/src/entities/users/api/use-get-me'
+import { useGetPrivateChat, useCreatePrivateChat } from '@/src/features/chat/api/use-get-private-chat'
 
 
 export const MyFriendsScreen = () => {
@@ -20,28 +21,106 @@ export const MyFriendsScreen = () => {
     const { data: incomingFriends } = useIncomingFriendsData()
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
     const { refetch } = useGetUsers(selectedUserId || undefined)
+    const getPrivateChat = useGetPrivateChat()
+    const createPrivateChat = useCreatePrivateChat()
 
     const handleChatNavigate = async (id: string | null) => {
-        if (id) {
-            setSelectedUserId(id)
+        if (!id || !me?.id) return;
 
-            const result = await refetch()
-            const userData = result.data
+        setSelectedUserId(id);
 
-            if (userData) {
-                setName(userData.name ?? 'User Name')
-                setAvatar(userData.avatar)
+        const result = await refetch();
+        const userData = result.data;
 
-                const sorted = [me?.id, id].sort();
-                const chatId = `chat-${sorted.join('-')}`;
+        if (!userData) return;
+
+        // Set user info in chat store
+        setName(userData.name ?? 'User Name');
+        setAvatar(userData.avatar);
+
+        try {
+            // First try to get an existing chat
+            try {
+                // Try to get or create the chat
+                const chatResponse = await getPrivateChat.mutateAsync({
+                    userId: me.id,
+                    targetUserId: id
+                });
+
+                // Ensure we have a valid chat ID
+                if (!chatResponse || !chatResponse.chatId) {
+                    throw new Error('Invalid chat response: missing chat ID');
+                }
+
+                console.log('Got chat ID:', chatResponse.chatId);
+                console.log('Participants:', chatResponse.participants);
+
+                // Navigate to chat screen
                 //@ts-ignore
                 navigation.navigate("PrivateChat" as never, {
-                    chatId: chatId,
-                    participants: [me?.id, id],
-                } as never)
+                    chatId: chatResponse.chatId,
+                    participants: chatResponse.participants,
+                    chatType: "private"
+                } as never);
+
+                // Connect to chat room after navigation has started
+                setTimeout(() => {
+                    const { connect } = useChatStore.getState();
+                    connect(chatResponse.chatId, me.id);
+                }, 100);
+
+            } catch (getError: any) {
+                // If we get a 500 error, the chat doesn't exist yet, so create it
+                if (getError?.response?.status === 500) {
+                    console.log('Chat does not exist, creating new chat...');
+
+                    // Create a new chat
+                    const newChatResponse = await createPrivateChat.mutateAsync({
+                        userA: me.id,
+                        userB: id
+                    });
+
+                    // Ensure we have a valid chat ID
+                    if (!newChatResponse || !newChatResponse.id) {
+                        throw new Error('Invalid chat creation response: missing chat ID');
+                    }
+
+                    console.log('Created new chat:', newChatResponse.id);
+
+                    // Extract participants from the response or use default
+                    const participants = newChatResponse.participants ?
+                        newChatResponse.participants.map(p => p.userId) :
+                        [me.id, id];
+
+                    // Get the chat ID, ensuring it's a string
+                    const chatId = newChatResponse.id || newChatResponse.chatId || '';
+
+                    if (!chatId) {
+                        throw new Error('Missing chat ID in response');
+                    }
+
+                    // Navigate to chat screen
+                    //@ts-ignore
+                    navigation.navigate("PrivateChat" as never, {
+                        chatId: chatId,
+                        participants: participants,
+                        chatType: "private"
+                    } as never);
+
+                    // Connect to chat room after navigation has started
+                    setTimeout(() => {
+                        const { connect } = useChatStore.getState();
+                        connect(chatId, me.id);
+                    }, 100);
+                } else {
+                    // If it's another error, rethrow it
+                    throw getError;
+                }
             }
+        } catch (error) {
+            console.error("Failed to handle chat navigation:", error);
         }
-    }
+    };
 
     return (
         <MainLayout isBack title='Мои друзья'>

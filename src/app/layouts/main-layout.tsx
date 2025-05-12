@@ -18,7 +18,7 @@ import RightArrowIcon from '@/src/shared/icons/right-arrow-icon';
 
 import { useNavigation } from '@react-navigation/native';
 
-type ChatInputType = "comments" | "private" | "group"
+export type ChatInputType = "comments" | "private" | "group"
 
 interface MainLayoutProps {
     children: React.ReactNode;
@@ -51,7 +51,7 @@ export const MainLayout = ({ children, isUserTab, isBack, title, isMap, isWeekly
                     {isTasks && <TasksTab />}
                     {isBookmarks && <BookmarkTab />}
                     {isActivity && <ActivityTab />}
-                    {(chatInputType === 'group' || chatInputType === 'private') && <ChatTab />}
+                    {(chatInputType === 'group' || chatInputType === 'private') && <ChatTab isGlobal={chatInputType === 'group'} />}
                     {isMap ?
                         <>
                             <View>

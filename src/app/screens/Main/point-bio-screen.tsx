@@ -38,6 +38,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { usePersonalizedPublicationsData } from "@/src/entities/markers/api/use-personalized-publications-data";
 import { useGetUsers } from "@/src/entities/users/api/use-get-users";
 import { useChatStore } from "@/src/features/chat/model/chat-store";
+import { useGetPrivateChat, useCreatePrivateChat } from "@/src/features/chat/api/use-get-private-chat";
 
 type PointBioRouteProp = {
   route: RouteProp<any, any>;
@@ -70,6 +71,8 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
   const { setName, setAvatar } = useChatStore()
   const { data: userById, refetch: refetchUsersData } = useGetUsers(ownerId)
   const { mutate: uploadImage } = useUploadImage();
+  const getPrivateChat = useGetPrivateChat();
+  const createPrivateChat = useCreatePrivateChat();
   const { setId, setIsPrivate } = useMarkerStore();
   const { data: marker } = useMarkerDataById(markerId);
   const { data: me } = useGetMe();
@@ -174,9 +177,6 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
     refetch();
   }, [publications, active === "Публикации"]);
 
-  const sorted = [me?.id, ownerId].sort();
-  const chatId = `chat-${markerId}-${sorted.join('-')}`;
-
   return (
     <MainLayout>
       <View className="w-[80%] mx-auto mt-4">
@@ -198,15 +198,101 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
               </Text>
             </Button>
             <Button
-              onPress={() => {
-                refetchUsersData()
-                setName(userById?.name ?? 'User Name')
-                setAvatar(userById?.avatar)
-                //@ts-ignore
-                navigation.navigate("PrivateChat" as never, {
-                  chatId: chatId,
-                  participants: [me?.id, ownerId],
-                });
+              onPress={async () => {
+                if (!ownerId || !me?.id) return;
+
+                // Fetch user data
+                const result = await refetchUsersData();
+                const userData = result.data;
+
+                if (!userData) return;
+
+                // Set user info in chat store
+                setName(userData.name ?? 'User Name');
+                setAvatar(userData.avatar);
+
+                try {
+                  // First try to get an existing chat
+                  try {
+                    // Try to get or create the chat
+                    const chatResponse = await getPrivateChat.mutateAsync({
+                      userId: me.id,
+                      targetUserId: ownerId
+                    });
+
+                    // Ensure we have a valid chat ID
+                    if (!chatResponse || !chatResponse.chatId) {
+                      throw new Error('Invalid chat response: missing chat ID');
+                    }
+
+                    console.log('Got chat ID:', chatResponse.chatId);
+                    console.log('Participants:', chatResponse.participants);
+
+                    // Navigate to chat screen
+                    //@ts-ignore
+                    navigation.navigate("PrivateChat" as never, {
+                      chatId: chatResponse.chatId,
+                      participants: chatResponse.participants,
+                      chatType: "private"
+                    } as never);
+
+                    // Connect to chat room after navigation has started
+                    setTimeout(() => {
+                      const { connect } = useChatStore.getState();
+                      connect(chatResponse.chatId, me.id);
+                    }, 100);
+
+                  } catch (getError: any) {
+                    // If we get a 500 error, the chat doesn't exist yet, so create it
+                    if (getError?.response?.status === 500) {
+                      console.log('Chat does not exist, creating new chat...');
+
+                      // Create a new chat
+                      const newChatResponse = await createPrivateChat.mutateAsync({
+                        userA: me.id,
+                        userB: ownerId
+                      });
+
+                      // Ensure we have a valid chat ID
+                      if (!newChatResponse || !newChatResponse.id) {
+                        throw new Error('Invalid chat creation response: missing chat ID');
+                      }
+
+                      console.log('Created new chat:', newChatResponse.id);
+
+                      // Extract participants from the response or use default
+                      const participants = newChatResponse.participants ?
+                        newChatResponse.participants.map(p => p.userId) :
+                        [me.id, ownerId];
+
+                      // Get the chat ID, ensuring it's a string
+                      const chatId = newChatResponse.id || newChatResponse.chatId || '';
+
+                      if (!chatId) {
+                        throw new Error('Missing chat ID in response');
+                      }
+
+                      // Navigate to chat screen
+                      //@ts-ignore
+                      navigation.navigate("PrivateChat" as never, {
+                        chatId: chatId,
+                        participants: participants,
+                        chatType: "private"
+                      } as never);
+
+                      // Connect to chat room after navigation has started
+                      setTimeout(() => {
+                        const { connect } = useChatStore.getState();
+                        connect(chatId, me.id);
+                      }, 100);
+                    } else {
+                      // If it's another error, rethrow it
+                      throw getError;
+                    }
+                  }
+                } catch (error) {
+                  console.error("Failed to handle chat navigation:", error);
+                }
               }}
               variant="custom"
               className="w-[32.822383880615234px] h-[32.822383880615234px] bg-[#8888882E] rounded-[7.77px] border-[0.86px] border-[#888888] flex items-center justify-center ml-2"

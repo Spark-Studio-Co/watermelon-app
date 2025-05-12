@@ -6,7 +6,6 @@ import { SingleValueInput } from "@/src/shared/ui/single-value-input/single-valu
 import { useNavigation } from "@react-navigation/native";
 import { StepsIndicator } from "@/src/shared/ui/steps-indicator/steps-indicator";
 import { useActiveStore } from "@/src/shared/model/use-active-store";
-import { hp } from "@/src/shared/utils/resize-dimensions";
 import { useSendVerificationStore } from "@/src/entities/registration/model/send-verification-store";
 import { useVerifyCode } from "@/src/entities/registration/api/use-verify-code";
 
