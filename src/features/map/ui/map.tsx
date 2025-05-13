@@ -215,8 +215,7 @@ export const Map = () => {
                                         setName(marker.name ?? 'Chat');
                                         setAvatar(marker.image ?? null);
 
-                                        useChatStore.getState().setMetadataLoaded(false);
-                                        useChatStore.getState().connect(chatId, me.id);
+                                        useChatStore.getState().connect(chatId, me.id, true);
 
                                         //@ts-ignore
                                         navigation.navigate('PrivateChat', {

@@ -5,6 +5,8 @@ import { ChatMessage } from "@/src/features/chat/ui/chat-message";
 import { useChatStore } from "@/src/features/chat/model/chat-store";
 import { useGetMe } from "@/src/entities/users/api/use-get-me";
 import { useRoute } from "@react-navigation/native";
+import { useShallow } from 'zustand/react/shallow';
+
 
 import user_image from '../../../images/user_image.png'
 
@@ -22,36 +24,42 @@ export const PrivateChatScreen = () => {
     chatType: string
   };
 
-  const { avatar, messages, connect, disconnect, sendMessage, getStatuses, sendGroupMessage } =
-    useChatStore();
+  const {
+    avatar,
+    messages,
+    connect,
+    disconnect,
+    sendMessage,
+    getStatuses,
+    sendGroupMessage
+  } = useChatStore(
+    useShallow((state) => ({
+      avatar: state.avatar,
+      messages: state.messages,
+      connect: state.connect,
+      disconnect: state.disconnect,
+      sendMessage: state.sendMessage,
+      getStatuses: state.getStatuses,
+      sendGroupMessage: state.sendGroupMessage,
+    }))
+  );
 
   useEffect(() => {
     if (!userId || !chatId || !participants.length) return;
 
     let isMounted = true;
-    console.log("[PrivateChatScreen] Setting up chat:", chatId);
+    setIsLoading(true);
 
-    const setupChat = async () => {
-      setIsLoading(true);
-      try {
-        // Подключение с флагом группы
-        connect(chatId, userId, chatType === 'group');
-        getStatuses(participants);
-      } catch (error) {
-        console.error("[PrivateChatScreen] Error setting up chat:", error);
-      } finally {
-        if (isMounted) setIsLoading(false);
-      }
-    };
+    connect(chatId, userId, chatType === 'group');
+    getStatuses(participants);
 
-    setupChat();
+    setIsLoading(false);
 
     return () => {
       isMounted = false;
-      console.log("[PrivateChatScreen] Disconnecting from chat:", chatId);
       disconnect();
     };
-  }, [userId, chatId, participants, chatType, connect, disconnect, getStatuses]);
+  }, [userId, chatId, participants, chatType]);
 
   // Debug messages
   useEffect(() => {
@@ -102,7 +110,7 @@ export const PrivateChatScreen = () => {
         sendMessage(text, chatId, userId, receiverId);
       }
     },
-    [sendMessage, sendGroupMessage, userId, chatId, participants, chatType]
+    [userId, chatId, participants, chatType]
   );
 
   if (isLoadingMe || !me) {

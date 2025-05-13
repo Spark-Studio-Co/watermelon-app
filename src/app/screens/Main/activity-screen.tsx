@@ -29,15 +29,15 @@ export const ActivityScreen = () => {
     const { active } = useActiveStore('activity', 'marker_created')
     const { data: activities } = useActivitiesData()
 
-    type ActivityType = "marker_created" | "Friends";
+    type ActivityType = "Point" | "Friends";
 
     return (
         <MainLayout isActivity>
             <View className="flex flex-col items-center mx-auto w-full">
                 {active === 'marker_created' && (
-                    <View className="flex flex-col w-[90%] items-start mt-6">
+                    <View className="flex flex-col w-[90%] items-start mt-2 gap-y-4">
                         {activities?.map((item: any, index: number) => (
-                            item.type === "marker_created" && (
+                            item.type === "Point" && (
                                 <ActivityCard
                                     key={index}
                                     type={item.type as ActivityType}
@@ -50,9 +50,9 @@ export const ActivityScreen = () => {
                     </View>
                 )}
                 {active === 'Friends' && (
-                    <View className="flex flex-col w-[90%] items-start mt-6">
+                    <View className="flex flex-col w-[90%] items-end mt-2 gap-y-4">
                         {activities?.map((item: any, index: number) => (
-                            item.type !== "marker_created" && (
+                            item.type === "Friends" && (
                                 <ActivityCard
                                     key={index}
                                     type={item.type as ActivityType}

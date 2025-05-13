@@ -52,6 +52,7 @@
     "react-native-sse": "^1.2.1",
     "react-native-status-bar-height": "^2.6.0",
     "react-native-svg": "15.11.2",
+    "react-native-uuid": "^2.0.3",
     "react-native-web": "^0.20.0",
     "react-native-webview": "13.13.5",
     "socket.io-client": "^4.8.1",

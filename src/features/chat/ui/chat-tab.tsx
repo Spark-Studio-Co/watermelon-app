@@ -51,10 +51,9 @@ export const ChatTab = ({ isGlobal }: IChatTabProps) => {
                         : (
                             <Text
                                 weight="regular"
-                                className={`${status === "Online" ? "text-[#31A6FF]" : "text-[#656565]"
-                                    } text-[14px]`}
+                                className={`${status === "Online" ? "text-[#31A6FF]" : "text-[#656565]"} text-[14px]`}
                             >
-                                {status === "Online" ? "Online" : "Offline"}
+                                {status}
                             </Text>
                         )}
                 </View>

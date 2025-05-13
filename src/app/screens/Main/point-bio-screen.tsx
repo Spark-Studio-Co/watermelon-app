@@ -69,7 +69,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
   } = usePersonalizedPublicationsData(markerId);
 
   const { setName, setAvatar } = useChatStore()
-  const { data: userById, refetch: refetchUsersData } = useGetUsers(ownerId)
+  const { refetch: refetchUsersData } = useGetUsers(ownerId)
   const { mutate: uploadImage } = useUploadImage();
   const getPrivateChat = useGetPrivateChat();
   const createPrivateChat = useCreatePrivateChat();
@@ -236,11 +236,6 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
                       chatType: "private"
                     } as never);
 
-                    // Connect to chat room after navigation has started
-                    setTimeout(() => {
-                      const { connect } = useChatStore.getState();
-                      connect(chatResponse.chatId, me.id);
-                    }, 100);
 
                   } catch (getError: any) {
                     // If we get a 500 error, the chat doesn't exist yet, so create it
@@ -279,12 +274,6 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
                         participants: participants,
                         chatType: "private"
                       } as never);
-
-                      // Connect to chat room after navigation has started
-                      setTimeout(() => {
-                        const { connect } = useChatStore.getState();
-                        connect(chatId, me.id);
-                      }, 100);
                     } else {
                       // If it's another error, rethrow it
                       throw getError;
