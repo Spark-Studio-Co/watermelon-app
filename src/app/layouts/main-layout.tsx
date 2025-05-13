@@ -11,33 +11,40 @@ import { ChatTab } from '@/src/features/chat/ui/chat-tab';
 import { ActivityTab } from '@/src/features/activity/ui/activity-tab';
 import { TasksTab } from '@/src/features/tasks/ui/tasks-tab';
 import { BookmarkTab } from '@/src/features/bookmarks/ui/bookmark-tab';
-
 import { hp } from '@/src/shared/utils/resize-dimensions';
-
 import RightArrowIcon from '@/src/shared/icons/right-arrow-icon';
-
 import { useNavigation } from '@react-navigation/native';
+import { useRef, useEffect } from 'react';
 
 export type ChatInputType = "comments" | "private" | "group"
 
 interface MainLayoutProps {
     children: React.ReactNode;
-    isUserTab?: boolean
-    isBack?: boolean
-    title?: string
-    isMap?: boolean
-    isWeeklyChallenge?: boolean
-    isScrollable?: boolean
-    isChat?: boolean
-    chatInputType?: ChatInputType
-    isActivity?: boolean
-    isTasks?: boolean
-    isBookmarks?: boolean
+    isUserTab?: boolean;
+    isBack?: boolean;
+    title?: string;
+    isMap?: boolean;
+    isWeeklyChallenge?: boolean;
+    isScrollable?: boolean;
+    isChat?: boolean;
+    chatInputType?: ChatInputType;
+    isActivity?: boolean;
+    isTasks?: boolean;
+    isBookmarks?: boolean;
     onSend?: (text: string) => void;
 }
 
 export const MainLayout = ({ children, isUserTab, isBack, title, isMap, isWeeklyChallenge, isScrollable = true, isChat = false, chatInputType, isActivity = false, isTasks = false, isBookmarks = false, onSend }: MainLayoutProps) => {
-    const navigation = useNavigation()
+    const navigation = useNavigation();
+    const chatScrollRef = useRef<ScrollView>(null);
+
+    useEffect(() => {
+        if (isChat && chatScrollRef.current) {
+            setTimeout(() => {
+                chatScrollRef.current?.scrollToEnd({ animated: true });
+            }, 50);
+        }
+    }, [children]);
 
     return (
         <KeyboardAvoidingView
@@ -52,53 +59,60 @@ export const MainLayout = ({ children, isUserTab, isBack, title, isMap, isWeekly
                     {isBookmarks && <BookmarkTab />}
                     {isActivity && <ActivityTab />}
                     {(chatInputType === 'group' || chatInputType === 'private') && <ChatTab isGlobal={chatInputType === 'group'} />}
-                    {isMap ?
+                    {isMap ? (
                         <>
                             <View>
                                 {children}
                             </View>
                             {!isBack && <BottomNavigationPanel />}
                         </>
-                        :
-                        isScrollable ?
-                            <>
-                                {isBack && <View className='flex flex-row items-center gap-x-3 mx-4 my-4'><Button variant='custom' className='rotate-180' onPress={() => navigation.goBack()}><RightArrowIcon /></Button><Text weight='regular' className='text-white text-[16px]'>{title}</Text></View>}
-                                {isUserTab && <UserTab />}
-                                {isWeeklyChallenge && (
-                                    <View className=" mx-auto px-4 mb-4 w-[90%]">
-                                        <Text weight="bold" className="text-white text-[24px]">Weekly Challenge</Text>
-                                        <WeeklyChallengeTab />
-                                    </View>
-                                )}
-                                <ScrollView
-                                    contentContainerStyle={{
-                                        paddingBottom: hp(12), paddingHorizontal: 16,
-                                    }}
-                                    keyboardShouldPersistTaps="handled"
-                                    showsVerticalScrollIndicator={false}
-                                >
-                                    {children}
-                                </ScrollView>
-                                {!isBack && <BottomNavigationPanel />}
-                                {isChat && <ChatInput type={chatInputType || 'comments'} onSend={onSend} />}
-                            </>
-                            :
-                            <>
-                                {isBack && <View className='flex flex-row items-center gap-x-3 mx-4 my-4'><Button variant='custom' className='rotate-180' onPress={() => navigation.goBack()}><RightArrowIcon /></Button><Text weight='regular' className='text-white text-[16px]'>{title}</Text></View>}
-                                {isUserTab && <UserTab />}
-                                {isWeeklyChallenge && (
-                                    <View className=" mx-auto px-4 mb-4 w-[90%] min-h-[100vh] flex-1">
-                                        <Text weight="bold" className="text-white text-[24px]">Weekly Challenge</Text>
-                                        <WeeklyChallengeTab />
-                                    </View>
-                                )}
-                                <View
-                                    className=" mx-auto px-4 mb-44">
-                                    {children}
+                    ) : isChat ? (
+                        <>
+                            <ScrollView
+                                ref={chatScrollRef}
+                                contentContainerStyle={{ paddingBottom: hp(12), paddingHorizontal: 16 }}
+                                keyboardShouldPersistTaps="handled"
+                                showsVerticalScrollIndicator={false}
+                            >
+                                {children}
+                            </ScrollView>
+                            <ChatInput type={chatInputType || 'comments'} onSend={onSend} />
+                        </>
+                    ) : isScrollable ? (
+                        <>
+                            {isBack && <View className='flex flex-row items-center gap-x-3 mx-4 my-4'><Button variant='custom' className='rotate-180' onPress={() => navigation.goBack()}><RightArrowIcon /></Button><Text weight='regular' className='text-white text-[16px]'>{title}</Text></View>}
+                            {isUserTab && <UserTab />}
+                            {isWeeklyChallenge && (
+                                <View className=" mx-auto px-4 mb-4 w-[90%]">
+                                    <Text weight="bold" className="text-white text-[24px]">Weekly Challenge</Text>
+                                    <WeeklyChallengeTab />
                                 </View>
-                                {!isBack && <BottomNavigationPanel />}
-                            </>
-                    }
+                            )}
+                            <ScrollView
+                                contentContainerStyle={{ paddingBottom: hp(12), paddingHorizontal: 16 }}
+                                keyboardShouldPersistTaps="handled"
+                                showsVerticalScrollIndicator={false}
+                            >
+                                {children}
+                            </ScrollView>
+                            {!isBack && <BottomNavigationPanel />}
+                        </>
+                    ) : (
+                        <>
+                            {isBack && <View className='flex flex-row items-center gap-x-3 mx-4 my-4'><Button variant='custom' className='rotate-180' onPress={() => navigation.goBack()}><RightArrowIcon /></Button><Text weight='regular' className='text-white text-[16px]'>{title}</Text></View>}
+                            {isUserTab && <UserTab />}
+                            {isWeeklyChallenge && (
+                                <View className=" mx-auto px-4 mb-4 w-[90%] min-h-[100vh] flex-1">
+                                    <Text weight="bold" className="text-white text-[24px]">Weekly Challenge</Text>
+                                    <WeeklyChallengeTab />
+                                </View>
+                            )}
+                            <View className=" mx-auto px-4 mb-44">
+                                {children}
+                            </View>
+                            {!isBack && <BottomNavigationPanel />}
+                        </>
+                    )}
                 </SafeAreaView>
             </View>
         </KeyboardAvoidingView>

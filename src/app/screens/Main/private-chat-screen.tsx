@@ -6,6 +6,8 @@ import { useChatStore } from "@/src/features/chat/model/chat-store";
 import { useGetMe } from "@/src/entities/users/api/use-get-me";
 import { useRoute } from "@react-navigation/native";
 
+import user_image from '../../../images/user_image.png'
+
 import { ChatInputType } from "../../layouts/main-layout";
 
 export const PrivateChatScreen = () => {
@@ -23,45 +25,33 @@ export const PrivateChatScreen = () => {
   const { avatar, messages, connect, disconnect, sendMessage, getStatuses, sendGroupMessage } =
     useChatStore();
 
-  // Connect to chat and fetch messages
   useEffect(() => {
     if (!userId || !chatId || !participants.length) return;
 
-    // Flag to track if component is mounted
     let isMounted = true;
     console.log("[PrivateChatScreen] Setting up chat:", chatId);
 
     const setupChat = async () => {
       setIsLoading(true);
       try {
-        // Connect to chat room via socket
-        // This will handle fetching messages via the store
-        connect(chatId, userId);
-
-        // Get user statuses
+        // Подключение с флагом группы
+        connect(chatId, userId, chatType === 'group');
         getStatuses(participants);
-
-        // We don't need to fetch messages here as the store already does it
-        // This prevents duplicate messages
       } catch (error) {
         console.error("[PrivateChatScreen] Error setting up chat:", error);
       } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
+        if (isMounted) setIsLoading(false);
       }
     };
 
     setupChat();
 
-
-    // Cleanup on unmount
     return () => {
       isMounted = false;
       console.log("[PrivateChatScreen] Disconnecting from chat:", chatId);
       disconnect();
     };
-  }, [userId, chatId, participants, connect, disconnect, getStatuses]);
+  }, [userId, chatId, participants, chatType, connect, disconnect, getStatuses]);
 
   // Debug messages
   useEffect(() => {
@@ -143,7 +133,7 @@ export const PrivateChatScreen = () => {
         messages.map((message, index) => (
           <View className="flex flex-col mb-10" key={index}>
             <ChatMessage
-              avatar={!message.isMy ? avatar : undefined}
+              avatar={!message.isMy ? avatar === null ? user_image : avatar : avatar}
               {...message}
             />
           </View>

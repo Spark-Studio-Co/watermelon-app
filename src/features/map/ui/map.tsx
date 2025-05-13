@@ -5,6 +5,7 @@ import { MapSwitch } from '@/src/shared/ui/map-switch/map-switch';
 import Text from '@/src/shared/ui/text/text';
 //@ts-ignore
 import _ from 'lodash';
+import { ActivityIndicator } from 'react-native';
 
 import { customMapStyle } from '../config/map-styles';
 
@@ -43,6 +44,7 @@ export const Map = () => {
     const mapRef = useRef<MapView>(null);
     const [selectedMarker, setSelectedMarker] = useState<MarkerData | null>(null);
     const [stateMarkerById, setStateMarkerById] = useState<string | null>(null)
+    const [isLoadingChat, setIsLoadingChat] = useState(false);
     const [isPrivate, setIsPrivate] = useState(true);
 
     const navigation = useNavigation()
@@ -63,48 +65,28 @@ export const Map = () => {
 
     const markersList = isPrivate ? privateMarkers : publicMarkers;
 
-    const handleChatNavigate = (id: string | null) => {
-        if (!id || !me?.id) return;
+    useEffect(() => {
+        if (isLoadingChat && markerById?.chats?.[0]?.id && me?.id) {
+            const chatId = markerById.chats[0].id;
+            const participants = [me.id, markerById.ownerId];
 
-        console.log('Navigating to chat for marker ID:', id);
-
-        // Set basic chat info
-        if (markerById) {
-            setName(markerById.name ?? 'Chat');
+            setName(markerById.name ?? "Chat");
             setAvatar(markerById.image);
-        } else {
-            setName('Chat');
+
+            //@ts-ignore
+            navigation.navigate("PrivateChat", {
+                chatId,
+                participants,
+                chatType: "group"
+            });
+
+            setTimeout(() => {
+                useChatStore.getState().connect(chatId, me.id);
+                setIsLoadingChat(false);
+            }, 100);
         }
+    }, [markerById, isLoadingChat]);
 
-        // Determine the chat ID
-        let chatId;
-        if (markerById?.chats && markerById.chats.length > 0) {
-            chatId = markerById.chats[0].id;
-            console.log('Using existing chat ID from marker:', chatId);
-        } else {
-            chatId = `chat-${id}`;
-            console.log('Generated chat ID:', chatId);
-        }
-
-        // Create participants array
-        const participants = [me.id, id];
-
-        console.log('Navigating to PrivateChat with:', { chatId, participants });
-
-        // @ts-ignore - Ignore type checking for navigation
-        navigation.navigate('PrivateChat', {
-            chatId,
-            participants,
-            chatType: "group"
-        });
-
-        // Connect to chat room after navigation
-        setTimeout(() => {
-            console.log('Connecting to chat room:', chatId);
-            const { connect } = useChatStore.getState();
-            connect(chatId, me.id);
-        }, 100);
-    };
 
     const getMarkerBorderColor = (pointType: string) => {
         switch (pointType) {
@@ -223,21 +205,35 @@ export const Map = () => {
                             style={{ borderColor: !marker.isWon && !isPrivate ? 'gray' : getMarkerBorderColor(marker.type) }}
                         />
                         {!marker.isWon && !isPrivate ? null : (
-                            <Callout tooltip onPress={() => {
-                                if (marker.type === "chat") {
-                                    setStateMarkerById(marker.id)
-                                    handleChatNavigate(marker.id)
-                                }
-                                else {
+                            <Callout
+                                tooltip
+                                onPress={() => {
+                                    if (marker.type === "chat") {
+                                        const chatId = marker.chats?.[0]?.id;
+                                        if (!chatId || !me?.id) return;
 
-                                    //@ts-ignore
-                                    navigation.navigate("PointBio" as never, {
-                                        id: marker?.id,
-                                        ownerId: marker?.ownerId,
-                                        isPrivate: marker?.isPrivate
-                                    })
-                                }
-                            }}>
+                                        setName(marker.name ?? 'Chat');
+                                        setAvatar(marker.image ?? null);
+
+                                        useChatStore.getState().setMetadataLoaded(false);
+                                        useChatStore.getState().connect(chatId, me.id);
+
+                                        //@ts-ignore
+                                        navigation.navigate('PrivateChat', {
+                                            chatId,
+                                            participants: [me.id, marker.ownerId],
+                                            chatType: "group",
+                                        });
+                                    } else {
+                                        //@ts-ignore
+                                        navigation.navigate("PointBio" as never, {
+                                            id: marker?.id,
+                                            ownerId: marker?.ownerId,
+                                            isPrivate: marker?.isPrivate
+                                        });
+                                    }
+                                }}
+                            >
                                 <View className='bg-[#272836] border-[2px] p-3 rounded-lg shadow-lg min-w-[220px] min-h-24' style={{ borderColor: getMarkerBorderColor(marker.type) }}>
                                     <View className="absolute bottom-[5px] left-1/2 -translate-x-1/2">
                                         <View

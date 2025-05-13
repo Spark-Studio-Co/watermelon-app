@@ -10,6 +10,12 @@ export interface ChatMessage {
   sentAt: number;
 }
 
+export interface ChatMetadata {
+  chatId: string;
+  members: number;
+  amount: number;
+}
+
 export interface CreatePrivateChatRequest {
   userA: string;
   userB: string;
@@ -150,5 +156,26 @@ export const getPrivateChatMessages = async (
   } catch (error) {
     console.error("[getPrivateChatMessages] Error:", error);
     return [];
+  }
+};
+
+/**
+ * Fetch metadata for a specific chat
+ * @param chatId The ID of the chat to fetch metadata for
+ * @returns Promise with chat metadata
+ */
+export const getChatMetadata = async (chatId: string): Promise<ChatMetadata> => {
+  try {
+    const response = await apiClient.get(
+      `/chat/${chatId}/metadata`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("[getChatMetadata] Error fetching chat metadata:", error);
+    return {
+      chatId,
+      members: 0,
+      amount: 0
+    };
   }
 };

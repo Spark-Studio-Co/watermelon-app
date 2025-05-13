@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { socket } from "../api/socket";
 import user_image from "@/src/images/user_image.png";
-import { getChatMessages } from "../api/chat-api";
+import { getChatMessages, getChatMetadata } from "../api/chat-api";
 
 type Message = {
     id?: string;
@@ -16,6 +16,7 @@ type Message = {
 type Status = "Online" | "Offline";
 
 interface IChatStore {
+    isChatMetadataLoaded: boolean;
     messages: Message[];
     currentChatId: string | null;
     currentUserId: string | null;
@@ -24,34 +25,16 @@ interface IChatStore {
     name: string;
     members: number;
     onlineAmount: number;
-    connect: (chatId: string, userId: string) => void;
+    connect: (chatId: string, userId: string, isGroup?: boolean) => void;
     disconnect: () => void;
     getStatuses: (userIds: string[]) => void;
+    setMetadataLoaded: (val: boolean) => void;
     sendMessage: (
         text: string,
         chatId: string,
         userId: string,
         receiverId?: string
     ) => void;
-    /**
-     * Send a message to a chat.
-     * @param text The message text.
-     * @param chatId The chat ID.
-     * @param userId The user ID.
-     * @param receiverId The receiver ID. If not provided, the message is sent to the current chat.
-     */
-    _sendMessageImpl: (
-        text: string,
-        chatId: string,
-        userId: string,
-        receiverId?: string
-    ) => void;
-    /**
-     * Send a message to a group chat.
-     * @param text The message text.
-     * @param chatId The group chat ID.
-     * @param userId The user ID.
-     */
     sendGroupMessage: (
         text: string,
         chatId: string,
@@ -64,6 +47,20 @@ interface IChatStore {
 
 let isWaitingToSend = false;
 
+const unsubscribeSocketEvents = () => {
+    const events = [
+        "connect",
+        "disconnect",
+        "newMessage",
+        "newGroupMessage",
+        "userStatusChanged",
+        "userStatuses",
+        "messageHistory",
+        "chatMetadata",
+    ];
+    events.forEach((event) => socket.off(event));
+};
+
 export const useChatStore = create<IChatStore>((set, get) => ({
     messages: [],
     currentChatId: null,
@@ -73,15 +70,13 @@ export const useChatStore = create<IChatStore>((set, get) => ({
     name: "Jack Jallenhell",
     members: 0,
     onlineAmount: 0,
+    isChatMetadataLoaded: false,
 
-    connect: (chatId, userId) => {
+    connect: (chatId, userId, isGroup = false) => {
+        unsubscribeSocketEvents();
         console.log("[connect] Joining room:", chatId);
-        socket.off("connect");
-        socket.off("disconnect");
-        socket.off("newMessage");
-        socket.off("userStatusChanged");
-        socket.off("userStatuses");
-        socket.off("messageHistory");
+
+        set({ isChatMetadataLoaded: false });
 
         const isNewChat = get().currentChatId !== chatId;
         if (isNewChat) {
@@ -103,9 +98,7 @@ export const useChatStore = create<IChatStore>((set, get) => ({
                 const formattedMessages = apiMessages.map((msg) => ({
                     id: msg.id,
                     text: msg.text,
-                    date: new Date(msg.sentAt || Date.now())
-                        .toLocaleTimeString()
-                        .slice(0, 5),
+                    date: new Date(msg.sentAt || Date.now()).toLocaleTimeString().slice(0, 5),
                     isMy: msg.user.id === userId,
                     sentAt: msg.sentAt,
                     userId: msg.user.id,
@@ -123,7 +116,7 @@ export const useChatStore = create<IChatStore>((set, get) => ({
         fetchMessages();
 
         socket.on("newMessage", (msg) => {
-            if (msg.chatId && msg.chatId !== get().currentChatId) return;
+            if (msg.chatId !== get().currentChatId) return;
 
             const newMsg: Message = {
                 id: msg.id || `temp-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
@@ -132,177 +125,152 @@ export const useChatStore = create<IChatStore>((set, get) => ({
                 isMy: msg.user?.id === userId,
                 sentAt: msg.sentAt || Date.now(),
                 userId: msg.userId,
-                chatId: msg.chatId || get().currentChatId,
+                chatId: msg.chatId,
             };
 
             set((state) => {
-                const existingIndex = state.messages.findIndex((m) =>
-                    (m.id && newMsg.id && m.id === newMsg.id) ||
-                    (
+                const exists = state.messages.some(
+                    (m) =>
                         m.text === newMsg.text &&
                         m.userId === newMsg.userId &&
-                        Math.abs((m.sentAt || 0) - (newMsg.sentAt || 0)) < 5000
-                    )
+                        Math.abs((m.sentAt || 0) - (newMsg.sentAt || 0)) < 1000
                 );
-
-                if (existingIndex !== -1) {
-                    const updated = [...state.messages];
-                    updated[existingIndex] = newMsg;
-                    return { messages: updated };
-                }
-
-                return {
-                    messages: [...state.messages, newMsg],
-                };
+                if (exists) return state;
+                return { messages: [...state.messages, newMsg] };
             });
         });
 
-        // Listen for group messages
         socket.on("newGroupMessage", (msg) => {
-            if (msg.chatId && msg.chatId !== get().currentChatId) return;
+            if (msg.chatId !== get().currentChatId) return;
 
             const newMsg: Message = {
                 id: msg.id || `temp-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
                 text: msg.text,
                 date: new Date(msg.sentAt || Date.now()).toLocaleTimeString().slice(0, 5),
-                isMy: msg.user.id === userId,
+                isMy: msg.user?.id === userId,
                 sentAt: msg.sentAt || Date.now(),
                 userId: msg.userId,
-                chatId: msg.chatId || get().currentChatId,
+                chatId: msg.chatId,
             };
 
+            if (!socket.connected) {
+                socket.connect();
+                socket.once("connect", () => {
+                    socket.emit("joinRoom", chatId);
+                });
+                return;
+            }
+
             set((state) => {
-                const existingIndex = state.messages.findIndex(
+                const exists = state.messages.some(
                     (m) =>
                         m.text === newMsg.text &&
                         m.userId === newMsg.userId &&
-                        Math.abs((m.sentAt || 0) - (newMsg.sentAt || 0)) < 5000
+                        Math.abs((m.sentAt || 0) - (newMsg.sentAt || 0)) < 1000
                 );
+                if (exists) return state;
+                return { messages: [...state.messages, newMsg] };
+            });
+        });
 
-                if (existingIndex !== -1) {
-                    const updated = [...state.messages];
-                    updated[existingIndex] = newMsg;
-                    return { messages: updated };
+        if (isGroup) {
+            const fetchChatMetadata = async () => {
+                try {
+                    const metadata = await getChatMetadata(chatId);
+                    console.log("[fetchChatMetadata] API metadata:", metadata);
+
+                    set({
+                        members: metadata.members,
+                        onlineAmount: metadata.amount,
+                        isChatMetadataLoaded: true,
+                    });
+                } catch (error) {
+                    console.error("[fetchChatMetadata] Error:", error);
                 }
+            };
 
-                return {
-                    messages: [...state.messages, newMsg],
-                };
+            fetchChatMetadata();
+
+            socket.on("chatMetadata", (metadata) => {
+                if (metadata.chatId !== get().currentChatId) return;
+
+                console.log("[chatMetadata] Received from socket:", metadata);
+                set({
+                    members: metadata.members,
+                    onlineAmount: metadata.amount,
+                    isChatMetadataLoaded: true,
+                });
             });
-        });
-
-        // Listen for chat metadata updates
-        socket.on("chatMetadata", (metadata) => {
-            if (metadata.chatId !== get().currentChatId) return;
-
-            console.log("[chatMetadata] Received:", metadata);
-            set({
-                members: metadata.members,
-                onlineAmount: metadata.amount
-            });
-        });
+        }
     },
 
     disconnect: () => {
         const { currentChatId, currentUserId } = get();
-        if (!currentChatId || !currentUserId) return;
 
-        socket.emit("leaveRoom", currentChatId);
-        socket.emit("setUserStatus", { userId: currentUserId, status: "online" });
+        unsubscribeSocketEvents();
 
-        socket.off("connect");
-        socket.off("disconnect");
-        socket.off("newMessage");
-        socket.off("userStatusChanged");
-        socket.off("userStatuses");
-        socket.off("messageHistory");
+        if (currentChatId && currentUserId) {
+            socket.emit("leaveRoom", currentChatId);
+            socket.emit("setUserStatus", { userId: currentUserId, status: "online" });
+        }
 
         set({
             status: "Offline",
             messages: [],
             currentChatId: null,
             currentUserId: null,
+            isChatMetadataLoaded: false,
         });
     },
 
     getStatuses: (userIds) => {
-        console.log('[getStatuses] Requesting statuses for:', userIds);
-
+        console.log("[getStatuses] Requesting:", userIds);
         socket.emit("getUserStatus", userIds);
 
-        // Тут добавляем слушателя
         socket.once("userStatuses", (statuses) => {
-            console.log("[userStatuses] Received:", statuses);
-
             const currentUserId = get().currentUserId;
-
-            //@ts-ignore
-            const selfStatus = statuses.find((u) => u.userId === currentUserId);
+            const selfStatus = statuses.find((u: any) => u.userId === currentUserId);
             if (selfStatus) {
-                set({
-                    status: selfStatus.status === "online" ? "Online" : "Offline"
-                });
+                set({ status: selfStatus.status === "online" ? "Online" : "Offline" });
             }
-
-        });
-    },
-
-    _sendMessageImpl: (text, chatId, userId, receiverId) => {
-
-        socket.emit("sendMessage", {
-            text,
-            chatId,
-            userId,
-            ownerId: userId,
-            receiverId,
         });
     },
 
     sendMessage: (text, chatId, userId, receiverId) => {
-        if (!text.trim()) return;
-        if (!socket.connected) {
-            if (isWaitingToSend) return;
-            isWaitingToSend = true;
+        if (!text.trim() || isWaitingToSend) return;
+        isWaitingToSend = true;
+        setTimeout(() => (isWaitingToSend = false), 500);
 
+        if (!socket.connected) {
             socket.connect();
             socket.once("connect", () => {
                 socket.emit("joinRoom", chatId);
-                get()._sendMessageImpl(text, chatId, userId, receiverId);
-                isWaitingToSend = false;
+                socket.emit("sendMessage", { text, chatId, userId, ownerId: userId, receiverId });
             });
             return;
         }
 
-        get()._sendMessageImpl(text, chatId, userId, receiverId);
+        socket.emit("sendMessage", { text, chatId, userId, ownerId: userId, receiverId });
     },
 
     sendGroupMessage: (text, chatId, userId) => {
-        if (!text.trim()) return;
-        if (!socket.connected) {
-            if (isWaitingToSend) return;
-            isWaitingToSend = true;
+        if (!text.trim() || isWaitingToSend) return;
+        isWaitingToSend = true;
+        setTimeout(() => (isWaitingToSend = false), 500);
 
+        if (!socket.connected) {
             socket.connect();
             socket.once("connect", () => {
                 socket.emit("joinRoom", chatId);
-                socket.emit("sendGroupMessage", {
-                    text,
-                    chatId,
-                    userId
-                });
-                isWaitingToSend = false;
             });
             return;
         }
 
-        socket.emit("sendGroupMessage", {
-            text,
-            chatId,
-            userId
-        });
+        socket.emit("sendGroupMessage", { text, chatId, userId });
     },
 
     setAvatar: (avatar) => set({ avatar }),
     setName: (name) => set({ name }),
     setStatus: (status) => set({ status }),
+    setMetadataLoaded: (val: boolean) => set({ isChatMetadataLoaded: val }),
 }));
