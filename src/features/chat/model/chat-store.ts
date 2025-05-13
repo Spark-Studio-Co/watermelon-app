@@ -45,7 +45,15 @@ interface IChatStore {
     setAvatar: (avatar: any) => void;
 }
 
-let isWaitingToSend = false;
+const lastEmittedMessages = new Map<string, number>();
+
+const canEmit = (key: string): boolean => {
+    const now = Date.now();
+    const last = lastEmittedMessages.get(key);
+    if (last && now - last < 10000) return false;
+    lastEmittedMessages.set(key, now);
+    return true;
+};
 
 const unsubscribeSocketEvents = () => {
     const events = [
@@ -119,7 +127,7 @@ export const useChatStore = create<IChatStore>((set, get) => ({
             if (msg.chatId !== get().currentChatId) return;
 
             const newMsg: Message = {
-                id: msg.id || `temp-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+                id: msg.id,
                 text: msg.text,
                 date: new Date(msg.sentAt || Date.now()).toLocaleTimeString().slice(0, 5),
                 isMy: msg.user?.id === userId,
@@ -144,7 +152,7 @@ export const useChatStore = create<IChatStore>((set, get) => ({
             if (msg.chatId !== get().currentChatId) return;
 
             const newMsg: Message = {
-                id: msg.id || `temp-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+                id: msg.id,
                 text: msg.text,
                 date: new Date(msg.sentAt || Date.now()).toLocaleTimeString().slice(0, 5),
                 isMy: msg.user?.id === userId,
@@ -152,14 +160,6 @@ export const useChatStore = create<IChatStore>((set, get) => ({
                 userId: msg.userId,
                 chatId: msg.chatId,
             };
-
-            if (!socket.connected) {
-                socket.connect();
-                socket.once("connect", () => {
-                    socket.emit("joinRoom", chatId);
-                });
-                return;
-            }
 
             set((state) => {
                 const exists = state.messages.some(
@@ -237,9 +237,9 @@ export const useChatStore = create<IChatStore>((set, get) => ({
     },
 
     sendMessage: (text, chatId, userId, receiverId) => {
-        if (!text.trim() || isWaitingToSend) return;
-        isWaitingToSend = true;
-        setTimeout(() => (isWaitingToSend = false), 500);
+        if (!text.trim()) return;
+        const key = `${chatId}-${userId}-${text}`;
+        if (!canEmit(key)) return;
 
         if (!socket.connected) {
             socket.connect();
@@ -254,14 +254,15 @@ export const useChatStore = create<IChatStore>((set, get) => ({
     },
 
     sendGroupMessage: (text, chatId, userId) => {
-        if (!text.trim() || isWaitingToSend) return;
-        isWaitingToSend = true;
-        setTimeout(() => (isWaitingToSend = false), 500);
+        if (!text.trim()) return;
+        const key = `${chatId}-${userId}-${text}`;
+        if (!canEmit(key)) return;
 
         if (!socket.connected) {
             socket.connect();
             socket.once("connect", () => {
                 socket.emit("joinRoom", chatId);
+                socket.emit("sendGroupMessage", { text, chatId, userId });
             });
             return;
         }
