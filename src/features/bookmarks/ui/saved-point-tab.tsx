@@ -35,7 +35,7 @@ export const SavedPointTab = ({ type, name, subscribers, views, members, image, 
                 {(type === "premium" || type === "standard") && (
                     <View className="flex flex-col ml-[30px]">
                         <Text weight="regular" className="text-white text-[15.1px]">{subscribers || 0}</Text>
-                        <Text weight="regular" className="text-[#5E6272] text-[11.33px]">Subscribers</Text>
+                        <Text weight="regular" className="text-[#5E6272] text-[11.33px]">Saved</Text>
                     </View>
                 )}
                 {(type === "premium" || type === "standard") && (

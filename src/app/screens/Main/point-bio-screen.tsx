@@ -32,6 +32,8 @@ import { useCameraPermissions } from "expo-camera";
 import { useCameraStore } from "@/src/widget/camera/model/camera-store";
 import { useMarkerDataById } from "@/src/entities/markers/api/use-marker-data-by-id";
 import { useGetMe } from "@/src/entities/users/api/use-get-me";
+import { useSaveMarker } from "@/src/entities/markers/api/use-save-marker";
+import { useUnsaveMarker } from "@/src/entities/markers/api/use-unsave-marker";
 import { useMarkerStore } from "@/src/entities/markers/model/use-marker-store";
 import { useUploadImage } from "@/src/entities/markers/api/use-upload-image";
 import { useQueryClient } from "@tanstack/react-query";
@@ -81,6 +83,8 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
     useVisibleStore("cameraChoice");
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const { active, setActive } = useActiveStore("pointBio", "bio");
+  const saveMarkerMutation = useSaveMarker();
+  const unsaveMarkerMutation = useUnsaveMarker();
   const { subscribed, setSubscribed } = usePointBioStore();
   const { open } = useVisibleStore("pointBio");
   const { open: openSettings } = useVisibleStore("pointSettings");
@@ -112,6 +116,37 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
 
   const handleOpenSection = (label: string) => {
     setActive(label);
+  };
+
+  // Handle saving/unsaving markers
+  const handleSaveMarker = () => {
+    if (subscribed) {
+      // Unsave the marker
+      unsaveMarkerMutation.mutate(markerId, {
+        onSuccess: () => {
+          console.log("Marker unsaved successfully");
+          setSubscribed(); // Toggle subscribed state in the store
+          // Optionally refresh marker data
+          refetch();
+        },
+        onError: (error) => {
+          console.error("Error unsaving marker:", error);
+        }
+      });
+    } else {
+      // Save the marker
+      saveMarkerMutation.mutate(markerId, {
+        onSuccess: () => {
+          console.log("Marker saved successfully");
+          setSubscribed(); // Toggle subscribed state in the store
+          // Optionally refresh marker data
+          refetch();
+        },
+        onError: (error) => {
+          console.error("Error saving marker:", error);
+        }
+      });
+    }
   };
 
   const openCamera = async () => {
@@ -192,9 +227,15 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
           <View className="ml-10" />
         ) : (
           <>
-            <Button variant="follow" onPress={setSubscribed}>
+            <Button 
+              variant="follow" 
+              onPress={handleSaveMarker}
+              disabled={saveMarkerMutation.isPending || unsaveMarkerMutation.isPending}
+            >
               <Text weight="bold" className="text-[#5992FF] text-[13.82px]">
-                {subscribed ? "Unfollow" : "+ Follow"}
+                {saveMarkerMutation.isPending || unsaveMarkerMutation.isPending 
+                  ? "Loading..." 
+                  : subscribed ? "Unsave" : "+ Save"}
               </Text>
             </Button>
             <Button
@@ -295,15 +336,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
             {marker?.followersCount}
           </Text>
           <Text weight="regular" className="text-[#888888] text-[11.23px]">
-            Followers
-          </Text>
-        </View>
-        <View className="flex flex-col ml-4">
-          <Text weight="medium" className="text-white text-[13.82px]">
-            787
-          </Text>
-          <Text weight="regular" className="text-[#888888] text-[11.23px]">
-            Following
+            Saved
           </Text>
         </View>
         <Button

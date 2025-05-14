@@ -21,89 +21,7 @@ const tabs = [
     "My bet"
 ]
 
-const onSoldPointTabs = [
-    {
-        type: "Premium",
-        name: "Hustle",
-        subscribers: 80,
-        views: 12
-    },
-    {
-        type: "Chat",
-        name: "El ",
-        members: 11
-    },
-    {
-        type: "Standard",
-        name: "New York"
-    },
-    {
-        type: "Premium",
-        name: "Rio de Janeiro"
-    },
-    {
-        type: "Chat",
-        name: "El Diablo"
-    },
-    {
-        type: "Standard",
-        name: "New York"
-    },
-    {
-        type: "Premium",
-        name: "Rio de Janeiro"
-    },
-    {
-        type: "Chat",
-        name: "El Diablo"
-    },
-    {
-        type: "Standard",
-        name: "New York"
-    },
-]
 
-const myBetPointTabs = [
-    {
-        type: "Premium",
-        name: "Rio de Janeiro",
-        subscribers: 787,
-        views: 123
-    },
-    {
-        type: "Chat",
-        name: "El Diablo",
-        members: 123
-    },
-    {
-        type: "Standard",
-        name: "New York"
-    },
-    {
-        type: "Premium",
-        name: "Rio de Janeiro"
-    },
-    {
-        type: "Chat",
-        name: "El Diablo"
-    },
-    {
-        type: "Standard",
-        name: "New York"
-    },
-    {
-        type: "Premium",
-        name: "Rio de Janeiro"
-    },
-    {
-        type: "Chat",
-        name: "El Diablo"
-    },
-    {
-        type: "Standard",
-        name: "New York"
-    },
-]
 
 const filterOptions = [
     {
@@ -166,21 +84,43 @@ const styles = StyleSheet.create({
 
 
 export const AuctionScreen = () => {
+
+    const statusMap: Record<string, 'new' | 'sold' | 'myBets'> = {
+        'New': 'new',
+        'On sold': 'sold',
+        'My bet': 'myBets',
+    };
+    const { active, setActive } = useActiveStore('auction', 'New')
     const queryClient = useQueryClient()
     const [filterMethod, setFilterMethod] = useState<AuctionSort | null>()
-    const { data: auctions, isLoading, refetch } = useAuctionsData(undefined, filterMethod)
-    const navigation = useNavigation()
-    const { active, setActive } = useActiveStore('auction', 'New')
+    const { data: auctions, isLoading, refetch } = useAuctionsData(undefined, filterMethod, statusMap[active as string]); const navigation = useNavigation()
     const [modalVisible, setModalVisible] = useState(false)
     const [selectedFilter, setSelectedFilter] = useState(2)
+    const [nameMap, setNameMap] = useState<Record<string, string>>({})
 
     const toggleModal = () => {
         setModalVisible(!modalVisible)
     }
 
     useEffect(() => {
-        refetch()
-        // console.table(auctions)
+        refetch();
+
+        if (active === 'My bet') {
+            console.log('[AuctionScreen] My bet auctions:', auctions);
+        }
+    }, [active, filterMethod]);
+
+
+    useEffect(() => {
+        if (Array.isArray(auctions)) {
+            const updatedMap = { ...nameMap }
+            auctions.forEach((auction, i) => {
+                if (!updatedMap[auction.id]) {
+                    updatedMap[auction.id] = `Point #${Object.keys(updatedMap).length + 1}`
+                }
+            })
+            setNameMap(updatedMap)
+        }
     }, [auctions])
 
     return (
@@ -218,7 +158,7 @@ export const AuctionScreen = () => {
                                     <PointTab
                                         status={active}
                                         type={auction.marker?.type}
-                                        name={`Point #${index + 1}`}
+                                        name={nameMap[auction.id] || 'Unnamed'}
                                         subscribers={auction.subscribers}
                                         views={auction.marker?.views}
                                         members={auction.members}
@@ -227,31 +167,34 @@ export const AuctionScreen = () => {
                             </Button>
                         ))}
 
-                        {active === 'On sold' && onSoldPointTabs.map((tab, index) => (
-                            <View key={index} className="mb-4">
-                                <PointTab
-                                    status={active}
-                                    type={tab.type}
-                                    name={tab.name}
-                                    subscribers={tab.subscribers}
-                                    views={tab.views}
-                                    members={tab.members}
-                                />
-                            </View>
-                        ))}
+                        {(active === 'On sold' || active === 'My bet') && Array.isArray(auctions) && (
+                            auctions.length > 0 ? (
+                                auctions.map((auction: any, index: number) => (
+                                    <Button key={index} variant='custom' onPress={() => {
+                                        //@ts-ignore
+                                        navigation.navigate('AuctionInner' as never, { id: auction.id, name: `Point #${index + 1}`, start: auction.startingBid, startDate: auction.startDate, endDate: auction.endDate })
+                                    }}>
+                                        <View key={index} className="mb-4">
+                                            <PointTab
+                                                status={active}
+                                                type={auction.marker?.type}
+                                                name={nameMap[auction.id] || 'Unnamed'}
+                                                subscribers={auction.subscribers}
+                                                views={auction.marker?.views}
+                                                members={auction.members}
+                                            />
+                                        </View>
+                                    </Button>
+                                ))
+                            ) : (
+                                <View className="items-center mt-10">
+                                    <Text className="text-white text-[16px]">
+                                        No auctions found for this tab.
+                                    </Text>
+                                </View>
+                            )
+                        )}
 
-                        {active === 'My bet' && myBetPointTabs.map((tab, index) => (
-                            <View key={index} className="mb-4">
-                                <PointTab
-                                    status={active}
-                                    type={tab.type}
-                                    name={tab.name}
-                                    subscribers={tab.subscribers}
-                                    views={tab.views}
-                                    members={tab.members}
-                                />
-                            </View>
-                        ))}
                     </ScrollView>}
             </View>
 
