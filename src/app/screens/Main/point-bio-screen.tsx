@@ -210,6 +210,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
 
   useEffect(() => {
     refetch();
+    console.log("marker data", marker)
   }, [publications, active === "Публикации"]);
 
   return (
@@ -217,7 +218,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
       <View className="w-[80%] mx-auto mt-4">
         <PointBioTab
           isSettingsVisible={ownerId === me?.id}
-          pointname={marker?.name}
+          pointname={marker?.name ?? "Point name"}
           nickname="point_name"
           onPress={openSettings}
         />
@@ -227,15 +228,15 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
           <View className="ml-10" />
         ) : (
           <>
-            <Button 
-              variant="follow" 
+            <Button
+              variant="follow"
               onPress={handleSaveMarker}
               disabled={saveMarkerMutation.isPending || unsaveMarkerMutation.isPending}
             >
               <Text weight="bold" className="text-[#5992FF] text-[13.82px]">
-                {saveMarkerMutation.isPending || unsaveMarkerMutation.isPending 
-                  ? "Loading..." 
-                  : subscribed ? "Unsave" : "+ Save"}
+                {saveMarkerMutation.isPending || unsaveMarkerMutation.isPending
+                  ? "Loading..."
+                  : subscribed ? !marker.isSaved ? "Unsave" : "Unsave" : "+ Save"}
               </Text>
             </Button>
             <Button
@@ -333,7 +334,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
         )}
         <View className="flex flex-col ml-6">
           <Text weight="medium" className="text-white text-[13.82px]">
-            {marker?.followersCount}
+            {marker?.totalEngagementCount}
           </Text>
           <Text weight="regular" className="text-[#888888] text-[11.23px]">
             Saved

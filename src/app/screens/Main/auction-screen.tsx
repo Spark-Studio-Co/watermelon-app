@@ -152,7 +152,7 @@ export const AuctionScreen = () => {
                         {active === 'New' && Array.isArray(auctions) && auctions?.map((auction: any, index: number) => (
                             <Button key={index} variant='custom' onPress={() => {
                                 //@ts-ignore
-                                navigation.navigate('AuctionInner' as never, { id: auction.id, name: `Point #${index + 1}`, start: auction.startingBid, startDate: auction.startDate, endDate: auction.endDate })
+                                navigation.navigate('AuctionInner' as never, { id: auction.id, name: nameMap[auction.id] || 'Unnamed', start: auction.startingBid, startDate: auction.startDate, endDate: auction.endDate })
                             }}>
                                 <View className="mb-4">
                                     <PointTab
@@ -172,7 +172,7 @@ export const AuctionScreen = () => {
                                 auctions.map((auction: any, index: number) => (
                                     <Button key={index} variant='custom' onPress={() => {
                                         //@ts-ignore
-                                        navigation.navigate('AuctionInner' as never, { id: auction.id, name: `Point #${index + 1}`, start: auction.startingBid, startDate: auction.startDate, endDate: auction.endDate })
+                                        navigation.navigate('AuctionInner' as never, { id: auction.id, name: nameMap[auction.id] || 'Unnamed', start: auction.startingBid, startDate: auction.startDate, endDate: auction.endDate })
                                     }}>
                                         <View key={index} className="mb-4">
                                             <PointTab

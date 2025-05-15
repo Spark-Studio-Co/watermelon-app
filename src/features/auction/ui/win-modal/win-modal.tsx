@@ -18,7 +18,7 @@ export const WinModal = ({ visible, onClose, id, name }: WinModalProps) => {
     const navigation = useNavigation()
 
     const handlePointNavigate = () => {
-        onClose(); // ✅ вызываем закрытие модалки
+        onClose();
         //@ts-ignore
         navigation.navigate("GlobalPointCreation" as never, { id: id, name: name })
     }

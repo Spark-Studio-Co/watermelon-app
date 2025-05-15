@@ -27,6 +27,7 @@ interface IChatStore {
     members: number;
     onlineAmount: number;
     participants: string[];
+    joinedRooms: Set<string>;
     connect: (chatId: string, userId: string, isGroup?: boolean) => void;
     disconnect: () => void;
     getStatuses: (userIds: string[]) => void;
@@ -110,34 +111,46 @@ export const useChatStore = create<IChatStore>((set, get) => ({
     members: 0,
     onlineAmount: 0,
     participants: [],
+    joinedRooms: new Set<string>(),
     isChatMetadataLoaded: false,
 
     connect: (chatId, userId, isGroup = false) => {
-        unsubscribeSocketEvents();
-        setupDebugListeners(); // Add debug listeners
-        console.log("[connect] Joining room:", chatId);
+        const { joinedRooms } = get();
 
+        if (get().currentChatId === chatId && joinedRooms.has(chatId)) {
+            console.log("[connect] Already connected to room:", chatId);
+            return;
+        }
+
+        unsubscribeSocketEvents();
+        setupDebugListeners();
+        console.log("[connect] Joining room:", chatId);
 
         set({ isChatMetadataLoaded: false });
 
         const isNewChat = get().currentChatId !== chatId;
-        if (isNewChat) {
-            set({ messages: [] });
-        }
-        
-        // Make sure we have the current participants
-        const currentParticipants = get().participants.length > 0 ? 
-            get().participants : 
-            isGroup ? [] : [userId]; // For private chats, at least include the current user
-            
-        set({ currentChatId: chatId, currentUserId: userId, participants: currentParticipants });
+        if (isNewChat) set({ messages: [] });
+
+        const currentParticipants = get().participants.length > 0
+            ? get().participants
+            : isGroup ? [] : [userId];
+
+        set({
+            currentChatId: chatId,
+            currentUserId: userId,
+            participants: currentParticipants,
+        });
 
         if (!socket.connected) {
             socket.connect();
         }
 
-        socket.emit("joinRoom", chatId);
-        // Send userId and status as an object as expected by the server
+        if (!joinedRooms.has(chatId)) {
+            socket.emit("joinRoom", chatId);
+            joinedRooms.add(chatId);
+            set({ joinedRooms });
+        }
+
         socket.emit("setUserStatus", { userId, status: "online" });
 
         const fetchMessages = async () => {
@@ -166,15 +179,10 @@ export const useChatStore = create<IChatStore>((set, get) => ({
         socket.on("newMessage", messageHandler);
         socket.on("newGroupMessage", messageHandler);
 
-        // Listen for status changes
         socket.on("userStatusChanged", (data) => {
-            console.log("[connect] userStatusChanged event:", data);
             const participants = get().participants;
             const currentUserId = get().currentUserId;
-            
-            // Only update status if it's for a participant other than the current user
             if (data.userId !== currentUserId && participants.includes(data.userId)) {
-                console.log("[connect] Setting status to:", data.status, "for user:", data.userId);
                 set({ status: data.status === "online" ? "Online" : "Offline" });
             }
         });
@@ -198,8 +206,6 @@ export const useChatStore = create<IChatStore>((set, get) => ({
 
             socket.on("chatMetadata", (metadata) => {
                 if (metadata.chatId !== get().currentChatId) return;
-
-                console.log("[chatMetadata] Received from socket:", metadata);
                 set({
                     members: metadata.members,
                     onlineAmount: metadata.amount,
@@ -210,14 +216,15 @@ export const useChatStore = create<IChatStore>((set, get) => ({
     },
 
     disconnect: () => {
-        const { currentChatId, currentUserId } = get();
+        const { currentChatId, currentUserId, joinedRooms } = get();
 
         unsubscribeSocketEvents();
 
         if (currentChatId && currentUserId) {
             socket.emit("leaveRoom", currentChatId);
-            // Send userId and status as an object as expected by the server
             socket.emit("setUserStatus", { userId: currentUserId, status: "offline" });
+            joinedRooms.delete(currentChatId);
+            set({ joinedRooms });
         }
 
         set({
@@ -254,7 +261,7 @@ export const useChatStore = create<IChatStore>((set, get) => ({
 
             // Find all participants who are not the current user
             const partners = statuses.filter((u: any) => u.userId !== currentUserId);
-            
+
             if (partners.length > 0) {
                 // Check if any partner is online
                 const anyPartnerOnline = partners.some((p: any) => p.status === "online");

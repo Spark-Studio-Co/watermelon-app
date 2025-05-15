@@ -269,7 +269,7 @@ export const Map = () => {
                                     <View className='items-start w-full justify-between flex-row'>
                                         <View className='flex flex-col'>
                                             <View className='flex-row items-center mb-1'>
-                                                <Text weight="medium" className='text-white text-[20px] whitespace-pre-wrap'>{marker.name}</Text>
+                                                <Text weight="medium" className='text-white text-[20px] whitespace-pre-wrap'>{marker.name ?? "Point name"}</Text>
                                             </View>
                                             <Text weight="regular" className='text-[#817E7E] text-[12px]'>{renderedMarkerType(marker.type)}</Text>
                                         </View>

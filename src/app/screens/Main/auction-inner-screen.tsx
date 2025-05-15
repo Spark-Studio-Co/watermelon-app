@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react"
+import React, { useState, useEffect, useMemo, useRef } from "react"
 import { MainLayout } from "../../layouts/main-layout"
 import { View, Image } from "react-native"
 import Text from "@/src/shared/ui/text/text"
@@ -15,7 +15,7 @@ import { useAuctionsData } from "@/src/entities/auction/api/use-auctions-data"
 import { useAuctionWin } from "@/src/entities/auction/api/use-auction-win"
 
 export const AuctionInnerScreen = ({ route }: { route: { params: { id: string, name: string, start: number, startDate: string, endDate: string } } }) => {
-    const queryClient = useQueryClient();
+    const hasSeenWinModal = useRef(false)
     const { id, name, start, startDate, endDate } = route.params
     const { data: bids, refetch } = useBidsData(id)
     const { mutate: makeBid } = useMakeBid()
@@ -29,33 +29,30 @@ export const AuctionInnerScreen = ({ route }: { route: { params: { id: string, n
             return;
         }
 
-        if (bidAmount < start) {
-            return;
-        }
+        // Принудительно обновим ставки перед проверкой
+        refetch().then((res) => {
+            const latestBids = res.data;
+            const latestHighest = latestBids && latestBids.length > 0
+                ? Math.max(...latestBids.map((bid: any) => bid.bidAmount || 0))
+                : 0;
 
-        makeBid({ auctionId: id, bidAmount }, {
-            onSuccess: () => {
-                console.log('✅ Ставка успешно сделана');
-                refetch();
-            },
-            onError: (error) => {
-                console.error('❌ Ошибка при ставке:', error);
+            if (bidAmount <= latestHighest || bidAmount < start) {
+                Alert.alert("Ошибка", `Ставка должна быть выше текущей (${latestHighest}) и выше стартовой (${start})`);
+                return;
             }
+
+            makeBid({ auctionId: id, bidAmount }, {
+                onSuccess: () => {
+                    console.log('✅ Ставка успешно сделана');
+                    refetch(); // обновим снова после успеха
+                },
+                onError: (error: any) => {
+                    console.error('❌ Ошибка при ставке:', error?.response?.data || error);
+                    Alert.alert("Ошибка", error?.response?.data?.message || "Не удалось сделать ставку");
+                }
+            });
         });
-    }
-
-    useEffect(() => {
-        queryClient.invalidateQueries(
-            {
-                queryKey: "auctions"
-            }
-        )
-        auctionsRefetch()
-
-        if (isWin === true) {
-            setWinModalVisible(true)
-        }
-    }, [bids, isWin])
+    };
 
     const calculateTimeLeft = () => {
         try {
@@ -93,37 +90,34 @@ export const AuctionInnerScreen = ({ route }: { route: { params: { id: string, n
     }, [bids])
 
     const handleCloseWinModal = () => {
+        hasSeenWinModal.current = true
         setWinModalVisible(false)
     }
 
     useEffect(() => {
-        setTimeLeft(calculateTimeLeft())
+        const checkWinCondition = () => {
+            const now = new Date();
+            const end = new Date(endDate);
 
-        if (!endDate || isNaN(new Date(endDate).getTime())) {
-            return;
-        }
+            const auctionEnded = !isNaN(end.getTime()) && now >= end;
+            const hasBids = bids && bids.length > 0 && highestBid > 0;
 
-        if (new Date() >= new Date(endDate)) {
-            if (bids && bids.length > 0 && highestBid > 0) {
+            if (auctionEnded && hasBids && !hasSeenWinModal.current) {
+                hasSeenWinModal.current = true;
                 setWinModalVisible(true);
             }
-            return;
-        }
+        };
+
+        checkWinCondition(); // сразу при монтировании
 
         const intervalId = setInterval(() => {
-            const newTimeLeft = calculateTimeLeft()
-            setTimeLeft(newTimeLeft)
+            setTimeLeft(calculateTimeLeft());
+            checkWinCondition(); // также периодически, пока открыт экран
+        }, 1000);
 
-            // Check if timer has reached zero
-            if (newTimeLeft.hours === 0 && newTimeLeft.minutes === 0 && newTimeLeft.seconds === 0) {
-                if (bids && bids.length > 0 && highestBid > 0) {
-                    setTimeout(() => setWinModalVisible(true), 500);
-                }
-            }
-        }, 1000)
+        return () => clearInterval(intervalId);
+    }, [bids, highestBid, endDate]);
 
-        return () => clearInterval(intervalId)
-    }, [endDate, bids, highestBid])
 
     const formatTime = (value: number) => {
         return value < 10 ? `0${value}` : `${value}`
@@ -133,26 +127,6 @@ export const AuctionInnerScreen = ({ route }: { route: { params: { id: string, n
         setOfferModalVisible(true)
     }
 
-
-    // Show win modal when auction ends with bids
-    useEffect(() => {
-        // Skip if no bids
-        if (!bids || bids.length === 0) return
-
-        // Validate endDate before comparing
-        if (!endDate || isNaN(new Date(endDate).getTime())) {
-            console.warn('Invalid end date for win check:', endDate)
-            return
-        }
-
-        // Skip if auction hasn't ended yet
-        if (new Date() < new Date(endDate)) return
-
-        // If auction has ended and there are bids, show win modal
-        if (highestBid > 0) {
-            setWinModalVisible(true)
-        }
-    }, [bids, highestBid, endDate])
 
     return (
         <MainLayout>

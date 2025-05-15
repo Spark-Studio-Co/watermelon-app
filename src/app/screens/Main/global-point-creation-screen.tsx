@@ -99,7 +99,7 @@ export const GlobalPointCreationScreen = ({ route }: {
             onSuccess: (data: any) => {
                 console.log("✅ Маркер успешно создан!", data);
                 queryClient.invalidateQueries({
-                    queryKey: 'markers'
+                    queryKey: ['markers']
                 })
                 setTimeout(() => {
                     //@ts-ignore

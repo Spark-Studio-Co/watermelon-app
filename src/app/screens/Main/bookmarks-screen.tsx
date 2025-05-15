@@ -6,55 +6,14 @@ import { SavedPointTab } from '@/src/features/bookmarks/ui/saved-point-tab'
 import { useActiveStore } from '@/src/shared/model/use-active-store'
 import { useNavigation } from '@react-navigation/native'
 import { useFavoritesData } from '@/src/entities/markers/api/use-favorites-data'
-
-
-const myBetPointTabs = [
-    {
-        type: "Premium",
-        name: "Rio de Janeiro",
-        subscribers: 787,
-        views: 123
-    },
-    {
-        type: "Chat",
-        name: "El Diablo",
-        members: 123
-    },
-    {
-        type: "Standard",
-        name: "New York"
-    },
-    {
-        type: "Premium",
-        name: "Rio de Janeiro"
-    },
-    {
-        type: "Chat",
-        name: "El Diablo"
-    },
-    {
-        type: "Standard",
-        name: "New York"
-    },
-    {
-        type: "Premium",
-        name: "Rio de Janeiro"
-    },
-    {
-        type: "Chat",
-        name: "El Diablo"
-    },
-    {
-        type: "Standard",
-        name: "New York"
-    },
-]
+import { useFavoritesChats } from '@/src/features/chat/api/use-get-favorites'
 
 
 
 export const BookmarksScreen = () => {
     const { active } = useActiveStore('bookmarks', 'Point')
     const { data: markers } = useFavoritesData()
+    const { data: chats } = useFavoritesChats()
     const navigation = useNavigation();
 
     return (
@@ -77,7 +36,7 @@ export const BookmarksScreen = () => {
                             />}
                     </View>
                 ))}
-                {active === 'Chats' && markers?.map((marker: any, index: number) => (
+                {active === 'Chats' && chats?.map((marker: any, index: number) => (
                     <View key={index} className="mb-4">
                         {(marker.type === "chat") &&
                             <SavedPointTab
