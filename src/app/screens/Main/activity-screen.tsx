@@ -4,7 +4,6 @@ import { ActivityCard } from "@/src/features/activity/ui/activity-card"
 
 import { useActiveStore } from "@/src/shared/model/use-active-store"
 import { useActivitiesData } from "@/src/entities/activities/api/use-activities-data"
-import { useEffect } from "react"
 
 const formatRelativeTime = (dateString: string) => {
     const date = new Date(dateString);

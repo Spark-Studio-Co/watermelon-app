@@ -11,36 +11,37 @@ export const PrivacyScreen = () => {
     const { id } = useAuthStore()
     const { mutate } = useUpdatePrivcy(id)
 
-    const { enabled: mapAccess, setEnabled: setMapAccessEnabled } = useSwitchStore("map")
-    const { enabled: auction, setEnabled: setAuctionEnabled } = useSwitchStore("auction")
-    const { enabled: activity, setEnabled: setActivityEnabled } = useSwitchStore("activity")
+    const mapStore = useSwitchStore("map")
+    const auctionStore = useSwitchStore("auction")
+    const activityStore = useSwitchStore("activity")
 
-    const handleToggle = () => {
+    const updatePrivacy = (newMapAccess: boolean, newAuction: boolean, newActivity: boolean) => {
         mutate({
-            isMapAccess: mapAccess,
-            isAuction: auction,
-            isActivities: activity,
-        },
-            {
-                onSuccess: () => console.log("Switched privacy"),
-                onError: (error: any) => console.error(error.response)
-            }
-        );
-    };
+            isMapAccess: newMapAccess,
+            isAuction: newAuction,
+            isActivities: newActivity,
+        }, {
+            onSuccess: () => console.log("Privacy updated"),
+            onError: (error: any) => console.error(error.response),
+        });
+    }
 
     const handleMapAccess = () => {
-        setMapAccessEnabled()
-        handleToggle()
+        mapStore.setEnabled((newMapAccess) => {
+            updatePrivacy(newMapAccess, auctionStore.enabled, activityStore.enabled)
+        })
     }
 
     const handleAuction = () => {
-        setAuctionEnabled()
-        handleToggle()
+        auctionStore.setEnabled((newAuction) => {
+            updatePrivacy(mapStore.enabled, newAuction, activityStore.enabled)
+        })
     }
 
     const handleActivity = () => {
-        setActivityEnabled()
-        handleToggle()
+        activityStore.setEnabled((newActivity) => {
+            updatePrivacy(mapStore.enabled, auctionStore.enabled, newActivity)
+        })
     }
 
     return (
@@ -51,21 +52,21 @@ export const PrivacyScreen = () => {
                         <Text weight="regular" className="text-white text-[16px]">Доступ друзей к карте</Text>
                         <Text weight="regular" className="text-[#6B6B6B] text-[14px] mt-0.5">Делиться приватными точками на картах друзей</Text>
                     </View>
-                    <Switch enabled={mapAccess} toggle={handleMapAccess} />
+                    <Switch enabled={mapStore.enabled} toggle={handleMapAccess} />
                 </View>
                 <View className="flex flex-row justify-between w-[100%] mt-10 items-center">
                     <View className="flex flex-col w-[80%]">
                         <Text weight="regular" className="text-white text-[16px]">Участие в аукционе</Text>
                         <Text weight="regular" className="text-[#6B6B6B] text-[14px] mt-0.5">Указывать мое имя пользователя во время участия в аукционе</Text>
                     </View>
-                    <Switch enabled={auction} toggle={handleAuction} />
+                    <Switch enabled={auctionStore.enabled} toggle={handleAuction} />
                 </View>
                 <View className="flex flex-row justify-between w-[100%] mt-10 items-center">
                     <View className="flex flex-col w-[70%]">
                         <Text weight="regular" className="text-white text-[16px]">Активности</Text>
                         <Text weight="regular" className="text-[#6B6B6B] text-[14px] mt-0.5">Отображать мои достижения в разделе активности</Text>
                     </View>
-                    <Switch enabled={activity} toggle={handleActivity} />
+                    <Switch enabled={activityStore.enabled} toggle={handleActivity} />
                 </View>
             </View>
         </MainLayout>

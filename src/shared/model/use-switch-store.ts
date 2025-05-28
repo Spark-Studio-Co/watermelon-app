@@ -4,7 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface ISwitchStore {
     enabled: boolean
-    setEnabled: () => void
+    setEnabled: (callback?: (newState: boolean) => void) => void
 }
 
 const switchStorage: Record<string, UseBoundStore<StoreApi<ISwitchStore>>> = {};
@@ -15,7 +15,12 @@ export const useSwitchStore = (storeKey: string) => {
             persist(
                 (set) => ({
                     enabled: false,
-                    setEnabled: () => set((state) => ({ enabled: !state.enabled }))
+                    setEnabled: (callback?: (newState: boolean) => void) =>
+                        set((state) => {
+                            const newState = !state.enabled;
+                            callback?.(newState);
+                            return { enabled: newState };
+                        })
                 }),
                 {
                     name: `switch-${storeKey}`,

@@ -156,11 +156,9 @@ export const Map = () => {
                 onLongPress={(e) => {
                     const pressCoordinate = e.nativeEvent.coordinate;
 
-                    // Check if the new point is within any existing marker's radius
                     const isWithinRadius = Array.isArray(markersList) && markersList.some((marker: any) => {
                         if (!marker.radius) return false;
 
-                        // Calculate distance between press coordinate and marker
                         const distance = calculateDistance(
                             pressCoordinate.latitude,
                             pressCoordinate.longitude,
