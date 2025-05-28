@@ -13,6 +13,7 @@ import { useUpdateMarker } from "@/src/entities/markers/api/use-update-marker"
 import { useMarkerStore } from "@/src/entities/markers/model/use-marker-store"
 import { useMarkerDataById } from "@/src/entities/markers/api/use-marker-data-by-id"
 import { useGetMe } from "@/src/entities/users/api/use-get-me"
+import { useEffect } from "react"
 
 export const PointRadiusSettings = () => {
     const { id } = useMarkerStore()
@@ -38,14 +39,17 @@ export const PointRadiusSettings = () => {
         })
     }
 
+
     return (
         <View className="bg-[#313034] w-full py-5 rounded-[15px] flex flex-col items-center relative" style={{ boxShadow: '0px 4px 4px 0px #00000040' }}>
             <Text weight="regular" className="text-white text-[20px]">Радуис</Text>
-            <Button className="absolute right-3 top-3" onPress={close}><CrossIcon /></Button>
+            <Button className="absolute right-3 top-3" onPress={close}>
+                <CrossIcon />
+            </Button>
             <View className="flex flex-col mt-6 mb-4 w-[90%]">
                 {Array.isArray(radius) && radius?.map((item: any, index: number) =>
                     <View key={index} className="flex flex-col gap-y-6">
-                        <RadiusSettingsTab active={item.id === markerById?.radiusId} meteres={item.value} level={item.minLevel} isLocked={me && me?.level < item.minLevel} onPress={() => handleSetRadius(item.value, item.id)} />
+                        <RadiusSettingsTab active={item?.id === markerById?.radius?.id} meteres={item.value} level={item.minLevel} isLocked={me && me?.level?.id < item.minLevel} onPress={() => handleSetRadius(item.value, item.id)} />
                         {index !== radius?.length - 1 && <View className="h-[1px] w-full bg-[#454547] mb-5 -mt-1" />}
                     </View>
                 )}

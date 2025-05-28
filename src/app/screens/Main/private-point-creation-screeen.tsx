@@ -90,8 +90,16 @@ export const PrivatePointCreationScreen = () => {
             onSuccess: (data: any) => {
                 console.log("✅ Маркер успешно создан!", data);
                 queryClient.invalidateQueries({
-                    queryKey: 'markers'
+                    queryKey: ['markers']
                 })
+
+                // Clear all fields after successful submission
+                setName('');
+                setDescription('');
+                setPointType('standard');
+                setPhotoUri(null);
+                setImage(null);
+
                 setTimeout(() => {
                     //@ts-ignore
                     navigation.navigate("PointBio" as never, {
@@ -99,6 +107,7 @@ export const PrivatePointCreationScreen = () => {
                         ownerId: data?.ownerId
                     })
                 }, 500)
+
             },
             onError: (error) => {
                 console.error("❌ Ошибка при создании маркера:", error.response);
@@ -106,10 +115,15 @@ export const PrivatePointCreationScreen = () => {
         });
     };
 
+    const [pointDisplayId] = useState(() => {
+        const randomId = Math.random().toString(36).substring(2, 7).toUpperCase();
+        return `Point #${randomId}`;
+    });
+
     return (
         <MainLayout>
             <View className="flex flex-col items-end mt-4">
-                <Text weight="bold" className="text-white text-[24px]">Point #12123</Text>
+                <Text weight="bold" className="text-white text-[24px]">{pointDisplayId}</Text>
             </View>
             <Image
                 source={image ? { uri: image } : require('@/src/images/point_image.png')}

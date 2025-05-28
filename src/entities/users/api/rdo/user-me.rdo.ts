@@ -4,7 +4,8 @@ export interface IUserMeRDO {
     username: string,
     email: string,
     avatar: string | null,
-    level: number,
+    level: { expNeeded: number, id: number },
     balance: number,
-    isVerified: boolean
+    isVerified: boolean,
+    isPremium: boolean
 }

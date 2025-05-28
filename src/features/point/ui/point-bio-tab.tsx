@@ -15,6 +15,9 @@ import { useMarkerStore } from "@/src/entities/markers/model/use-marker-store";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMarkerDataById } from "@/src/entities/markers/api/use-marker-data-by-id";
 
+import PointFallbackIcon from "@/src/shared/icons/point-fallback-icon";
+import PremiumPointFallbackIcon from "@/src/shared/icons/premium-point-fallback-icon";
+
 interface IPointBioTab {
     pointname: string
     nickname: string
@@ -91,19 +94,29 @@ export const PointBioTab = ({ pointname, nickname, onPress, isSettingsVisible }:
                     onPress={openChoice}
                     style={{ height: 96, width: 96 }}
                 >
-                    <Image
-                        className='w-full h-full rounded-full'
-                        source={marker?.image ? { uri: marker.image + `?t=${Date.now()}` } : require("../../../images/user_image.png")}
-                    />
+                    {marker?.image ?
+                        <Image
+                            className='w-full h-full rounded-full'
+                            source={marker?.image && { uri: marker.image + `?t=${Date.now()}` }}
+                        /> :
+                        marker?.type === "premium" ?
+                            <PremiumPointFallbackIcon /> :
+                            <PointFallbackIcon />
+                    }
                 </Button>
             ) : (
                 <View
                     style={{ height: 96, width: 96 }}
                 >
-                    <Image
-                        className='w-full h-full rounded-full'
-                        source={marker?.image ? { uri: marker.image + `?t=${Date.now()}` } : require("../../../images/user_image.png")}
-                    />
+                    {marker?.image ?
+                        <Image
+                            className='w-full h-full rounded-full'
+                            source={marker?.image && { uri: marker.image + `?t=${Date.now()}` }}
+                        /> :
+                        marker?.type === "premium" ?
+                            <PremiumPointFallbackIcon /> :
+                            <PointFallbackIcon />
+                    }
                 </View>
             )}
             <View className="flex flex-col gap-y-2">

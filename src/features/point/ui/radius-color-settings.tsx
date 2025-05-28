@@ -6,63 +6,64 @@ import { RadiusColorTab } from "./radius-color-tab"
 import CrossIcon from "@/src/shared/icons/cross-icon"
 
 import { useVisibleStore } from "@/src/shared/model/use-visible-store"
-import { useUpdateRadius } from "@/src/entities/radius/api/use-update-radius"
-import { useRadiusData } from "@/src/entities/radius/api/use-radius-data"
+import { useUpdateRadiusColor } from "@/src/entities/radius/api/use-update-radius-color"
+import { useRadiusColorData } from "@/src/entities/radius/api/use-radius-color-data"
 import { useMarkerDataById } from "@/src/entities/markers/api/use-marker-data-by-id"
 import { useMarkerStore } from "@/src/entities/markers/model/use-marker-store"
 import { useRadiusStore } from "../model/use-radius-store"
 import { useQueryClient } from "@tanstack/react-query"
+import { useGetMe } from "@/src/entities/users/api/use-get-me"
+import { useEffect } from "react"
+import { ScrollView } from "react-native-gesture-handler"
+
 
 export const RadiusColorSettings = () => {
     const queryClient = useQueryClient()
+    const { data: me } = useGetMe();
     const { id } = useMarkerStore()
-    const { mutate } = useUpdateRadius()
-    const { data: radius } = useRadiusData()
+    const { mutate } = useUpdateRadiusColor()
+    const { data: color } = useRadiusColorData()
     const { close } = useVisibleStore("radiusColor")
     const { data: markerById } = useMarkerDataById(id)
-    const { color } = useRadiusStore()
+    const { color: selectedColor } = useRadiusStore()
 
-    const radiusColors = [
-        { label: 'Без цвета', value: 'transparent', description: 'Прозрачный радиус' },
-        { label: 'Черный', value: 'rgba(0, 0, 0, 0.6)', description: 'Темный цвет для радиуса' },
-        { label: 'Желтый', value: 'rgba(255, 255, 0, 0.4)', description: 'Яркий цвет для радиуса' },
-        { label: 'Фиолетовый', value: 'rgba(128, 0, 128, 0.4)', description: 'Фиолетовый цвет радиуса' },
-        { label: 'Градиент', value: 'rgba(255, 0, 150, 0.5)', description: 'Premium градиент (массив цветов)' }
-    ]
+    const handleUpdateColor = (colorId: string | undefined) => {
+        if (!colorId) return;
 
-    const currentRadius = radius?.find((r: any) => r.id === markerById?.radiusId)
+        mutate({ id: me?.id ?? "", colorId: colorId });
 
-    const handleUpdateColor = (color: string | undefined) => {
-        if (!currentRadius?.id) return;
-
-        mutate({ id: currentRadius.id, color })
+        console.log("colorId:", colorId, "color:", color);
 
         queryClient.invalidateQueries({
-            queryKey: "markers"
-        })
-    }
+            queryKey: ["markers"],
+        });
+    };
+
+    const activeColor = markerById?.radius?.color || selectedColor;
 
     return (
-        <View className="bg-[#313034] w-full py-5 rounded-[15px] flex flex-col items-center relative" style={{ boxShadow: '0px 4px 4px 0px #00000040' }}>
-            <Text weight="regular" className="text-white text-[20px]">Радуис</Text>
+        <View className="bg-[#313034] w-full py-5 rounded-[15px] mt-auto flex flex-col items-center relative" style={{ boxShadow: '0px 4px 4px 0px #00000040' }}>
+            <Text weight="regular" className="text-white text-[20px]">Радиус</Text>
             <Button className="absolute right-3 top-3" onPress={close}><CrossIcon /></Button>
-            <View className="flex flex-col mt-10 mb-4 w-[90%]">
-                {radiusColors.map((item, index) => (
+            <ScrollView className="flex flex-col mt-10 mb-4 w-[90%]" showsVerticalScrollIndicator={false}>
+                {color?.map((item: any, index: number) => (
                     <View key={item.value ?? index} className="flex flex-col gap-y-6">
                         <RadiusColorTab
-                            label={item.label}
-                            color={item.value}
+                            isLocked={me && me?.level?.id < item.minLevel}
+                            isPremiumOnly={item.isPremiumOnly}
+                            label={item.name}
+                            color={item.color}
                             description={item.description}
-                            defaultChoice={color}
-                            onPress={() => handleUpdateColor(item.value ?? "")}
+                            defaultChoice={selectedColor}
+                            onPress={() => handleUpdateColor(item.id)}
+                            active={item.color === activeColor}
                         />
-                        {index !== radiusColors.length - 1 && (
+                        {index !== color?.length - 1 && (
                             <View className="h-[1px] w-full bg-[#454547] mb-5 -mt-1" />
                         )}
                     </View>
                 ))}
-            </View>
+            </ScrollView>
         </View>
-
     )
 }

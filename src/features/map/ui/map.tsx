@@ -88,6 +88,20 @@ export const Map = () => {
     }, [markerById, isLoadingChat]);
 
 
+    const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+        // Haversine formula to calculate distance between two points on Earth
+        const R = 6371000; // Earth radius in meters
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        const distance = R * c; // Distance in meters
+        return distance;
+    };
+
     const getMarkerBorderColor = (pointType: string) => {
         switch (pointType) {
             case 'premium':
@@ -141,6 +155,29 @@ export const Map = () => {
                 ref={mapRef}
                 onLongPress={(e) => {
                     const pressCoordinate = e.nativeEvent.coordinate;
+
+                    // Check if the new point is within any existing marker's radius
+                    const isWithinRadius = Array.isArray(markersList) && markersList.some((marker: any) => {
+                        if (!marker.radius) return false;
+
+                        // Calculate distance between press coordinate and marker
+                        const distance = calculateDistance(
+                            pressCoordinate.latitude,
+                            pressCoordinate.longitude,
+                            marker.latitude,
+                            marker.longitude
+                        );
+
+                        // Return true if press is within radius
+                        return distance < marker.radius.value;
+                    });
+
+                    if (isWithinRadius) {
+                        // Alert or show message that point can't be placed here
+                        alert("Cannot place a point within the radius of an existing point");
+                        return;
+                    }
+
                     setMarkerPosition(pressCoordinate);
                     setLatitude(pressCoordinate.latitude);
                     setLongitude(pressCoordinate.longitude);
@@ -181,7 +218,7 @@ export const Map = () => {
                             center={{ latitude: marker.latitude, longitude: marker.longitude }}
                             radius={marker.radius.value}
                             strokeColor="#FFFFFF"
-                            fillColor={marker.radius.color || 'rgba(255,255,255,0.2)'}
+                            fillColor={marker?.owner?.color?.color || 'rgba(255,255,255,0.2)'}
                             strokeWidth={2}
                         />
                     ) : null

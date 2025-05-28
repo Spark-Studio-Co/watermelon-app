@@ -23,7 +23,7 @@ const radiusColors: StateStorage = {
 export const useRadiusStore = create<IRadiusStore>()(
     persist(
         (set) => ({
-            color: "transparent",
+            color: "",
             setColor: (color: string) => set({ color })
         }),
         {

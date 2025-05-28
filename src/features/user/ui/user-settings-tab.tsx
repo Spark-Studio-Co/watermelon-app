@@ -13,6 +13,8 @@ import { useUpdateUser } from "@/src/entities/users/api/use-update-user";
 import { useGetMe } from "@/src/entities/users/api/use-get-me";
 import { useQueryClient } from "@tanstack/react-query";
 
+import ProfileFallbackIcon from "@/src/shared/icons/profile-fallback-icon";
+
 interface IUserTab {
     username: string
     nickname: string
@@ -86,10 +88,13 @@ export const UserSettingsTab = ({ username, nickname, lvl }: IUserTab) => {
             <Button onPress={openChoice}
                 style={{ height: 96, width: 96 }}
             >
-                <Image
-                    className="w-full h-full rounded-full"
-                    source={{ uri: me?.avatar ? me.avatar : require("../../../images/user_image.png") }}
-                />
+                {me?.avatar ?
+                    <Image
+                        className="w-full h-full rounded-full"
+                        source={{ uri: me?.avatar ? me.avatar : require("../../../images/user_image.png") }}
+                    /> :
+                    <ProfileFallbackIcon />
+                }
             </Button>
             <View className="flex flex-col gap-y-2">
                 <Text weight="regular" className="text-white text-[24px]">{username}</Text>
