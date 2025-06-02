@@ -5,7 +5,6 @@ import { MapSwitch } from '@/src/shared/ui/map-switch/map-switch';
 import Text from '@/src/shared/ui/text/text';
 //@ts-ignore
 import _ from 'lodash';
-import { ActivityIndicator } from 'react-native';
 
 import { customMapStyle } from '../config/map-styles';
 
@@ -51,19 +50,15 @@ export const Map = () => {
     const { data: me } = useGetMe()
     const { data: markerById } = useMarkerDataById(stateMarkerById)
     const { setName, setAvatar } = useChatStore()
-    const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
-    const { refetch: refetchUserData } = useGetUsers(selectedUserId || undefined)
     const { open: openPointType } = useVisibleStore('pointType')
     const { type } = useTypePointStore()
     const { markerPosition, setMarkerPosition } = useMarkerPositionStore()
     const { region, setRegion, centerOnUser, coordinate } = useUserLocationStore()
     const { ownerId, setLatitude, setLongitude, setIsPrivate: setMarkerIsPrivate, setOwnerId } = useMarkerStore()
-    const { data: markers, refetch } = useMarkersData()
+    const { data: availableMarkers, refetch: availableMarkersRefetch } = useMarkersData(true)
+    const { data: allMarkers, refetch: allMarkersRefetch } = useMarkersData(false)
 
-    const privateMarkers = markers?.filter((marker: any) => marker.isPrivate === true && marker.ownerId === me?.id)
-    const publicMarkers = markers?.filter((marker: any) => marker.isPrivate === false)
-
-    const markersList = isPrivate ? privateMarkers : publicMarkers;
+    const markersList = isPrivate ? availableMarkers : allMarkers;
 
     useEffect(() => {
         if (isLoadingChat && markerById?.chats?.[0]?.id && me?.id) {
@@ -124,7 +119,7 @@ export const Map = () => {
                 longitudeDelta: isPrivate ? 0.01 : 0.2,
             });
         }
-        refetch()
+        availableMarkersRefetch()
     }, [isPrivate, coordinate])
 
     const renderedMarkerType = (markerType: string) => {
@@ -148,6 +143,14 @@ export const Map = () => {
             setAvatar(markerById.image);
         }
     }, [markerById]);
+
+    // useEffect(() => {
+    //     console.log("MY ID", me?.id)
+    // }, [])
+
+    useEffect(() => {
+        console.log(availableMarkers)
+    }, [])
 
     return (
         <View style={{ width: width, height: height }}>
@@ -304,7 +307,7 @@ export const Map = () => {
                                     <View className='items-start w-full justify-between flex-row'>
                                         <View className='flex flex-col'>
                                             <View className='flex-row items-center mb-1'>
-                                                <Text weight="medium" className='text-white text-[20px] whitespace-pre-wrap'>{marker.name ?? "Point name"}</Text>
+                                                <Text weight="medium" className='text-white text-[20px] whitespace-pre-wrap'>{marker.name ?? "Point name"} #{marker?.map_id}</Text>
                                             </View>
                                             <Text weight="regular" className='text-[#817E7E] text-[12px]'>{renderedMarkerType(marker.type)}</Text>
                                         </View>

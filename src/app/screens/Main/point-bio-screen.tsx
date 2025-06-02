@@ -76,7 +76,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
   const getPrivateChat = useGetPrivateChat();
   const createPrivateChat = useCreatePrivateChat();
   const { setId, setIsPrivate } = useMarkerStore();
-  const { data: marker } = useMarkerDataById(markerId);
+  const { data: marker, refetch: markerRefetch } = useMarkerDataById(markerId);
   const { data: me } = useGetMe();
   const { open: openPost } = useVisibleStore("post");
   const { open: openChoice, close: closeChoice } =
@@ -95,7 +95,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
   const buttons = ["bio", "Публикации"];
 
   useEffect(() => {
-
+    console.log("IS SAVED:", marker?.isSaved)
     setId(markerId);
     setIsPrivate(isPrivate);
   }, [markerId]);
@@ -127,7 +127,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
           console.log("Marker unsaved successfully");
           setSubscribed(); // Toggle subscribed state in the store
           // Optionally refresh marker data
-          refetch();
+          markerRefetch();
         },
         onError: (error) => {
           console.error("Error unsaving marker:", error);
@@ -140,7 +140,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
           console.log("Marker saved successfully");
           setSubscribed(); // Toggle subscribed state in the store
           // Optionally refresh marker data
-          refetch();
+          markerRefetch();
         },
         onError: (error) => {
           console.error("Error saving marker:", error);
@@ -236,7 +236,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
               <Text weight="bold" className="text-[#5992FF] text-[13.82px]">
                 {saveMarkerMutation.isPending || unsaveMarkerMutation.isPending
                   ? "Loading..."
-                  : subscribed ? !marker.isSaved ? "Unsave" : "Unsave" : "+ Save"}
+                  : subscribed ? !marker?.isSaved ? "Unsave" : "Unsave" : "+ Save"}
               </Text>
             </Button>
             <Button

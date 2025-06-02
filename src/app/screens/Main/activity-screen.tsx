@@ -41,7 +41,7 @@ export const ActivityScreen = () => {
                                     key={index}
                                     type={item.type as ActivityType}
                                     created={formatRelativeTime(item.createdAt || item.created)}
-                                    username={item.username}
+                                    username={item.username ?? "User Name"}
                                     description={item.description}
                                 />
                             )
@@ -56,7 +56,7 @@ export const ActivityScreen = () => {
                                     key={index}
                                     type={item.type as ActivityType}
                                     created={formatRelativeTime(item.createdAt || item.created)}
-                                    username={item.username}
+                                    username={item.username ?? "User Name"}
                                     description={item.description}
                                 />
                             )

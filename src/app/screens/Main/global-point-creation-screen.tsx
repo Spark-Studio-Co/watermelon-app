@@ -126,7 +126,7 @@ export const GlobalPointCreationScreen = ({ route }: {
             />
             <View style={{ boxShadow: '0px 4px 4px 0px #00000040' }} className="rounded-[12px] ">
                 <View className="flex flex-col py-2  w-[95%] justify-center mx-auto">
-                    <Input placeholder="Point name user" className="h-[65px] placeholder:text-[#5C5A5A] text-[#5C5A5A] text-[20px] pl-6 mt-6 border-[1px] border-[#999999] rounded-[15px] w-full" onChangeText={setName} />
+                    <Input placeholder="Point name user" maxLength={50} className="h-[65px] placeholder:text-[#5C5A5A] text-[#5C5A5A] text-[20px] pl-6 mt-6 border-[1px] border-[#999999] rounded-[15px] w-full" onChangeText={setName} />
                     <Text weight="bold" className="mt-6 text-white text-[24px]">Add bio</Text>
                     <Input
                         ref={bioInputRef}
