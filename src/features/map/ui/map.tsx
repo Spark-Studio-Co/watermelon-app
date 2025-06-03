@@ -18,7 +18,6 @@ import { useGetMe } from '@/src/entities/users/api/use-get-me';
 import { useMarkersData } from '@/src/entities/markers/api/use-markers-data';
 import { useChatStore } from '../../chat/model/chat-store';
 import { useMarkerDataById } from '@/src/entities/markers/api/use-marker-data-by-id';
-import { useGetUsers } from '@/src/entities/users/api/use-get-users';
 
 // icons
 import CenterMeIcon from '@/src/shared/icons/center-me-icon';
@@ -144,12 +143,8 @@ export const Map = () => {
         }
     }, [markerById]);
 
-    // useEffect(() => {
-    //     console.log("MY ID", me?.id)
-    // }, [])
-
     useEffect(() => {
-        console.log(availableMarkers)
+        console.log("MARKERS available:", markersList)
     }, [])
 
     return (

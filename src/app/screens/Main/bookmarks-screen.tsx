@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { MainLayout } from '../../layouts/main-layout'
 import { ScrollView, View } from 'react-native'
 import { SavedPointTab } from '@/src/features/bookmarks/ui/saved-point-tab'
@@ -30,7 +30,7 @@ export const BookmarksScreen = () => {
                                 onPress={() => navigation.navigate("PointBio" as never, { id: marker?.id, ownerId: marker?.ownerId })}
                                 image={marker.image}
                                 type={marker.type}
-                                name={marker.name ?? `Point #${index}`}
+                                name={marker.name ?? `Point #${marker?.map_id}`}
                                 subscribers={marker?.favoriteCount}
                                 views={marker.views ?? 0}
                             />}
@@ -44,7 +44,7 @@ export const BookmarksScreen = () => {
                                 onPress={() => navigation.navigate("PointBio" as never, { id: marker?.id, ownerId: marker?.ownerId })}
                                 image={marker.image}
                                 type={marker.type}
-                                name={marker.name ?? `Point #${index}`}
+                                name={marker.name ?? `Point #${marker?.map_id}`}
                                 subscribers={marker?.followersCount}
                                 views={marker.views ?? 0}
                             />}

@@ -51,7 +51,8 @@ export const AuctionOfferModal = ({ visible, onClose, onSaveOffer, name, start }
             setOffer(updatedOffer)
             hasMadeOffer.current = true
             onSaveOffer(updatedOffer.points)
-            setShowSuccessModal(true)
+            // Don't show success modal here - let the parent component handle success/error
+            // setShowSuccessModal(true)
             bets.push(updatedOffer)
         }
     }
@@ -88,86 +89,80 @@ export const AuctionOfferModal = ({ visible, onClose, onSaveOffer, name, start }
     }, [])
 
     return (
-        <>
-            <Modal
-                animationType="fade"
-                transparent={true}
-                visible={visible}
-                onRequestClose={onClose}
-            >
-                <View className="flex-1 justify-center items-center bg-black/70">
-                    <View className="bg-[#1B1C1E] rounded-[12px] w-[90%] max-w-[400px]">
-                        <Button variant="custom" className="absolute -top-4 right-0" onPress={onClose}>
-                            <CloseModalIcon />
-                        </Button>
-                        <View className="flex items-center flex-col w-[95%] mx-auto">
-                            <View className="flex justify-between flex-row items-center w-full mt-4">
-                                <Text weight="bold" className="text-white text-[24px]">{name}</Text>
-                                <View className="flex flex-row gap-x-2.5">
-                                    <Button variant="custom" className="bg-[#F3F4F5] rounded-[4px]">
-                                        <AddPcIcon />
-                                    </Button>
-                                    <Text weight="bold" className="text-white text-[16px]">Pc 12,580</Text>
-                                </View>
+        <Modal
+            animationType="fade"
+            transparent={true}
+            visible={visible}
+            onRequestClose={onClose}
+        >
+            <View className="flex-1 justify-center items-center bg-black/70">
+                <View className="bg-[#1B1C1E] rounded-[12px] w-[90%] max-w-[400px]">
+                    <Button variant="custom" className="absolute -top-4 right-0" onPress={onClose}>
+                        <CloseModalIcon />
+                    </Button>
+                    <View className="flex items-center flex-col w-[95%] mx-auto">
+                        <View className="flex justify-between flex-row items-center w-full mt-4">
+                            <Text weight="bold" className="text-white text-[24px]">{name}</Text>
+                            <View className="flex flex-row gap-x-2.5">
+                                <Button variant="custom" className="bg-[#F3F4F5] rounded-[4px]">
+                                    <AddPcIcon />
+                                </Button>
+                                <Text weight="bold" className="text-white text-[16px]">Pc 12,580</Text>
                             </View>
-                            <View className="bg-[#C4C4C4] opacity-[50%] w-full h-[1px] mt-2" />
-                            <View className="flex flex-row w-[70%] gap-x-2 justify-center items-center mt-5">
-                                <Input
-                                    keyboardType="numeric"
-                                    returnKeyType="done"
-                                    type="numeric"
-                                    placeholder=''
-                                    value={activeOffer || value}
-                                    variant="point"
-                                    className="w-[79%]"
-                                    onChangeText={(text: string) => {
-                                        setValue(text);
-                                        const points = Number(text) || Number(activeOffer) || 0
+                        </View>
+                        <View className="bg-[#C4C4C4] opacity-[50%] w-full h-[1px] mt-2" />
+                        <View className="flex flex-row w-[70%] gap-x-2 justify-center items-center mt-5">
+                            <Input
+                                keyboardType="numeric"
+                                returnKeyType="done"
+                                type="numeric"
+                                placeholder=''
+                                value={activeOffer || value}
+                                variant="point"
+                                className="w-[79%]"
+                                onChangeText={(text: string) => {
+                                    setValue(text);
+                                    const points = Number(text) || Number(activeOffer) || 0
+                                    setOffer({
+                                        points,
+                                        date: currentDate,
+                                        time: currentTime
+                                    })
+                                }}
+                            />
+                            <Button
+                                variant="custom"
+                                className={`px-4 py-3.5 rounded-[6px] ${isOfferSet && (activeOffer || value) ? 'bg-[#14A278]' : 'bg-[#14A278] opacity-50'}`}
+                                onPress={handleMakeOffer}
+                                disabled={!activeOffer && !value}>
+                                <Text weight="bold" className="text-white text-[11.74px]">Make a bet</Text>
+                            </Button>
+                        </View>
+                        <View className="flex flex-row gap-x-1.5 mt-8 mb-8">
+                            {offers.map((offer) => (
+                                <Button
+                                    key={offer}
+                                    variant="bet"
+                                    className={`${active === offer ? 'bg-black border-black' : "bg-[#F3F4F5] border-[#0000000D]"}` }
+                                    onPress={() => {
+                                        toggle(offer)
+                                        setActiveOffer(offer)
+                                        setValue('')
                                         setOffer({
-                                            points,
+                                            points: Number(offer),
                                             date: currentDate,
                                             time: currentTime
                                         })
                                     }}
-                                />
-                                <Button
-                                    variant="custom"
-                                    className={`px-4 py-3.5 rounded-[6px] ${isOfferSet && (activeOffer || value) ? 'bg-[#14A278]' : 'bg-[#14A278] opacity-50'}`}
-                                    onPress={handleMakeOffer}
-                                    disabled={!activeOffer && !value}>
-                                    <Text weight="bold" className="text-white text-[11.74px]">Make a bet</Text>
+                                >
+                                    <Text weight="medium" className="text-black text-[12px]" style={{ color: active === offer ? '#FFFFFF' : '#000000' }}>pc {offer}</Text>
                                 </Button>
-                            </View>
-                            <View className="flex flex-row gap-x-1.5 mt-8 mb-8">
-                                {offers.map((offer) => (
-                                    <Button
-                                        key={offer}
-                                        variant="bet"
-                                        className={`${active === offer ? 'bg-black border-black' : "bg-[#F3F4F5] border-[#0000000D]"}`}
-                                        onPress={() => {
-                                            toggle(offer)
-                                            setActiveOffer(offer)
-                                            setValue('')
-                                            setOffer({
-                                                points: Number(offer),
-                                                date: currentDate,
-                                                time: currentTime
-                                            })
-                                        }}
-                                    >
-                                        <Text weight="medium" className="text-black text-[12px]" style={{ color: active === offer ? '#FFFFFF' : '#000000' }}>pc {offer}</Text>
-                                    </Button>
-                                ))}
-                            </View>
+                            ))}
                         </View>
                     </View>
                 </View>
-            </Modal>
-            <BetSuccessModal
-                visible={showSuccessModal}
-                onClose={handleSuccessModalClose}
-            />
-        </>
+            </View>
+        </Modal>
     )
 }
 

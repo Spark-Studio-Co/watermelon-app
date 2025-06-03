@@ -6,6 +6,7 @@ import { Button } from "@/src/shared/ui/button/button"
 import { BetPlaceTab } from "@/src/features/auction/ui/bet-place-tab/bet-place-tab"
 import { AuctionOfferModal } from "@/src/features/auction/ui/auction-offer-modal/auction-offer-modal"
 import { WinModal } from "@/src/features/auction/ui/win-modal/win-modal"
+import { BetSuccessModal } from "@/src/features/auction/ui/bet-success-modal/bet-success-modal"
 import { Alert } from "react-native"
 
 import { useBidsData } from "@/src/entities/auction/api/use-bids-data"
@@ -19,13 +20,16 @@ export const AuctionInnerScreen = ({ route }: { route: { params: { id: string, n
     const { id, name, start, startDate, endDate } = route.params
     const { data: bids, refetch } = useBidsData(id)
     const { mutate: makeBid } = useMakeBid()
-    const { refetch: auctionsRefetch } = useAuctionsData()
     const { data: isWin } = useAuctionWin(id)
 
 
     const handleMakeBid = (bidAmount: number) => {
+        // Reset bid success state
+        setBidSuccessful(false);
+        
         if (timeLeft.hours === 0 && timeLeft.minutes === 0 && timeLeft.seconds === 0) {
             Alert.alert('Ошибка', '⛔ Нельзя сделать ставку: таймер истёк.');
+            setOfferModalVisible(false); // Close the offer modal on error
             return;
         }
 
@@ -38,6 +42,7 @@ export const AuctionInnerScreen = ({ route }: { route: { params: { id: string, n
 
             if (bidAmount <= latestHighest || bidAmount < start) {
                 Alert.alert("Ошибка", `Ставка должна быть выше текущей (${latestHighest}) и выше стартовой (${start})`);
+                setOfferModalVisible(false); // Close the offer modal on error
                 return;
             }
 
@@ -45,12 +50,22 @@ export const AuctionInnerScreen = ({ route }: { route: { params: { id: string, n
                 onSuccess: () => {
                     console.log('✅ Ставка успешно сделана');
                     refetch(); // обновим снова после успеха
+                    // Set bid as successful
+                    setBidSuccessful(true);
+                    Alert.alert("Успех", "Ставка принята");
                 },
                 onError: (error: any) => {
                     console.error('❌ Ошибка при ставке:', error?.response?.data || error);
                     Alert.alert("Ошибка", error?.response?.data?.message || "Не удалось сделать ставку");
+                    setOfferModalVisible(false); // Close the offer modal on error
+                    setBidSuccessful(false);
                 }
             });
+        }).catch(error => {
+            console.error('❌ Ошибка при получении ставок:', error);
+            Alert.alert("Ошибка", "Не удалось получить текущие ставки");
+            setOfferModalVisible(false); // Close the offer modal on error
+            setBidSuccessful(false);
         });
     };
 
@@ -83,6 +98,7 @@ export const AuctionInnerScreen = ({ route }: { route: { params: { id: string, n
     const [timeLeft, setTimeLeft] = useState(calculateTimeLeft())
     const [offerModalVisible, setOfferModalVisible] = useState(false)
     const [winModalVisible, setWinModalVisible] = useState(false)
+    const [bidSuccessful, setBidSuccessful] = useState(false)
 
     const highestBid = useMemo(() => {
         if (!bids || bids.length === 0) return 0
@@ -223,8 +239,8 @@ export const AuctionInnerScreen = ({ route }: { route: { params: { id: string, n
                     }
                 }}
                 onSaveOffer={(points: number) => {
-                    handleMakeBid(points)
-                    setOfferModalVisible(false);
+                    // Don't close the modal here - let the API response determine what happens
+                    handleMakeBid(points);
                 }}
                 start={start}
             />
@@ -233,6 +249,10 @@ export const AuctionInnerScreen = ({ route }: { route: { params: { id: string, n
                 id={isWin?.markerId}
                 visible={winModalVisible}
                 onClose={handleCloseWinModal}
+            />
+            <BetSuccessModal
+                visible={bidSuccessful}
+                onClose={() => setBidSuccessful(false)}
             />
         </MainLayout>
     )

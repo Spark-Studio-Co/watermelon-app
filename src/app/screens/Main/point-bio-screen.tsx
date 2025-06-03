@@ -120,13 +120,12 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
 
   // Handle saving/unsaving markers
   const handleSaveMarker = () => {
-    if (subscribed) {
+    if (marker?.isSaved) {
       // Unsave the marker
       unsaveMarkerMutation.mutate(markerId, {
         onSuccess: () => {
           console.log("Marker unsaved successfully");
-          setSubscribed(); // Toggle subscribed state in the store
-          // Optionally refresh marker data
+          // Optionally refresh marker data to update isSaved status
           markerRefetch();
         },
         onError: (error) => {
@@ -138,8 +137,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
       saveMarkerMutation.mutate(markerId, {
         onSuccess: () => {
           console.log("Marker saved successfully");
-          setSubscribed(); // Toggle subscribed state in the store
-          // Optionally refresh marker data
+          // Optionally refresh marker data to update isSaved status
           markerRefetch();
         },
         onError: (error) => {
@@ -218,7 +216,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
       <View className="w-[80%] mx-auto mt-4">
         <PointBioTab
           isSettingsVisible={ownerId === me?.id}
-          pointname={marker?.name ?? "Point name"}
+          pointname={marker?.name ?? `Point #${marker?.map_id}`}
           nickname="point_name"
           onPress={openSettings}
         />
@@ -236,7 +234,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
               <Text weight="bold" className="text-[#5992FF] text-[13.82px]">
                 {saveMarkerMutation.isPending || unsaveMarkerMutation.isPending
                   ? "Loading..."
-                  : subscribed ? !marker?.isSaved ? "Unsave" : "Unsave" : "+ Save"}
+                  : marker?.isSaved ? "Unsave" : "+ Save"}
               </Text>
             </Button>
             <Button

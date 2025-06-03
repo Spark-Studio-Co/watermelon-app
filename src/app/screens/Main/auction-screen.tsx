@@ -123,6 +123,10 @@ export const AuctionScreen = () => {
         }
     }, [auctions])
 
+    useEffect(() => {
+        console.log("AUCTIONS", auctions)
+    })
+
     return (
         <MainLayout isScrollable={false}>
             <View className='mt-7 flex flex-col'>
@@ -152,13 +156,14 @@ export const AuctionScreen = () => {
                         {active === 'New' && Array.isArray(auctions) && auctions?.map((auction: any, index: number) => (
                             <Button key={index} variant='custom' onPress={() => {
                                 //@ts-ignore
-                                navigation.navigate('AuctionInner' as never, { id: auction.id, name: nameMap[auction.id] || 'Unnamed', start: auction.startingBid, startDate: auction.startDate, endDate: auction.endDate })
+                                navigation.navigate('AuctionInner' as never, { id: auction.auctionId, name: `Point #${auction?.marker?.map_id}` || nameMap[auction.id], start: auction.startingBid, startDate: auction.startDate, endDate: auction.endDate })
+                                console.log("AUCTION ID", auction.auctionId)
                             }}>
                                 <View className="mb-4">
                                     <PointTab
                                         status={active}
                                         type={auction.marker?.type}
-                                        name={nameMap[auction.id] || 'Unnamed'}
+                                        name={`Point #${auction?.marker?.map_id}` || nameMap[auction.id]}
                                         subscribers={auction.subscribers}
                                         views={auction.marker?.views}
                                         members={auction.members}
@@ -172,13 +177,13 @@ export const AuctionScreen = () => {
                                 auctions.map((auction: any, index: number) => (
                                     <Button key={index} variant='custom' onPress={() => {
                                         //@ts-ignore
-                                        navigation.navigate('AuctionInner' as never, { id: auction.id, name: nameMap[auction.id] || 'Unnamed', start: auction.startingBid, startDate: auction.startDate, endDate: auction.endDate })
+                                        navigation.navigate('AuctionInner' as never, { id: auction.auctionId, name: `Point #${auction?.marker?.map_id}` || nameMap[auction.id], start: auction.startingBid, startDate: auction.startDate, endDate: auction.endDate })
                                     }}>
                                         <View key={index} className="mb-4">
                                             <PointTab
                                                 status={active}
                                                 type={auction.marker?.type}
-                                                name={nameMap[auction.id] || 'Unnamed'}
+                                                name={`Point #${auction?.marker?.map_id}` || nameMap[auction.id]}
                                                 subscribers={auction.subscribers}
                                                 views={auction.marker?.views}
                                                 members={auction.members}
