@@ -129,7 +129,7 @@ export const MyFriendsScreen = () => {
                 {Array.isArray(incomingFriends) && incomingFriends?.map((friend: any, index: number) => {
                     return (
                         <View key={index}>
-                            <FriendTab id={friend.id} avatar={friend.requester.avatar} username={friend.requester.name} nickname={`@${friend.requester.username}`} isIncoming />
+                            <FriendTab id={friend.id} avatar={friend.requester.avatar} username={friend.name === "" ? "User Name" : friend.name} nickname={`@${friend.requester.username}`} isIncoming />
                             <View className={`bg-white w-full h-0.5 mt-6 mb-4 ${index === friends?.length - 1 && 'hidden'}`} />
                         </View>
                     )
@@ -137,7 +137,7 @@ export const MyFriendsScreen = () => {
                 {Array.isArray(friends) && friends?.map((friend: any, index: number) => {
                     return (
                         <View key={index}>
-                            <FriendTab avatar={friend.avatar} username={friend.name} nickname={friend.username === "" ? "@user_name" : `@${friend.username}`} onPress={() => handleChatNavigate(friend.id)} />
+                            <FriendTab avatar={friend.avatar} username={friend.name === "" ? "User Name" : friend.name} nickname={friend.username === "" ? "@user_name" : `@${friend.username}`} onPress={() => handleChatNavigate(friend.id)} />
                             <View className={`bg-white w-full h-0.5 mt-6 mb-4 ${index === friends.length - 1 && 'hidden'}`} />
                         </View>
                     )

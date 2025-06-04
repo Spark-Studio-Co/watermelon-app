@@ -245,7 +245,7 @@ export const Map = () => {
                                         const chatId = marker.chats?.[0]?.id;
                                         if (!chatId || !me?.id) return;
 
-                                        setName(marker.name ?? 'Chat');
+                                        setName(marker.name ?? `Point #${marker?.map_id}`);
                                         setAvatar(marker.image ?? null);
 
                                         useChatStore.getState().connect(chatId, me.id, true);
@@ -272,7 +272,7 @@ export const Map = () => {
                                     <View className='items-start w-full justify-between flex-row'>
                                         <View className='flex flex-col'>
                                             <View className='flex-row items-center mb-1'>
-                                                <Text weight="medium" className='text-white text-[20px] whitespace-pre-wrap'>{marker.name ?? "Point name"} #{marker?.map_id}</Text>
+                                                <Text weight="medium" className='text-white text-[20px] whitespace-pre-wrap'>{marker.name ?? "Point"} #{marker?.map_id}</Text>
                                             </View>
                                             <Text weight="regular" className='text-[#817E7E] text-[12px]'>{renderedMarkerType(marker.type)}</Text>
                                         </View>

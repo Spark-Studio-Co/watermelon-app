@@ -40,7 +40,7 @@ export const ChatTab = ({ isGlobal }: IChatTabProps) => {
                 />
                 <View className="flex flex-col justify-between ml-7">
                     <Text weight="regular" className="text-white text-[17.4px]">
-                        {name}
+                        {name === "" ? "User Name" : name}
                     </Text>
                     {isGlobal ?
 

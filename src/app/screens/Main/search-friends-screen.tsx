@@ -34,7 +34,7 @@ export const SearchFriendsScreen = () => {
                     <View key={friend.id}>
                         <FriendTab
                             avatar={friend.avatar}
-                            username={friend.name}
+                            username={friend.name === "" ? "User Name" : friend.name}
                             nickname={friend.username ? `@${friend.username}` : friend.email}
                             isAddToFriends
                             onPress={() => handleSendRequest(friend.id)}
