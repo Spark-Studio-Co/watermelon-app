@@ -156,7 +156,15 @@ export const AuctionScreen = () => {
                         {active === 'New' && Array.isArray(auctions) && auctions?.map((auction: any, index: number) => (
                             <Button key={index} variant='custom' onPress={() => {
                                 //@ts-ignore
-                                navigation.navigate('AuctionInner' as never, { id: auction.auctionId, name: `Point #${auction?.marker?.map_id}` || nameMap[auction.id], start: auction.startingBid, startDate: auction.startDate, endDate: auction.endDate })
+                                navigation.navigate('AuctionInner' as never, { 
+                                    id: auction.auctionId, 
+                                    name: `Point #${auction?.marker?.map_id}` || nameMap[auction.id], 
+                                    start: auction.startingBid, 
+                                    startDate: auction.startDate, 
+                                    endDate: auction.endDate,
+                                    latitude: auction.marker?.latitude,
+                                    longitude: auction.marker?.longitude
+                                })
                                 console.log("AUCTION ID", auction.auctionId)
                             }}>
                                 <View className="mb-4">
@@ -177,7 +185,15 @@ export const AuctionScreen = () => {
                                 auctions.map((auction: any, index: number) => (
                                     <Button key={index} variant='custom' onPress={() => {
                                         //@ts-ignore
-                                        navigation.navigate('AuctionInner' as never, { id: auction.auctionId, name: `Point #${auction?.marker?.map_id}` || nameMap[auction.id], start: auction.startingBid, startDate: auction.startDate, endDate: auction.endDate })
+                                        navigation.navigate('AuctionInner' as never, { 
+                                            id: auction.auctionId, 
+                                            name: `Point #${auction?.marker?.map_id}` || nameMap[auction.id], 
+                                            start: auction.startingBid, 
+                                            startDate: auction.startDate, 
+                                            endDate: auction.endDate,
+                                            latitude: auction.marker?.latitude,
+                                            longitude: auction.marker?.longitude
+                                        })
                                     }}>
                                         <View key={index} className="mb-4">
                                             <PointTab

@@ -268,36 +268,6 @@ export const Map = () => {
                             >
                                 <View className='bg-[#272836] border-[2px] p-3 rounded-lg shadow-lg min-w-[220px] min-h-24' style={{ borderColor: getMarkerBorderColor(marker.type) }}>
                                     <View className="absolute bottom-[5px] left-1/2 -translate-x-1/2">
-                                        <View
-                                            style={{
-                                                position: 'absolute',
-                                                top: 0,
-                                                left: 0,
-                                                width: 0,
-                                                height: 0,
-                                                borderLeftWidth: 14,
-                                                borderRightWidth: 14,
-                                                borderTopWidth: 14,
-                                                borderLeftColor: 'transparent',
-                                                borderRightColor: 'transparent',
-                                                borderTopColor: getMarkerBorderColor(marker.type)
-                                            }}
-                                        />
-                                        <View
-                                            style={{
-                                                position: 'absolute',
-                                                top: 1.8,
-                                                left: 4,
-                                                width: 0,
-                                                height: 0,
-                                                borderLeftWidth: 10,
-                                                borderRightWidth: 10,
-                                                borderTopWidth: 10,
-                                                borderLeftColor: 'transparent',
-                                                borderRightColor: 'transparent',
-                                                borderTopColor: '#272836',
-                                            }}
-                                        />
                                     </View>
                                     <View className='items-start w-full justify-between flex-row'>
                                         <View className='flex flex-col'>

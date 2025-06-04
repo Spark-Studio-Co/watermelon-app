@@ -1,39 +1,75 @@
 import { MainLayout } from "../../layouts/main-layout"
-import { View, Image, Keyboard } from "react-native"
+import { View, Image, Keyboard, Dimensions } from "react-native"
 import Text from "@/src/shared/ui/text/text"
 import { Input } from "@/src/shared/ui/input/input"
-import { useRef, useState } from "react"
+import { useRef, useState, useEffect } from "react"
 import { Button } from "@/src/shared/ui/button/button"
 import { useCameraPermissions } from 'expo-camera';
 import { PointTypeSwitch } from "@/src/shared/ui/point-type-switch/point-type-switch"
 import { CameraModalWidget } from "@/src/widget/camera/ui/camera-modal-widget"
 import { ModalWrapper } from "@/src/shared/ui/modal-wrapper/modal-wrapper"
 import * as ImagePicker from 'expo-image-picker';
+import MapView, { Marker } from 'react-native-maps';
 
-import { useNavigation } from "@react-navigation/native"
+import { useNavigation, useRoute, RouteProp } from "@react-navigation/native"
 import { useCameraStore } from "@/src/widget/camera/model/camera-store"
 import { useVisibleStore } from "@/src/shared/model/use-visible-store"
 import { useMarkerStore } from '@/src/entities/markers/model/use-marker-store';
 import { useCreateMarker } from "@/src/entities/markers/api/use-create-marker"
 import { useQueryClient } from "@tanstack/react-query"
+import { customMapStyle } from '@/src/features/map/config/map-styles'
 
 
 import CameraIcon from "@/src/shared/icons/camera-icon"
 
+type PrivatePointCreationParams = {
+    coordinate?: {
+        latitude: number;
+        longitude: number;
+    };
+};
+
+type PrivatePointCreationScreenRouteProp = RouteProp<{
+    PrivatePointCreation: PrivatePointCreationParams;
+}, 'PrivatePointCreation'>;
+
 export const PrivatePointCreationScreen = () => {
     const queryClient = useQueryClient()
     const navigation = useNavigation()
+    const route = useRoute<PrivatePointCreationScreenRouteProp>();
     const bioInputRef = useRef(null);
+    const { width } = Dimensions.get('window');
 
     const [photoUri, setPhotoUri] = useState<string | null>(null);
     const [pointType, setPointType] = useState<string>("standard");
+    const [mapRegion, setMapRegion] = useState<{
+        latitude: number;
+        longitude: number;
+        latitudeDelta: number;
+        longitudeDelta: number;
+    } | null>(null);
     const { image, setImage } = useCameraStore('privateCamera')
     const { open } = useVisibleStore("privateCamera")
     const { open: openChoice, close: closeChoice } = useVisibleStore("cameraChoice")
     const [permission, requestPermission] = useCameraPermissions();
 
     const { mutate: createPoint } = useCreateMarker();
-    const { setName, setDescription, name, description, latitude, longitude, isPrivate, ownerId } = useMarkerStore()
+    const { setName, setDescription, name, description, latitude, longitude, isPrivate, ownerId, setLatitude, setLongitude } = useMarkerStore()
+
+    useEffect(() => {
+        // Get coordinates from route params if available
+        if (route.params?.coordinate) {
+            const { latitude: lat, longitude: lng } = route.params.coordinate;
+            setLatitude(lat);
+            setLongitude(lng);
+            setMapRegion({
+                latitude: lat,
+                longitude: lng,
+                latitudeDelta: 0.005,
+                longitudeDelta: 0.005
+            });
+        }
+    }, [route.params, setLatitude, setLongitude]);
 
     const openCamera = async () => {
         const { granted } = await requestPermission();
@@ -125,10 +161,35 @@ export const PrivatePointCreationScreen = () => {
             <View className="flex flex-col items-end mt-4">
                 <Text weight="bold" className="text-white text-[24px]">{pointDisplayId}</Text>
             </View>
-            <Image
-                source={image ? { uri: image } : require('@/src/images/point_image.png')}
-                className="w-full h-[182px] rounded-[12px] mt-1"
-            />
+            <View className="w-full h-[182px] rounded-[12px] mt-1 overflow-hidden">
+                {mapRegion && latitude && longitude ? (
+                    <MapView
+                        style={{ width: '100%', height: '100%' }}
+                        region={mapRegion}
+                        customMapStyle={customMapStyle}
+                        scrollEnabled={false}
+                        zoomEnabled={false}
+                        rotateEnabled={false}
+                        pitchEnabled={false}
+                        mapType="standard"
+                        showsPointsOfInterest={false}
+                        showsBuildings={false}
+                        showsTraffic={false}
+                        showsIndoors={false}
+                    >
+                        <Marker
+                            coordinate={{ latitude, longitude }}
+                        >
+                            <View className='bg-[#2E2E2E] w-[25px] h-[25px] border-[2px] border-gray rounded-full' />
+                        </Marker>
+                    </MapView>
+                ) : (
+                    <Image
+                        source={image ? { uri: image } : require('@/src/images/point_image.png')}
+                        className="w-full h-[182px]"
+                    />
+                )}
+            </View>
             <View style={{ boxShadow: '0px 4px 4px 0px #00000040' }} className="rounded-[12px] ">
                 <View className="flex flex-col py-2  w-[95%] justify-center mx-auto">
                     <Input value={name} onChangeText={setName} placeholder="Point name user" maxLength={50} className="h-[65px] placeholder:text-[#5C5A5A] text-[#5C5A5A] text-[20px] pl-6 mt-6 border-[1px] border-[#999999] rounded-[15px] w-full" />

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from "react"
 import { MainLayout } from "../../layouts/main-layout"
-import { View, Image } from "react-native"
+import { View, Image, Dimensions } from "react-native"
 import Text from "@/src/shared/ui/text/text"
 import { Button } from "@/src/shared/ui/button/button"
 import { BetPlaceTab } from "@/src/features/auction/ui/bet-place-tab/bet-place-tab"
@@ -8,16 +8,22 @@ import { AuctionOfferModal } from "@/src/features/auction/ui/auction-offer-modal
 import { WinModal } from "@/src/features/auction/ui/win-modal/win-modal"
 import { BetSuccessModal } from "@/src/features/auction/ui/bet-success-modal/bet-success-modal"
 import { Alert } from "react-native"
+import MapView, { Marker } from 'react-native-maps'
+import { customMapStyle } from '@/src/features/map/config/map-styles'
 
 import { useBidsData } from "@/src/entities/auction/api/use-bids-data"
 import { useMakeBid } from "@/src/entities/auction/api/use-make-bid"
-import { useQueryClient } from "@tanstack/react-query"
-import { useAuctionsData } from "@/src/entities/auction/api/use-auctions-data"
 import { useAuctionWin } from "@/src/entities/auction/api/use-auction-win"
 
-export const AuctionInnerScreen = ({ route }: { route: { params: { id: string, name: string, start: number, startDate: string, endDate: string } } }) => {
+export const AuctionInnerScreen = ({ route }: { route: { params: { id: string, name: string, start: number, startDate: string, endDate: string, latitude?: number, longitude?: number } } }) => {
     const hasSeenWinModal = useRef(false)
-    const { id, name, start, startDate, endDate } = route.params
+    const { id, name, start, startDate, endDate, latitude, longitude } = route.params
+    const [mapRegion, setMapRegion] = useState<{
+        latitude: number;
+        longitude: number;
+        latitudeDelta: number;
+        longitudeDelta: number;
+    } | null>(null)
     const { data: bids, refetch } = useBidsData(id)
     const { mutate: makeBid } = useMakeBid()
     const { data: isWin } = useAuctionWin(id)
@@ -26,7 +32,7 @@ export const AuctionInnerScreen = ({ route }: { route: { params: { id: string, n
     const handleMakeBid = (bidAmount: number) => {
         // Reset bid success state
         setBidSuccessful(false);
-        
+
         if (timeLeft.hours === 0 && timeLeft.minutes === 0 && timeLeft.seconds === 0) {
             Alert.alert('Ошибка', '⛔ Нельзя сделать ставку: таймер истёк.');
             setOfferModalVisible(false); // Close the offer modal on error
@@ -52,7 +58,8 @@ export const AuctionInnerScreen = ({ route }: { route: { params: { id: string, n
                     refetch(); // обновим снова после успеха
                     // Set bid as successful
                     setBidSuccessful(true);
-                    Alert.alert("Успех", "Ставка принята");
+                    // Close the offer modal on success
+                    setOfferModalVisible(false);
                 },
                 onError: (error: any) => {
                     console.error('❌ Ошибка при ставке:', error?.response?.data || error);
@@ -134,6 +141,16 @@ export const AuctionInnerScreen = ({ route }: { route: { params: { id: string, n
         return () => clearInterval(intervalId);
     }, [bids, highestBid, endDate]);
 
+    useEffect(() => {
+        if (latitude && longitude) {
+            setMapRegion({
+                latitude,
+                longitude,
+                latitudeDelta: 0.005,
+                longitudeDelta: 0.005
+            });
+        }
+    }, [latitude, longitude]);
 
     const formatTime = (value: number) => {
         return value < 10 ? `0${value}` : `${value}`
@@ -143,13 +160,40 @@ export const AuctionInnerScreen = ({ route }: { route: { params: { id: string, n
         setOfferModalVisible(true)
     }
 
-
     return (
         <MainLayout>
             <View className="flex flex-col items-end mt-4">
                 <Text weight="bold" className="text-white text-[24px]">{name}</Text>
             </View>
-            <Image source={require('@/src/images/point_image.png')} className="w-full h-[182px] rounded-[12px] mt-1" />
+            <View className="w-full h-[182px] rounded-[12px] mt-1 overflow-hidden">
+                {mapRegion && latitude && longitude ? (
+                    <MapView
+                        style={{ width: '100%', height: '100%' }}
+                        region={mapRegion}
+                        customMapStyle={customMapStyle}
+                        scrollEnabled={false}
+                        zoomEnabled={false}
+                        rotateEnabled={false}
+                        pitchEnabled={false}
+                        mapType="standard"
+                        showsPointsOfInterest={false}
+                        showsBuildings={false}
+                        showsTraffic={false}
+                        showsIndoors={false}
+                    >
+                        <Marker
+                            coordinate={{ latitude, longitude }}
+                        >
+                            <View className='bg-[#2E2E2E] w-[25px] h-[25px] border-[2px] border-gray rounded-full' />
+                        </Marker>
+                    </MapView>
+                ) : (
+                    <Image
+                        source={require('@/src/images/point_image.png')}
+                        className="w-full h-[182px]"
+                    />
+                )}
+            </View>
             <View className="flex flex-col items-center w-full rounded-[12px]" style={{ boxShadow: '0px 4px 4px 0px #11D4994D' }}>
                 <View className="flex flex-row items-center w-[95%] justify-center border border-white rounded-[15px] h-[65px] mt-8">
                     <Text weight="regular" className="text-white text-[16px]">Last</Text>
