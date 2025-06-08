@@ -5,6 +5,8 @@ export interface ChatMessage {
   chatId: string;
   user: {
     id: string;
+    avatar?: string; // Added avatar field to match API response
+    name?: string;  // Added name field for future use
   };
   text: string;
   sentAt: number;

@@ -5,10 +5,9 @@ import { ChatMessage } from "@/src/features/chat/ui/chat-message";
 import { useChatStore } from "@/src/features/chat/model/chat-store";
 import { useGetMe } from "@/src/entities/users/api/use-get-me";
 import { useRoute } from "@react-navigation/native";
-import { useShallow } from 'zustand/react/shallow';
+import { useShallow } from "zustand/react/shallow";
 
-
-import user_image from '../../../images/user_image.png'
+import user_image from "../../../images/user_image.png";
 
 import { ChatInputType } from "../../layouts/main-layout";
 
@@ -21,7 +20,7 @@ export const PrivateChatScreen = () => {
   const { chatId, participants, chatType } = route.params as {
     chatId: string;
     participants: string[];
-    chatType: string
+    chatType: string;
   };
 
   const {
@@ -31,7 +30,7 @@ export const PrivateChatScreen = () => {
     disconnect,
     sendMessage,
     getStatuses,
-    sendGroupMessage
+    sendGroupMessage,
   } = useChatStore(
     useShallow((state) => ({
       avatar: state.avatar,
@@ -50,7 +49,7 @@ export const PrivateChatScreen = () => {
     let isMounted = true;
     setIsLoading(true);
 
-    connect(chatId, userId, chatType === 'group');
+    connect(chatId, userId, chatType === "group");
     getStatuses(participants);
 
     setIsLoading(false);
@@ -100,10 +99,12 @@ export const PrivateChatScreen = () => {
       if (chatType === "group") {
         sendGroupMessage(text, chatId, userId);
       } else {
-        const receiverId = participants.find(id => id !== userId);
+        const receiverId = participants.find((id) => id !== userId);
 
         if (!receiverId) {
-          console.error("[PrivateChatScreen] Error: Could not determine receiverId!");
+          console.error(
+            "[PrivateChatScreen] Error: Could not determine receiverId!"
+          );
           return;
         }
 
@@ -125,7 +126,11 @@ export const PrivateChatScreen = () => {
   }
 
   return (
-    <MainLayout isChat chatInputType={chatType as ChatInputType} onSend={handleSendMessage}>
+    <MainLayout
+      isChat
+      chatInputType={chatType as ChatInputType}
+      onSend={handleSendMessage}
+    >
       {isLoading ? (
         <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="small" color="#0000ff" />
@@ -141,7 +146,7 @@ export const PrivateChatScreen = () => {
         messages.map((message, index) => (
           <View className="flex flex-col mb-10" key={index}>
             <ChatMessage
-              avatar={!message.isMy ? avatar === null ? user_image : avatar : avatar}
+              avatar={message.avatar || (!message.isMy ? avatar : user_image)}
               {...message}
             />
           </View>
