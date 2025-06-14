@@ -181,12 +181,10 @@ export const Map = () => {
                 marker.longitude
               );
 
-              // Return true if press is within radius
               return distance < marker.radius.value;
             });
 
           if (isWithinRadius) {
-            // Alert or show message that point can't be placed here
             alert(
               "Cannot place a point within the radius of an existing point"
             );

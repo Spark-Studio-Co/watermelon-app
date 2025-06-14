@@ -2,7 +2,7 @@ import { MainLayout } from "../../layouts/main-layout";
 import { View, Image, Keyboard, Dimensions } from "react-native";
 import Text from "@/src/shared/ui/text/text";
 import { Input } from "@/src/shared/ui/input/input";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useMemo } from "react";
 import { Button } from "@/src/shared/ui/button/button";
 import { useCameraPermissions } from "expo-camera";
 import { PointTypeSwitch } from "@/src/shared/ui/point-type-switch/point-type-switch";
@@ -169,6 +169,10 @@ export const PrivatePointCreationScreen = () => {
     return `Point #${randomId}`;
   });
 
+  const markerStyle = useMemo(() => ({
+    borderColor: pointType === "standard" ? "#FFFFFF" : "#93E0FF"
+  }), [pointType]);
+
   return (
     <MainLayout>
       <View className="flex flex-col items-end mt-4">
@@ -193,14 +197,15 @@ export const PrivatePointCreationScreen = () => {
             showsIndoors={false}
           >
             <Marker 
+              key={`marker-${latitude}-${longitude}`}
               coordinate={{ latitude, longitude }}
-              tracksViewChanges={false}
+              tracksViewChanges={true}
               rotation={0}
               anchor={{ x: 0.5, y: 0.5 }}
             >
               <View
                 className="bg-[#2E2E2E] w-[25px] h-[25px] border-[2px] rounded-full"
-                style={{ borderColor: pointType === "standard" ? "#FFFFFF" : "#93E0FF" }}
+                style={markerStyle}
               />
             </Marker>
           </MapView>

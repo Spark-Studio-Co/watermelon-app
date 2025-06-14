@@ -25,7 +25,11 @@ import CameraIcon from "@/src/shared/icons/camera-icon";
 import { usePointBioStore } from "@/src/features/point/model/point-bio-store";
 import { useActiveStore } from "@/src/shared/model/use-active-store";
 import { useVisibleStore } from "@/src/shared/model/use-visible-store";
-import { RouteProp, useNavigation, NavigationProp } from "@react-navigation/native";
+import {
+  RouteProp,
+  useNavigation,
+  NavigationProp,
+} from "@react-navigation/native";
 import { hp } from "@/src/shared/utils/resize-dimensions";
 import { useEffect, useRef, useState } from "react";
 import { useCameraPermissions } from "expo-camera";
@@ -40,7 +44,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import { usePersonalizedPublicationsData } from "@/src/entities/markers/api/use-personalized-publications-data";
 import { useGetUsers } from "@/src/entities/users/api/use-get-users";
 import { useChatStore } from "@/src/features/chat/model/chat-store";
-import { useGetPrivateChat, useCreatePrivateChat } from "@/src/features/chat/api/use-get-private-chat";
+import {
+  useGetPrivateChat,
+  useCreatePrivateChat,
+} from "@/src/features/chat/api/use-get-private-chat";
 
 type PointBioRouteProp = {
   route: RouteProp<any, any>;
@@ -70,8 +77,8 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
     refetch,
   } = usePersonalizedPublicationsData(markerId);
 
-  const { setName, setAvatar } = useChatStore()
-  const { refetch: refetchUsersData } = useGetUsers(ownerId)
+  const { setName, setAvatar } = useChatStore();
+  const { refetch: refetchUsersData } = useGetUsers(ownerId);
   const { mutate: uploadImage } = useUploadImage();
   const getPrivateChat = useGetPrivateChat();
   const createPrivateChat = useCreatePrivateChat();
@@ -95,13 +102,14 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
   const buttons = ["bio", "Публикации"];
 
   useEffect(() => {
-    console.log("IS SAVED:", marker?.isSaved)
+    console.log("IS SAVED:", marker?.isSaved);
     setId(markerId);
     setIsPrivate(isPrivate);
   }, [markerId]);
 
-  const alternatingHeightsImages = Array.isArray(publications) && publications?.map(
-    (item: any, index: number) => {
+  const alternatingHeightsImages =
+    Array.isArray(publications) &&
+    publications?.map((item: any, index: number) => {
       const isEven = index % 2 === 0;
 
       return {
@@ -111,8 +119,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
           height: isEven ? 219.70872497558594 : 178.95631408691406,
         },
       };
-    }
-  );
+    });
 
   const handleOpenSection = (label: string) => {
     setActive(label);
@@ -130,7 +137,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
         },
         onError: (error) => {
           console.error("Error unsaving marker:", error);
-        }
+        },
       });
     } else {
       // Save the marker
@@ -142,7 +149,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
         },
         onError: (error) => {
           console.error("Error saving marker:", error);
-        }
+        },
       });
     }
   };
@@ -188,7 +195,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
         type: mimeType,
       } as any);
 
-      formData.append("caption", caption ?? '');
+      formData.append("caption", caption ?? "");
       formData.append("markerId", markerId);
 
       uploadImage(formData, {
@@ -208,7 +215,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
 
   useEffect(() => {
     refetch();
-    console.log("marker data", marker)
+    console.log("marker data", marker);
   }, [publications, active === "Публикации"]);
 
   return (
@@ -217,7 +224,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
         <PointBioTab
           isSettingsVisible={ownerId === me?.id}
           pointname={marker?.name ?? `Point #${marker?.map_id}`}
-          nickname="point_name"
+          // nickname="point_name"
           onPress={openSettings}
         />
       </View>
@@ -229,12 +236,16 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
             <Button
               variant="follow"
               onPress={handleSaveMarker}
-              disabled={saveMarkerMutation.isPending || unsaveMarkerMutation.isPending}
+              disabled={
+                saveMarkerMutation.isPending || unsaveMarkerMutation.isPending
+              }
             >
               <Text weight="bold" className="text-[#5992FF] text-[13.82px]">
                 {saveMarkerMutation.isPending || unsaveMarkerMutation.isPending
                   ? "Loading..."
-                  : marker?.isSaved ? "Unsave" : "+ Save"}
+                  : marker?.isSaved
+                    ? "Unsave"
+                    : "+ Save"}
               </Text>
             </Button>
             <Button
@@ -248,7 +259,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
                 if (!userData) return;
 
                 // Set user info in chat store
-                setName(userData.name ?? 'User Name');
+                setName(userData.name ?? "User Name");
                 setAvatar(userData.avatar);
 
                 try {
@@ -257,65 +268,70 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
                     // Try to get or create the chat
                     const chatResponse = await getPrivateChat.mutateAsync({
                       userId: me.id,
-                      targetUserId: ownerId
+                      targetUserId: ownerId,
                     });
 
                     // Ensure we have a valid chat ID
                     if (!chatResponse || !chatResponse.chatId) {
-                      throw new Error('Invalid chat response: missing chat ID');
+                      throw new Error("Invalid chat response: missing chat ID");
                     }
 
-                    console.log('Got chat ID:', chatResponse.chatId);
-                    console.log('Participants:', chatResponse.participants);
+                    console.log("Got chat ID:", chatResponse.chatId);
+                    console.log("Participants:", chatResponse.participants);
 
-                    // Navigate to chat screen
                     //@ts-ignore
-                    navigation.navigate("PrivateChat" as never, {
-                      chatId: chatResponse.chatId,
-                      participants: chatResponse.participants,
-                      chatType: "private"
-                    } as never);
-
-
+                    navigation.navigate(
+                      "PrivateChat" as never,
+                      {
+                        chatId: chatResponse.chatId,
+                        participants: chatResponse.participants,
+                        chatType: "private",
+                      } as never
+                    );
                   } catch (getError: any) {
                     // If we get a 500 error, the chat doesn't exist yet, so create it
                     if (getError?.response?.status === 500) {
-                      console.log('Chat does not exist, creating new chat...');
+                      console.log("Chat does not exist, creating new chat...");
 
                       // Create a new chat
-                      const newChatResponse = await createPrivateChat.mutateAsync({
-                        userA: me.id,
-                        userB: ownerId
-                      });
+                      const newChatResponse =
+                        await createPrivateChat.mutateAsync({
+                          userA: me.id,
+                          userB: ownerId,
+                        });
 
                       // Ensure we have a valid chat ID
                       if (!newChatResponse || !newChatResponse.id) {
-                        throw new Error('Invalid chat creation response: missing chat ID');
+                        throw new Error(
+                          "Invalid chat creation response: missing chat ID"
+                        );
                       }
 
-                      console.log('Created new chat:', newChatResponse.id);
+                      console.log("Created new chat:", newChatResponse.id);
 
                       // Extract participants from the response or use default
-                      const participants = newChatResponse.participants ?
-                        newChatResponse.participants.map(p => p.userId) :
-                        [me.id, ownerId];
+                      const participants = newChatResponse.participants
+                        ? newChatResponse.participants.map((p) => p.userId)
+                        : [me.id, ownerId];
 
                       // Get the chat ID, ensuring it's a string
-                      const chatId = newChatResponse.id || newChatResponse.chatId || '';
+                      const chatId =
+                        newChatResponse.id || newChatResponse.chatId || "";
 
                       if (!chatId) {
-                        throw new Error('Missing chat ID in response');
+                        throw new Error("Missing chat ID in response");
                       }
 
-                      // Navigate to chat screen
                       //@ts-ignore
-                      navigation.navigate("PrivateChat" as never, {
-                        chatId: chatId,
-                        participants: participants,
-                        chatType: "private"
-                      } as never);
+                      navigation.navigate(
+                        "PrivateChat" as never,
+                        {
+                          chatId: chatId,
+                          participants: participants,
+                          chatType: "private",
+                        } as never
+                      );
                     } else {
-                      // If it's another error, rethrow it
                       throw getError;
                     }
                   }
@@ -376,25 +392,27 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
             </Button>
           </View>
         ))}
-        {ownerId === me?.id && <TouchableOpacity
-          onPress={() => setActive("post")}
-          style={{
-            backgroundColor: "#5992FF",
-            width: 35,
-            height: 35,
-            borderRadius: 30,
-            justifyContent: "center",
-            alignItems: "center",
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.3,
-            shadowRadius: 3,
-            elevation: 5,
-            zIndex: 999,
-          }}
-        >
-          <PlusIcon color="white" />
-        </TouchableOpacity>}
+        {ownerId === me?.id && (
+          <TouchableOpacity
+            onPress={() => setActive("post")}
+            style={{
+              backgroundColor: "#5992FF",
+              width: 35,
+              height: 35,
+              borderRadius: 30,
+              justifyContent: "center",
+              alignItems: "center",
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.3,
+              shadowRadius: 3,
+              elevation: 5,
+              zIndex: 999,
+            }}
+          >
+            <PlusIcon color="white" />
+          </TouchableOpacity>
+        )}
       </View>
       <View className="w-[95%] mx-auto flex flex-col mt-6">
         {active === "bio" && (
@@ -438,7 +456,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
             <Input
               ref={bioInputRef}
               returnKeyType="done"
-              value={caption ?? ''}
+              value={caption ?? ""}
               multiline
               onChangeText={setCaption}
               placeholder="Ваше сообщение..."
