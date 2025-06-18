@@ -16,7 +16,7 @@ import { ModalWrapper } from "@/src/shared/ui/modal-wrapper/modal-wrapper";
 
 import { ChatSettingsModal } from "./chat-settings-modal";
 import { ChatUserSettingsModal } from "./chat-user-settings-modal";
-import { ChatViolationModel } from "./chat-violation-modal";
+import { ChatViolationModal } from "./chat-violation-modal";
 import { ChatApplicationModal } from "./chat-application-modal";
 
 interface IChatTabProps {
@@ -93,7 +93,7 @@ export const ChatTab = ({ isGlobal }: IChatTabProps) => {
         isMini
         className="w-[90%] absolute top-48"
       >
-        <ChatViolationModel />
+        <ChatViolationModal />
       </ModalWrapper>
       <ModalWrapper
         storeKey="chatApplications"

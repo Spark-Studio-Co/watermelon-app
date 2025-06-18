@@ -14,10 +14,10 @@ import { PointNameSettings } from "@/src/features/point/ui/point-name-settings";
 import { Input } from "@/src/shared/ui/input/input";
 import { CameraModalWidget } from "@/src/widget/camera/ui/camera-modal-widget";
 import { PointBioSettings } from "@/src/features/point/ui/point-bio-settings";
+import { ChatViolationModal } from "@/src/features/chat/ui/chat-violation-modal";
 
 import MailIcon from "@/src/shared/icons/mail-icon";
 import ThreeDotIcon from "@/src/shared/icons/three-dot-icon";
-import SendFeedBackIcon from "@/src/shared/icons/send-feedback-icon";
 import RightArrowIcon from "@/src/shared/icons/right-arrow-icon";
 import PlusIcon from "@/src/shared/icons/plus-icon";
 import CameraIcon from "@/src/shared/icons/camera-icon";
@@ -30,7 +30,6 @@ import {
   useNavigation,
   NavigationProp,
 } from "@react-navigation/native";
-import { hp } from "@/src/shared/utils/resize-dimensions";
 import { useEffect, useRef, useState } from "react";
 import { useCameraPermissions } from "expo-camera";
 import { useCameraStore } from "@/src/widget/camera/model/camera-store";
@@ -88,12 +87,13 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
   const { open: openPost } = useVisibleStore("post");
   const { open: openChoice, close: closeChoice } =
     useVisibleStore("cameraChoice");
+  const { open: openViolationModal } = useVisibleStore("chatViolations");
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const { active, setActive } = useActiveStore("pointBio", "bio");
   const saveMarkerMutation = useSaveMarker();
   const unsaveMarkerMutation = useUnsaveMarker();
   const { subscribed, setSubscribed } = usePointBioStore();
-  const { open } = useVisibleStore("pointBio");
+  const { open, close } = useVisibleStore("pointBio");
   const { open: openSettings } = useVisibleStore("pointSettings");
   const [permission, requestPermission] = useCameraPermissions();
   const { image, setImage: setPostImage, clearImage } = useCameraStore("post");
@@ -244,8 +244,8 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
                 {saveMarkerMutation.isPending || unsaveMarkerMutation.isPending
                   ? "Loading..."
                   : marker?.isSaved
-                    ? "Unsave"
-                    : "+ Save"}
+                  ? "Unsave"
+                  : "+ Save"}
               </Text>
             </Button>
             <Button
@@ -361,20 +361,34 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
         >
           <ThreeDotIcon />
         </Button>
-        <ModalWrapper storeKey="pointBio" isMini>
-          <Button
-            activeOpacity={0.9}
-            className="bg-[#313034] flex flex-row items-center justify-between w-[335px] h-[62px] rounded-[15px] px-6"
-            style={{ top: hp(-17) }}
+        <ModalWrapper storeKey="pointBio" isMini className="-top-40 w-[80%]">
+          <View
+            className="bg-[#313034] w-full py-5 rounded-[15px] flex flex-col items-center justify-center relative"
+            style={{ boxShadow: "0px 4px 4px 0px #00000040" }}
           >
-            <View className="flex flex-row items-center gap-x-4">
-              <SendFeedBackIcon />
+            <Button
+              activeOpacity={0.9}
+              className="flex flex-row items-center justify-between w-full rounded-[15px] px-6 mb-6"
+            >
               <Text weight="regular" className="text-white text-[18px]">
                 Поделиться
               </Text>
-            </View>
-            <RightArrowIcon />
-          </Button>
+              <RightArrowIcon />
+            </Button>
+            <Button
+              activeOpacity={0.9}
+              onPress={() => {
+                close();
+                openViolationModal();
+              }}
+              className="flex flex-row items-center justify-between w-full rounded-[15px] px-6"
+            >
+              <Text weight="regular" className="text-white text-[18px]">
+                Сообщить о нарушении
+              </Text>
+              <RightArrowIcon />
+            </Button>
+          </View>
         </ModalWrapper>
       </View>
       <View className="mx-auto flex flex-row gap-x-4 items-center justify-center mt-6">
@@ -546,6 +560,9 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
         storeKey="post"
         onPhotoTaken={(uri) => setPhotoUri(uri)}
       />
+      <ModalWrapper storeKey="chatViolations" isMini className="w-[90%]">
+        <ChatViolationModal />
+      </ModalWrapper>
     </MainLayout>
   );
 };

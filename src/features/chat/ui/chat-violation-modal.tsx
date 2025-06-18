@@ -7,7 +7,7 @@ import CrossIcon from "@/src/shared/icons/cross-icon";
 
 import { useVisibleStore } from "@/src/shared/model/use-visible-store";
 
-export const ChatViolationModel = () => {
+export const ChatViolationModal = () => {
   const { close } = useVisibleStore("chatViolations");
   const violations = [
     {
