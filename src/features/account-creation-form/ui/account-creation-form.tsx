@@ -12,24 +12,24 @@ import { useCameraStore } from "@/src/widget/camera/model/camera-store";
 import { useVisibleStore } from "@/src/shared/model/use-visible-store";
 import { useNavigation } from "@react-navigation/native";
 import { useAccountCreationStore } from "../../../entities/account-creation/model/account-creation-store";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCameraPermissions } from "expo-camera";
 import { ModalWrapper } from "@/src/shared/ui/modal-wrapper/modal-wrapper";
 import { CameraModalWidget } from "@/src/widget/camera/ui/camera-modal-widget";
+import { useQueryClient } from "@tanstack/react-query";
+import { useAuthStore } from "@/src/entities/registration/api/use-auth-store";
+import { useUpdateUser } from "@/src/entities/users/api/use-update-user";
+import { useCheckNickname } from "@/src/entities/users/api/use-check-nickname";
 
 export const AccountCreationForm = () => {
   const navigation = useNavigation();
-  const {
-    fullName,
-    username,
-    isLoading,
-    usernameError,
-    setFullName,
-    setUsername,
-    validateUsername,
-    canSubmit,
-    setIsLoading,
-  } = useAccountCreationStore();
+  const { fullName, username, setFullName, setUsername, validateUsername } =
+    useAccountCreationStore();
+
+  const queryClient = useQueryClient();
+  const { id } = useAuthStore();
+  const { mutate, isPending } = useUpdateUser(id);
+  const { data: isUsernameUnique, refetch } = useCheckNickname(username);
 
   const [showUsernameError, setShowUsernameError] = useState(false);
   const { setImage, image } = useCameraStore("avatar");
@@ -37,6 +37,10 @@ export const AccountCreationForm = () => {
   const { open: openChoice, close: closeChoice } =
     useVisibleStore("avatarChoice");
   const [permission, requestPermission] = useCameraPermissions();
+
+  useEffect(() => {
+    refetch();
+  }, [username]);
 
   const openCamera = async () => {
     const { granted } = await requestPermission();
@@ -72,15 +76,15 @@ export const AccountCreationForm = () => {
         type: `image/${fileType}`,
       } as any);
 
-      //   mutate(formData, {
-      //     onSuccess: () => {
-      //       console.log("✅ Аватар обновлён");
-      //       queryClient.invalidateQueries({
-      //         queryKey: ["userMe"],
-      //       });
-      //     },
-      //     onError: (e) => console.error("❌ Ошибка:", e),
-      //   });
+      mutate(formData, {
+        onSuccess: () => {
+          console.log("✅ Аватар обновлён");
+          queryClient.invalidateQueries({
+            queryKey: ["userMe"],
+          });
+        },
+        onError: (e) => console.error("❌ Ошибка:", e),
+      });
     } else {
       setImage(null);
     }
@@ -93,26 +97,34 @@ export const AccountCreationForm = () => {
     }
   };
 
-  const handleSubmit = async () => {
-    if (!canSubmit()) return;
+  const handleSubmit = () => {
+    const data = new FormData();
 
-    const isUsernameValid = validateUsername(username);
-    if (!isUsernameValid) {
-      setShowUsernameError(true);
+    data.append("name", fullName);
+    data.append("username", username);
+
+    if ((data as any)._parts.length === 0) {
+      alert("Нет изменений для сохранения");
       return;
     }
 
-    setIsLoading(true);
+    console.log(data);
+    console.log(isUsernameUnique?.data?.isUnique);
 
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log("✅ Account creation data:", { fullName, username });
-      navigation.navigate("SuccessSignIn" as never);
-    } catch (error) {
-      console.error("Account creation failed:", error);
-    } finally {
-      setIsLoading(false);
+    if (isUsernameUnique?.data?.isUnique === false) {
+      return;
     }
+
+    mutate(data, {
+      onSuccess: () => {
+        console.log("User Data Changed");
+        queryClient.invalidateQueries({
+          queryKey: ["userMe"],
+        });
+        navigation.navigate("SuccessSignIn" as never);
+      },
+      onError: (error: any) => console.error(error.response),
+    });
   };
 
   return (
@@ -160,22 +172,16 @@ export const AccountCreationForm = () => {
             placeholder="@username"
             variant="auth"
             className="w-full"
-            value={username.length > 0 ? "@" + username.replace(/^@+/, "") : ""}
+            value={username}
             onChangeText={(text) => {
-              let clean = text.replace(/^@+/, "");
-              setUsername(clean);
+              setUsername(text.replace(/^@+/, ""));
+              refetch();
             }}
             onBlur={handleUsernameBlur}
           />
-          {showUsernameError && usernameError && (
+          {isUsernameUnique?.data?.isUnique === false && (
             <Text className="text-red-500 text-lg mt-4 ml-2">
-              {usernameError === "Only letters, numbers and underscores allowed"
-                ? "Только латиница и цифры"
-                : usernameError === "Username is required"
-                  ? "Имя пользователя обязательно"
-                  : usernameError === "Username must be at least 3 characters"
-                    ? "Минимум 3 символа"
-                    : "Этот юзернейм уже используется"}
+              {"Этот юзернейм уже используется"}
             </Text>
           )}
         </View>
@@ -183,12 +189,14 @@ export const AccountCreationForm = () => {
 
       <View className="mb-10 w-full">
         <Button
-          onPress={handleSubmit}
+          onPress={
+            isUsernameUnique?.data?.isUnique == false ? () => {} : handleSubmit
+          }
           variant="blue"
           className="w-full flex items-center justify-center"
         >
           <Text weight="regular" className="text-[22px] text-[#FFFFFF] flex">
-            {isLoading ? "Создание..." : "Создать"}
+            {isPending ? "Создание..." : "Создать"}
           </Text>
         </Button>
       </View>
@@ -227,13 +235,13 @@ export const AccountCreationForm = () => {
             type: `image/${fileType}`,
           } as any);
 
-          //   mutate(formData, {
-          //     onSuccess: () =>
-          //       queryClient.invalidateQueries({
-          //         queryKey: ["userMe"],
-          //       }),
-          //     onError: (e) => console.error("❌ Ошибка:", e),
-          //   });
+          mutate(formData, {
+            onSuccess: () =>
+              queryClient.invalidateQueries({
+                queryKey: ["userMe"],
+              }),
+            onError: (e) => console.error("❌ Ошибка:", e),
+          });
         }}
       />
     </View>

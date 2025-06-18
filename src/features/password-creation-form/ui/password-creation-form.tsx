@@ -9,6 +9,7 @@ import { Input } from "@/src/shared/ui/input/input";
 import { useRegister } from "@/src/entities/registration/api/use-register";
 import { useSendVerificationStore } from "@/src/entities/registration/model/send-verification-store";
 import { useActiveStore } from "@/src/shared/model/use-active-store";
+import { useAuthStore } from "@/src/entities/registration/api/use-auth-store";
 
 export const PasswordForm = () => {
   const { setActive } = useActiveStore("steps", "Registration");
@@ -16,6 +17,7 @@ export const PasswordForm = () => {
   const { email } = useSendVerificationStore();
   const [password, setPassword] = useState<string>("");
   const navigation = useNavigation();
+  const { setId } = useAuthStore();
 
   const minLength = password.length >= 8;
   const hasNumber = /\d/.test(password);
@@ -29,10 +31,12 @@ export const PasswordForm = () => {
     mutate(
       { email, password },
       {
-        onSuccess: () => {
+        onSuccess: (data: any) => {
           console.log("Registered succsesfully");
           navigation.navigate("AccountCreation" as never);
           setActive("AccountCreation");
+          console.log("ID", data.uuid);
+          setId(data.uuid);
         },
         onError: (error: any) => {
           console.log("Error", error);
@@ -75,7 +79,9 @@ export const PasswordForm = () => {
           ].map(({ rule, passed }, index) => (
             <View key={index} className="flex-row items-center mt-2">
               <Text
-                className={`text-[16px] text-white ${passed ? "opacity-50 line-through" : ""}`}
+                className={`text-[16px] text-white ${
+                  passed ? "opacity-50 line-through" : ""
+                }`}
               >
                 ○ {rule}
               </Text>
