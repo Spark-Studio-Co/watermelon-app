@@ -28,6 +28,7 @@ import ChatPointIcon from "@/src/shared/icons/chat-point-icon";
 import { ModalWrapper } from "@/src/shared/ui/modal-wrapper/modal-wrapper";
 import { PointTypeContent } from "./point-type-bottom-sheet";
 import { BetBottomContent } from "./bet-bottom-sheet";
+import { CreateApplicationModal } from "./create-application-modal";
 
 const { width, height } = Dimensions.get("window");
 
@@ -50,6 +51,7 @@ export const Map = () => {
   const { data: markerById } = useMarkerDataById(stateMarkerById);
   const { setName, setAvatar } = useChatStore();
   const { open: openPointType } = useVisibleStore("pointType");
+  const { open: openCreateApplication } = useVisibleStore("createApplication");
   const { type } = useTypePointStore();
   const { markerPosition, setMarkerPosition } = useMarkerPositionStore();
   const { region, setRegion, centerOnUser, coordinate } =
@@ -366,6 +368,11 @@ export const Map = () => {
         isBottomSheet
         children={<BetBottomContent />}
         storeKey="bet"
+      />
+      <ModalWrapper
+        isBottomSheet
+        children={<CreateApplicationModal />}
+        storeKey="createApplication"
       />
     </View>
   );
