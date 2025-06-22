@@ -4,9 +4,30 @@ import Text from "@/src/shared/ui/text/text";
 import { Button } from "@/src/shared/ui/button/button";
 
 import { useVisibleStore } from "@/src/shared/model/use-visible-store";
+import { useRequestMarkerAccess } from "@/src/entities/markers/api/use-request-marker";
+import queryClient from "@/src/app/config/queryClient";
 
-export const CreateApplicationModal = ({ isSent }: { isSent?: boolean }) => {
+export const CreateApplicationModal = ({
+  isSent,
+  markerId,
+}: {
+  isSent?: boolean;
+  markerId: string;
+}) => {
   const { close } = useVisibleStore("createApplication");
+  const { mutate } = useRequestMarkerAccess();
+
+  const handleSendApplication = () => {
+    mutate(markerId, {
+      onSuccess: () => {
+        console.log("Success created application");
+        close();
+        queryClient.invalidateQueries({
+          queryKey: ["markerApplications"],
+        });
+      },
+    });
+  };
 
   return (
     <View className="flex items-center flex-col h-[280px] w-[95%] mx-auto">
@@ -20,7 +41,7 @@ export const CreateApplicationModal = ({ isSent }: { isSent?: boolean }) => {
         Что бы получить доступ, отправьте заявку Администратору поинта.
       </Text>
       <Button
-        onPress={() => {}}
+        onPress={handleSendApplication}
         variant="custom"
         className={`mt-auto w-full h-[50px] rounded-[10px] flex items-center justify-center ${
           isSent ? "bg-[#898989]" : "bg-white"

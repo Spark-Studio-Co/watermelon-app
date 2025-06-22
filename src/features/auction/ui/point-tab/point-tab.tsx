@@ -1,9 +1,13 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { View, Image } from "react-native";
 import Text from "@/src/shared/ui/text/text";
 import { Button } from "@/src/shared/ui/button/button";
 
 import CirclePlus from "@/src/shared/icons/circle-plus";
+import CircleMinus from "@/src/shared/icons/circle-minus";
+
+import { useApproveApplication } from "@/src/entities/markers/api/use-approve-application";
+import { useDeclineApplication } from "@/src/entities/markers/api/use-decline-application";
 
 interface IPointTabProps {
   status?: "New" | "On sold" | "My bet";
@@ -15,7 +19,7 @@ interface IPointTabProps {
 
   isApplication?: boolean;
   username?: string;
-  onPress?: () => void;
+  requestId?: string;
 }
 
 export const PointTab = ({
@@ -26,8 +30,11 @@ export const PointTab = ({
   members,
   isApplication = false,
   username,
-  onPress,
+  requestId,
 }: IPointTabProps) => {
+  const { mutate: approveApplication } = useApproveApplication();
+  const { mutate: declineApplication } = useDeclineApplication();
+
   return (
     <View
       className={`w-full flex justify-center pl-[15px] border-[0.94px] rounded-[15.1px] h-[76.46564483642578px] ${
@@ -89,9 +96,25 @@ export const PointTab = ({
           </View>
         )}
         {isApplication && (
-          <Button onPress={onPress} className="ml-auto mr-6 mt-2">
-            <CirclePlus />
-          </Button>
+          <View className="flex flex-row ml-auto mt-2 gap-x-4 mr-4">
+            <Button
+              onPress={() =>
+                declineApplication(requestId!, {
+                  onSuccess: () => {
+                    console.log("❌ Заявка отклонена:", requestId);
+                  },
+                  onError: (error) => {
+                    console.error("Ошибка при отклонении заявки:", error);
+                  },
+                })
+              }
+            >
+              <CircleMinus />
+            </Button>
+            <Button onPress={() => approveApplication(requestId!)}>
+              <CirclePlus />
+            </Button>
+          </View>
         )}
       </View>
     </View>

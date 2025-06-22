@@ -179,11 +179,15 @@ export const AccountCreationForm = () => {
             }}
             onBlur={handleUsernameBlur}
           />
-          {isUsernameUnique?.data?.isUnique === false && (
-            <Text className="text-red-500 text-lg mt-4 ml-2">
-              {"Этот юзернейм уже используется"}
-            </Text>
-          )}
+          {username.trim() !== "" &&
+            (showUsernameError ||
+              isUsernameUnique?.data?.isUnique === false) && (
+              <Text className="text-red-500 text-lg mt-4 ml-2">
+                {showUsernameError
+                  ? "Некорректный формат юзернейма"
+                  : "Этот юзернейм уже используется"}
+              </Text>
+            )}
         </View>
       </View>
 

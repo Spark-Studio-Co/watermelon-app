@@ -30,11 +30,6 @@ export const ChatSettingsTab = ({
         }`}
       >
         <Text className={`text-[16px] text-white font-[400]`}>{title}</Text>
-        {applications && (
-          <View className="flex justify-center items-center bg-white rounded-[5px] w-[25.961538314819336px] h-[13px] ml-2">
-            <Text className="text-[10px] text-dark">{applications}...</Text>
-          </View>
-        )}
         {description && (
           <Text className="text-[14px] text-[#6B6B6B] mt-[2px]">
             {description}

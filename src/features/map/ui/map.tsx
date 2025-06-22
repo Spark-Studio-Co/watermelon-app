@@ -291,6 +291,14 @@ export const Map = () => {
                         chatType: "group",
                       });
                     } else {
+                      // 🔒 Приватный поинт, но не твой — откроем модалку заявки
+                      if (marker.isPrivate && marker.ownerId !== me?.id) {
+                        setStateMarkerById(marker.id); // сохранить id для отправки заявки
+                        openCreateApplication();
+                        return;
+                      }
+
+                      // 👤 Обычный поинт — открыть bio
                       //@ts-ignore
                       navigation.navigate("PointBio" as never, {
                         id: marker?.id,
@@ -371,7 +379,7 @@ export const Map = () => {
       />
       <ModalWrapper
         isBottomSheet
-        children={<CreateApplicationModal />}
+        children={<CreateApplicationModal markerId={stateMarkerById ?? ""} />}
         storeKey="createApplication"
       />
     </View>

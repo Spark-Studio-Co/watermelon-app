@@ -47,6 +47,7 @@ import {
   useGetPrivateChat,
   useCreatePrivateChat,
 } from "@/src/features/chat/api/use-get-private-chat";
+import { PointApplicationsModal } from "@/src/features/point/ui/point-applications-modal";
 
 type PointBioRouteProp = {
   route: RouteProp<any, any>;
@@ -279,7 +280,6 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
                     console.log("Got chat ID:", chatResponse.chatId);
                     console.log("Participants:", chatResponse.participants);
 
-                    //@ts-ignore
                     navigation.navigate(
                       "PrivateChat" as never,
                       {
@@ -322,7 +322,6 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
                         throw new Error("Missing chat ID in response");
                       }
 
-                      //@ts-ignore
                       navigation.navigate(
                         "PrivateChat" as never,
                         {
@@ -361,33 +360,39 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
         >
           <ThreeDotIcon />
         </Button>
-        <ModalWrapper storeKey="pointBio" isMini className="-top-40 w-[80%]">
+        <ModalWrapper
+          storeKey="pointBio"
+          isMini
+          className={`${ownerId === me?.id ? "-top-44" : "-top-40"} w-[80%]`}
+        >
           <View
             className="bg-[#313034] w-full py-5 rounded-[15px] flex flex-col items-center justify-center relative"
             style={{ boxShadow: "0px 4px 4px 0px #00000040" }}
           >
             <Button
               activeOpacity={0.9}
-              className="flex flex-row items-center justify-between w-full rounded-[15px] px-6 mb-6"
+              className="flex flex-row items-center justify-between w-full rounded-[15px] px-6"
             >
               <Text weight="regular" className="text-white text-[18px]">
                 Поделиться
               </Text>
               <RightArrowIcon />
             </Button>
-            <Button
-              activeOpacity={0.9}
-              onPress={() => {
-                close();
-                openViolationModal();
-              }}
-              className="flex flex-row items-center justify-between w-full rounded-[15px] px-6"
-            >
-              <Text weight="regular" className="text-white text-[18px]">
-                Сообщить о нарушении
-              </Text>
-              <RightArrowIcon />
-            </Button>
+            {ownerId !== me?.id && (
+              <Button
+                activeOpacity={0.9}
+                onPress={() => {
+                  close();
+                  openViolationModal();
+                }}
+                className="flex flex-row items-center justify-between w-full rounded-[15px] px-6 mt-6"
+              >
+                <Text weight="regular" className="text-white text-[18px]">
+                  Сообщить о нарушении
+                </Text>
+                <RightArrowIcon />
+              </Button>
+            )}
           </View>
         </ModalWrapper>
       </View>
@@ -409,22 +414,9 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
         {ownerId === me?.id && (
           <TouchableOpacity
             onPress={() => setActive("post")}
-            style={{
-              backgroundColor: "#5992FF",
-              width: 35,
-              height: 35,
-              borderRadius: 30,
-              justifyContent: "center",
-              alignItems: "center",
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.3,
-              shadowRadius: 3,
-              elevation: 5,
-              zIndex: 999,
-            }}
+            className="bg-[#2A292C] w-[40px] h-[40px] rounded-full flex items-center justify-center"
           >
-            <PlusIcon color="white" />
+            <View className="bg-[#313034] w-[30px] h-[30px] rounded-full" />
           </TouchableOpacity>
         )}
       </View>
@@ -555,6 +547,9 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
             </Button>
           </View>
         </View>
+      </ModalWrapper>
+      <ModalWrapper storeKey="pointApplications" isMini className="w-[90%]">
+        <PointApplicationsModal markerId={markerId} />
       </ModalWrapper>
       <CameraModalWidget
         storeKey="post"
