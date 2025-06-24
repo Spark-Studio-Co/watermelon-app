@@ -10,7 +10,7 @@ import { ChatInput } from '@/src/features/comments/ui/chat-input';
 import { ChatTab } from '@/src/features/chat/ui/chat-tab';
 import { ActivityTab } from '@/src/features/activity/ui/activity-tab';
 import { TasksTab } from '@/src/features/tasks/ui/tasks-tab';
-import { BookmarkTab } from '@/src/features/bookmarks/ui/bookmark-tab';
+
 import { hp } from '@/src/shared/utils/resize-dimensions';
 import RightArrowIcon from '@/src/shared/icons/right-arrow-icon';
 import { useNavigation } from '@react-navigation/native';
@@ -30,11 +30,10 @@ interface MainLayoutProps {
     chatInputType?: ChatInputType;
     isActivity?: boolean;
     isTasks?: boolean;
-    isBookmarks?: boolean;
     onSend?: (text: string) => void;
 }
 
-export const MainLayout = ({ children, isUserTab, isBack, title, isMap, isWeeklyChallenge, isScrollable = true, isChat = false, chatInputType, isActivity = false, isTasks = false, isBookmarks = false, onSend }: MainLayoutProps) => {
+export const MainLayout = ({ children, isUserTab, isBack, title, isMap, isWeeklyChallenge, isScrollable = true, isChat = false, chatInputType, isActivity = false, isTasks = false, onSend }: MainLayoutProps) => {
     const navigation = useNavigation();
     const chatScrollRef = useRef<ScrollView>(null);
 
@@ -56,7 +55,6 @@ export const MainLayout = ({ children, isUserTab, isBack, title, isMap, isWeekly
                 <StatusBar style="light" translucent={true} backgroundColor='transparent' />
                 <SafeAreaView style={{ flex: 1 }}>
                     {isTasks && <TasksTab />}
-                    {isBookmarks && <BookmarkTab />}
                     {isActivity && <ActivityTab />}
                     {(chatInputType === 'group' || chatInputType === 'private') && <ChatTab isGlobal={chatInputType === 'group'} />}
                     {isMap ? (

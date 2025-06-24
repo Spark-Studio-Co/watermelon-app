@@ -4,12 +4,12 @@ import Text from "@/src/shared/ui/text/text";
 import { useActiveStore } from "@/src/shared/model/use-active-store";
 import { useIncomingFriendsData } from "@/src/entities/friends/api/use-incoming-friends-data";
 import { SearchInput } from "../../auction/ui/search-input/search-input";
-import { Button } from "@/src/shared/ui/button/button";
-import DarkBurgerIcon from "@/src/shared/icons/dark-burger-icon";
+import { useBookmarksSearchStore } from "../model/use-bookmarks-search-store";
 
 export const BookmarkTab = () => {
   const { active, setActive } = useActiveStore("bookmarks", "Point");
   const { data: incomingFriends } = useIncomingFriendsData();
+  const { search, setSearch } = useBookmarksSearchStore();
 
   const tabs = ["Point", "Chats", "Friends"];
 
@@ -41,15 +41,8 @@ export const BookmarkTab = () => {
           </View>
         ))}
       </View>
-      <View className="flex flex-row items-center justify-between w-[85%] gap-x-4 mt-8">
-        <SearchInput />
-        <Button
-          variant="custom"
-          className="bg-[#E6E6E6] rounded-full w-[42px] h-[42px] flex items-center justify-center"
-          // onPress={toggleModal}
-        >
-          <DarkBurgerIcon />
-        </Button>
+      <View className="flex flex-row items-center mx-auto mt-8">
+        <SearchInput value={search} onChangeText={setSearch} />
       </View>
     </View>
   );

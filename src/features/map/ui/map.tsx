@@ -18,6 +18,7 @@ import { useGetMe } from "@/src/entities/users/api/use-get-me";
 import { useMarkersData } from "@/src/entities/markers/api/use-markers-data";
 import { useChatStore } from "../../chat/model/chat-store";
 import { useMarkerDataById } from "@/src/entities/markers/api/use-marker-data-by-id";
+import { useAddMarkerToFavorites } from "@/src/features/chat/api/use-add-marker-to-favorites";
 
 // icons
 import CenterMeIcon from "@/src/shared/icons/center-me-icon";
@@ -48,6 +49,7 @@ export const Map = () => {
 
   const navigation = useNavigation();
   const { data: me } = useGetMe();
+  const addToFavorites = useAddMarkerToFavorites();
   const { data: markerById } = useMarkerDataById(stateMarkerById);
   const { setName, setAvatar } = useChatStore();
   const { open: openPointType } = useVisibleStore("pointType");
@@ -65,8 +67,7 @@ export const Map = () => {
   } = useMarkerStore();
   const { data: availableMarkers, refetch: availableMarkersRefetch } =
     useMarkersData(true);
-  const { data: allMarkers, refetch: allMarkersRefetch } =
-    useMarkersData(false);
+  const { data: allMarkers } = useMarkersData(false);
 
   const markersList = isPrivate ? availableMarkers : allMarkers;
 
@@ -283,6 +284,11 @@ export const Map = () => {
                       setAvatar(marker.image ?? null);
 
                       useChatStore.getState().connect(chatId, me.id, true);
+
+                      if (marker.ownerId !== me.id && marker.id) {
+                        console.log("Added to favorite", marker.id);
+                        addToFavorites.mutate(marker.id);
+                      }
 
                       //@ts-ignore
                       navigation.navigate("PrivateChat", {
