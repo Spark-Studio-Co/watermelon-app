@@ -213,3 +213,24 @@ export const addMarkerToFavorites = async (
     return { success: false };
   }
 };
+
+/**
+ * Search for chats by query string
+ * @param query The search query string
+ * @returns Promise with array of chat results
+ */
+export const searchChats = async (query: string): Promise<any[]> => {
+  try {
+    if (!query || query.trim() === "") {
+      return [];
+    }
+
+    const response = await apiClient.get(`/chat/chat/search?q=${query}`);
+
+    console.log("[searchChats] Search results:", response.data);
+    return response.data || [];
+  } catch (error) {
+    console.error("[searchChats] Error searching chats:", error);
+    return [];
+  }
+};

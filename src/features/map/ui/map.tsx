@@ -93,6 +93,8 @@ export const Map = () => {
     }
   }, [markerById, isLoadingChat]);
 
+  const isPremium = me?.isPremium;
+
   const calculateDistance = (
     lat1: number,
     lon1: number,
@@ -374,6 +376,7 @@ export const Map = () => {
           <PointTypeContent
             isPrivateView={!isPrivate}
             longPressCoordinate={markerPosition}
+            isPremium={isPremium}
           />
         }
         storeKey="pointType"

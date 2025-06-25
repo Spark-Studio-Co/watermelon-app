@@ -26,6 +26,7 @@ import { useSendFriendRequest } from "@/src/entities/friends/api/use-send-friend
 import { useActiveFriendsStore } from "@/src/entities/friends/model/use-active-friends-store";
 import { useSearchFriends } from "@/src/entities/users/api/use-search-friends";
 import { useSearchPoints } from "@/src/entities/markers/api/use-search-points";
+import { useSearchChats } from "@/src/features/chat/api/use-search-chats";
 import { useBookmarksSearchStore } from "@/src/features/bookmarks/model/use-bookmarks-search-store";
 
 export const BookmarksScreen = () => {
@@ -50,10 +51,7 @@ export const BookmarksScreen = () => {
 
   const { data: friendSearchResults } = useSearchFriends(search);
   const { data: pointSearchResults } = useSearchPoints(search);
-
-  useEffect(() => {
-    console.log("chats", chats);
-  }, [chats]);
+  const { data: chatSearchResults } = useSearchChats(search);
 
   const handleChatNavigate = async (id: string | null) => {
     if (!id || !me?.id) return;
@@ -229,53 +227,116 @@ export const BookmarksScreen = () => {
             ))
           ))}
         {active === "Chats" &&
-          Array.isArray(chats) &&
-          chats.map((item: any, index: number) => {
-            const chat = item.chat;
+          (search.length > 0 ? (
+            Array.isArray(chatSearchResults) && chatSearchResults.length > 0 ? (
+              chatSearchResults.map((chatItem: any, index: number) => {
+                const chat = chatItem.chat;
+                if (!chat || !chat.isGroup) return null;
 
-            if (!chat || !chat.isGroup) return null;
+                return (
+                  <View
+                    key={`search-chat-${chat.id || index}`}
+                    className="mb-4"
+                  >
+                    <SavedPointTab
+                      //@ts-ignore
+                      onPress={() => {
+                        const chatId = chat.id;
+                        if (!chatId || !me?.id) return;
 
-            return (
-              <View key={chat.id || index} className="mb-4">
-                <SavedPointTab
-                  //@ts-ignore
-                  onPress={() => {
-                    const chatId = chat?.id;
-                    if (!chatId || !me?.id) return;
+                        setName(
+                          chat.title === null
+                            ? `ChatHub ${chat.randomPointName}`
+                            : chat.title
+                        );
+                        setAvatar(chat?.marker?.image ?? null);
 
-                    setName(
-                      chat?.title === null
-                        ? `ChatHub ${chat?.randomPointName}`
-                        : chat?.title
-                    );
-                    setAvatar(chat?.marker?.image ?? null);
+                        useChatStore.getState().connect(chatId, me.id, true);
 
-                    useChatStore.getState().connect(chatId, me.id, true);
+                        if (chat.ownerId !== me.id && chat.markerId) {
+                          console.log("Added to favorite", chat.markerId);
+                          addToFavorites.mutate(chat.markerId);
+                        }
 
-                    if (chat?.ownerId !== me.id && chat?.markerId) {
-                      console.log("Added to favorite", chat.markerId);
-                      addToFavorites.mutate(chat.markerId);
-                    }
+                        //@ts-ignore
+                        navigation.navigate("PrivateChat", {
+                          chatId,
+                          participants: [me.id, chat.ownerId],
+                          chatType: "group",
+                        });
+                      }}
+                      image={chat?.marker?.image}
+                      type="chat"
+                      name={
+                        chat.title === null
+                          ? `ChatHub #${chat.randomPointName}`
+                          : chat.title
+                      }
+                      members={
+                        chat.participants?.length ?? chat.membersCount ?? 0
+                      }
+                    />
+                  </View>
+                );
+              })
+            ) : (
+              <Text
+                weight="regular"
+                className="text-white text-center text-[18px]"
+                style={{ textAlign: "center" }}
+              >
+                Ничего не найдено
+              </Text>
+            )
+          ) : (
+            Array.isArray(chats) &&
+            chats.map((item: any, index: number) => {
+              const chat = item.chat;
 
+              if (!chat || !chat.isGroup) return null;
+
+              return (
+                <View key={chat.id || index} className="mb-4">
+                  <SavedPointTab
                     //@ts-ignore
-                    navigation.navigate("PrivateChat", {
-                      chatId,
-                      participants: [me.id, chat?.ownerId],
-                      chatType: "group",
-                    });
-                  }}
-                  image={chat?.marker?.image}
-                  type="chat"
-                  name={
-                    chat?.title === null
-                      ? `ChatHub ${chat?.randomPointName}`
-                      : chat?.title
-                  }
-                  members={chat?.participants.length}
-                />
-              </View>
-            );
-          })}
+                    onPress={() => {
+                      const chatId = chat?.id;
+                      if (!chatId || !me?.id) return;
+
+                      setName(
+                        chat?.title === null
+                          ? `ChatHub ${chat?.randomPointName}`
+                          : chat?.title
+                      );
+                      setAvatar(chat?.marker?.image ?? null);
+
+                      useChatStore.getState().connect(chatId, me.id, true);
+
+                      if (chat?.ownerId !== me.id && chat?.markerId) {
+                        console.log("Added to favorite", chat.markerId);
+                        addToFavorites.mutate(chat.markerId);
+                      }
+
+                      //@ts-ignore
+                      navigation.navigate("PrivateChat", {
+                        chatId,
+                        participants: [me.id, chat?.ownerId],
+                        chatType: "group",
+                      });
+                    }}
+                    image={chat?.marker?.image}
+                    type="chat"
+                    name={
+                      chat?.title === null
+                        ? `ChatHub #${chat?.randomPointName}`
+                        : chat?.title
+                    }
+                    members={chat?.participants.length}
+                  />
+                </View>
+              );
+            })
+          ))}
         {active === "Friends" && (
           <View className="mb-4">
             {search.length > 0 ? (
