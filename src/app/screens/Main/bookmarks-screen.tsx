@@ -246,7 +246,7 @@ export const BookmarksScreen = () => {
 
                         setName(
                           chat.title === null
-                            ? `ChatHub ${chat.randomPointName}`
+                            ? `ChatHub #${chat.randomPointName}`
                             : chat.title
                         );
                         setAvatar(chat?.marker?.image ?? null);

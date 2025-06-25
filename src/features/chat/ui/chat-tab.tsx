@@ -8,6 +8,9 @@ import BackArrowIcon from "@/src/shared/icons/back-arrow-icon";
 import { useChatStore } from "../model/chat-store";
 import { useNavigation } from "@react-navigation/native";
 import { useVisibleStore } from "@/src/shared/model/use-visible-store";
+import { useChatOwnerData } from "../api/use-chat-owner-data";
+import { useChatTitle } from "../api/use-chat-title";
+import { useAuthStore } from "@/src/entities/registration/api/use-auth-store";
 
 import user_image from "../../../images/user_image.png";
 import chat_image from "../../../images/chat.png";
@@ -18,6 +21,7 @@ import { ChatSettingsModal } from "./chat-settings-modal";
 import { ChatUserSettingsModal } from "./chat-user-settings-modal";
 import { ChatViolationModal } from "./chat-violation-modal";
 import { ChatApplicationModal } from "./chat-application-modal";
+import { useEffect } from "react";
 
 interface IChatTabProps {
   isGlobal?: boolean;
@@ -31,9 +35,23 @@ export const ChatTab = ({ isGlobal }: IChatTabProps) => {
   const members = useChatStore((state) => state.members);
   const onlineAmount = useChatStore((state) => state.onlineAmount);
   const status = useChatStore((state) => state.status);
+  const currentChatId = useChatStore((state) => state.currentChatId);
+
+  const { id: currentUserId } = useAuthStore();
+
+  const { data: ownerData } = useChatOwnerData(currentChatId || undefined);
+  const { data: chatTitleData } = useChatTitle(
+    isGlobal ? currentChatId || undefined : undefined
+  );
+
+  const isOwner = ownerData?.owner?.id === currentUserId;
 
   const { open } = useVisibleStore("globalChatSettings");
   const { open: openUserSettings } = useVisibleStore("userChatSettings");
+
+  useEffect(() => {
+    console.log(chatTitleData);
+  }, [chatTitleData]);
 
   return (
     <View
@@ -53,7 +71,11 @@ export const ChatTab = ({ isGlobal }: IChatTabProps) => {
         />
         <View className="flex flex-col justify-between ml-7">
           <Text weight="regular" className="text-white text-[17.4px]">
-            {name === "" ? "User Name" : name}
+            {isGlobal && chatTitleData?.title
+              ? chatTitleData.title
+              : name === ""
+              ? "User Name"
+              : name}
           </Text>
           {isGlobal ? (
             <Text weight="regular" className="text-[#8E8E8E] text-[14px]">
@@ -71,7 +93,15 @@ export const ChatTab = ({ isGlobal }: IChatTabProps) => {
           )}
         </View>
       </View>
-      <Button onPress={isGlobal ? () => open() : () => openUserSettings()}>
+      <Button
+        onPress={() => {
+          if (isOwner) {
+            open();
+          } else {
+            openUserSettings();
+          }
+        }}
+      >
         <BigThreeDots />
       </Button>
       <ModalWrapper

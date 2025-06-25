@@ -2,10 +2,20 @@ import React from "react";
 import { View } from "react-native";
 import { ChatSettingsTab } from "./chat-settings-tab";
 import { useVisibleStore } from "@/src/shared/model/use-visible-store";
+import { useLeaveChat } from "../api/use-leave-chat";
+import { useAuthStore } from "@/src/entities/registration/api/use-auth-store";
+import { useChatStore } from "../model/chat-store";
 
 export const ChatUserSettingsModal = () => {
   const { open } = useVisibleStore("chatViolations");
   const { close } = useVisibleStore("userChatSettings");
+  
+  // Get current user ID and chat ID
+  const { id: currentUserId } = useAuthStore();
+  const currentChatId = useChatStore((state) => state.currentChatId);
+  
+  // Use the leave chat hook
+  const { mutate: leaveChat, isPending: isLeaving } = useLeaveChat(currentUserId || "");
   const settings = [
     {
       title: "Поделиться",
@@ -20,7 +30,15 @@ export const ChatUserSettingsModal = () => {
     },
     {
       title: "Удалить чат",
-      onPress: () => {},
+      onPress: () => {
+        // Close the modal
+        close();
+        
+        // Leave the chat and automatically remove from favorites
+        if (currentChatId) {
+          leaveChat(currentChatId);
+        }
+      },
     },
   ];
 

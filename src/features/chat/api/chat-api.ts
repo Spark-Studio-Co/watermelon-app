@@ -234,3 +234,125 @@ export const searchChats = async (query: string): Promise<any[]> => {
     return [];
   }
 };
+
+/**
+ * Leave a chat (for the current user)
+ * @param chatId The ID of the chat to leave
+ * @returns Promise with success status
+ */
+export const leaveChat = async (
+  chatId: string
+): Promise<{ success: boolean }> => {
+  try {
+    const response = await apiClient.delete(`/chat/${chatId}/leave`);
+    return response.data;
+  } catch (error) {
+    console.error("[leaveChat] Error leaving chat:", error);
+    return { success: false };
+  }
+};
+
+/**
+ * Remove a chat from favorites
+ * @param chatId The ID of the chat to remove from favorites
+ * @param userId The ID of the user
+ * @returns Promise with success status
+ */
+export const removeChatFromFavorites = async (
+  chatId: string,
+  userId: string
+): Promise<{ success: boolean }> => {
+  try {
+    const response = await apiClient.delete(`/chat/${chatId}/favorite`, {
+      data: { userId },
+    });
+    return response.data;
+  } catch (error) {
+    console.error(
+      "[removeChatFromFavorites] Error removing chat from favorites:",
+      error
+    );
+    return { success: false };
+  }
+};
+
+/**
+ * Delete a chat globally (for owners only)
+ * @param chatId The ID of the chat to delete
+ * @returns Promise with success status
+ */
+export const deleteChat = async (
+  chatId: string
+): Promise<{ success: boolean }> => {
+  try {
+    const response = await apiClient.delete(`/chat/${chatId}`);
+    return response.data;
+  } catch (error) {
+    console.error("[deleteChat] Error deleting chat:", error);
+    return { success: false };
+  }
+};
+
+/**
+ * Report a violation (for point, chat, publication, or message)
+ * @param type Type of entity ('point', 'chat', 'publication', 'message')
+ * @param entityId ID of the entity being reported
+ * @param reason Reason for the report
+ * @param details Optional additional details
+ * @returns Promise with success status
+ */
+export const reportViolation = async (
+  type: "point" | "chat" | "publication" | "message",
+  entityId: string,
+  reason: string,
+  details?: string
+): Promise<{ success: boolean }> => {
+  try {
+    const response = await apiClient.post("/moderation/report", {
+      type,
+      entityId,
+      reason,
+      details,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("[reportViolation] Error reporting violation:", error);
+    return { success: false };
+  }
+};
+
+/**
+ * Update chat title
+ * @param chatId The ID of the chat to update
+ * @param title New title for the chat
+ * @returns Promise with success status and title
+ */
+export const updateChatTitle = async (
+  chatId: string,
+  title: string
+): Promise<{ success: boolean; title: string }> => {
+  try {
+    const response = await apiClient.post(`/chat/${chatId}/title`, { title });
+    return response.data;
+  } catch (error) {
+    console.error("[updateChatTitle] Error updating chat title:", error);
+    return { success: false, title: "" };
+  }
+};
+
+/**
+ * Get chat title
+ * @param chatId The ID of the chat
+ * @returns Promise with chat title
+ */
+export const getChatTitle = async (
+  chatId: string
+): Promise<{ title: string }> => {
+  try {
+    const response = await apiClient.get(`/chat/chat/${chatId}/title`);
+    return response.data;
+  } catch (error) {
+    console.error("[getChatTitle] Error getting chat title:", error);
+    return { title: "" };
+  }
+};
