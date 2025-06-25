@@ -30,6 +30,7 @@ import { ModalWrapper } from "@/src/shared/ui/modal-wrapper/modal-wrapper";
 import { PointTypeContent } from "./point-type-bottom-sheet";
 import { BetBottomContent } from "./bet-bottom-sheet";
 import { CreateApplicationModal } from "./create-application-modal";
+import { PreviewConfirmationSheet } from "./preview-confirmation-sheet";
 
 const { width, height } = Dimensions.get("window");
 
@@ -46,6 +47,12 @@ export const Map = () => {
   const [stateMarkerById, setStateMarkerById] = useState<string | null>(null);
   const [isLoadingChat, setIsLoadingChat] = useState(false);
   const [isPrivate, setIsPrivate] = useState(true);
+  const [previewCoordinate, setPreviewCoordinate] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+  const [bottomSheetHeight, setBottomSheetHeight] = useState(300); // Estimated height of bottom sheet
+  const [isInLowerPart, setIsInLowerPart] = useState(false); // Track if marker is in lower part of screen
 
   const navigation = useNavigation();
   const { data: me } = useGetMe();
@@ -54,6 +61,10 @@ export const Map = () => {
   const { setName, setAvatar } = useChatStore();
   const { open: openPointType } = useVisibleStore("pointType");
   const { open: openCreateApplication } = useVisibleStore("createApplication");
+  const {
+    open: openPreviewConfirmation,
+    isVisible: isPreviewConfirmationVisible,
+  } = useVisibleStore("previewConfirmation");
   const { type } = useTypePointStore();
   const { markerPosition, setMarkerPosition } = useMarkerPositionStore();
   const { region, setRegion, centerOnUser, coordinate } =
@@ -92,6 +103,37 @@ export const Map = () => {
       }, 100);
     }
   }, [markerById, isLoadingChat]);
+
+  // Clear preview marker when modal is closed
+  useEffect(() => {
+    if (!isPreviewConfirmationVisible) {
+      setPreviewCoordinate(null);
+    }
+  }, [isPreviewConfirmationVisible]);
+
+  // Adjust map view when preview coordinate is set
+  useEffect(() => {
+    if (previewCoordinate && mapRef.current) {
+      // Only shift the map if the marker is in the lower part of the screen
+      if (isInLowerPart) {
+        // Calculate a new region that shifts the map down to show the marker above the bottom sheet
+
+        // Use a smaller negative adjustment factor to shift the map downward
+        // This will move the map down, making the marker appear higher on the screen
+        const latitudeAdjustment =
+          (bottomSheetHeight / height) * region.latitudeDelta * -0.8;
+
+        // Create a new region with the marker visible above the bottom sheet
+        const newRegion = {
+          ...region,
+          latitude: previewCoordinate.latitude + latitudeAdjustment, // Shift map down moderately
+        };
+
+        // Animate to the new region
+        mapRef.current.animateToRegion(newRegion, 300);
+      }
+    }
+  }, [previewCoordinate, isInLowerPart]);
 
   const isPremium = me?.isPremium;
 
@@ -196,23 +238,33 @@ export const Map = () => {
             return;
           }
 
-          setMarkerPosition(pressCoordinate);
+          // Check if the coordinate is in the lower part of the screen
+          const pointY = e.nativeEvent.position.y;
+          const inLowerPart = pointY > height * 0.65; // If in lower 35% of screen
+
+          // Set state to track if marker is in lower part of screen
+          setIsInLowerPart(inLowerPart);
+
+          if (inLowerPart) {
+            // Adjust bottom sheet height estimation based on screen position
+            // Use a more moderate height estimation
+            setBottomSheetHeight(Math.min(350, height - pointY + 100));
+          } else {
+            setBottomSheetHeight(300); // Default height
+          }
+
+          // Set preview coordinate for the marker
+          setPreviewCoordinate(pressCoordinate);
+
+          // Store coordinates in marker store
           setLatitude(pressCoordinate.latitude);
           setLongitude(pressCoordinate.longitude);
           setMarkerIsPrivate(isPrivate);
           //@ts-ignore
-          setOwnerId(me?.id); // Now we're sure me.id exists
+          setOwnerId(me?.id);
 
-          console.log(ownerId);
-
-          if (!isPrivate) {
-            openPointType();
-          } else {
-            //@ts-ignore
-            navigation.navigate("PrivatePointCreation" as never, {
-              coordinate: pressCoordinate,
-            });
-          }
+          // Open preview confirmation modal
+          openPreviewConfirmation();
         }}
         initialRegion={region}
         style={{ width: width, height: height }}
@@ -247,11 +299,24 @@ export const Map = () => {
               />
             ) : null
           )}
-        {markerPosition && type && (
+        {/* Preview marker */}
+        {previewCoordinate && (
+          <Marker coordinate={previewCoordinate}>
+            <View
+              className="bg-[#2E2E2E] w-[25px] h-[25px] border-[2px] rounded-full"
+              style={{
+                borderColor: isPrivate ? "#FFFFFF" : getMarkerBorderColor(type),
+              }}
+            />
+          </Marker>
+        )}
+
+        {/* Regular marker during creation */}
+        {markerPosition && (type || isPrivate) && (
           <Marker coordinate={markerPosition}>
             <View
               className="bg-[#2E2E2E] w-[25px] h-[25px] border-[2px] rounded-full"
-              style={{ borderColor: getMarkerBorderColor(type) }}
+              style={{ borderColor: isPrivate ? "#FFFFFF" : getMarkerBorderColor(type) }}
             />
           </Marker>
         )}
@@ -390,6 +455,39 @@ export const Map = () => {
         isBottomSheet
         children={<CreateApplicationModal markerId={stateMarkerById ?? ""} />}
         storeKey="createApplication"
+      />
+      <ModalWrapper
+        isBottomSheet
+        children={
+          <PreviewConfirmationSheet
+            isPrivate={isPrivate}
+            coordinate={previewCoordinate}
+            onConfirm={() => {
+              // Set marker position for creation first
+              if (previewCoordinate) {
+                setMarkerPosition(previewCoordinate);
+              }
+              
+              // Clear preview marker
+              setPreviewCoordinate(null);
+
+              // Handle point creation based on privacy setting
+              if (!isPrivate) {
+                openPointType();
+              } else {
+                //@ts-ignore
+                navigation.navigate("PrivatePointCreation" as never, {
+                  coordinate: previewCoordinate,
+                });
+              }
+            }}
+            onCancel={() => {
+              // Clear preview marker and reset state
+              setPreviewCoordinate(null);
+            }}
+          />
+        }
+        storeKey="previewConfirmation"
       />
     </View>
   );
