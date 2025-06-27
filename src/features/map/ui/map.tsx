@@ -1,5 +1,5 @@
 import MapView, { Marker, Callout, Circle } from "react-native-maps";
-import { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { TouchableOpacity, View, Dimensions } from "react-native";
 import { MapSwitch } from "@/src/shared/ui/map-switch/map-switch";
 import Text from "@/src/shared/ui/text/text";
@@ -12,7 +12,7 @@ import { useVisibleStore } from "@/src/shared/model/use-visible-store";
 import { useTypePointStore } from "../model/type-point-store";
 import { useMarkerPositionStore } from "../model/marker-position-store";
 import { useUserLocationStore } from "../model/user-location-store";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { useMarkerStore } from "@/src/entities/markers/model/use-marker-store";
 import { useGetMe } from "@/src/entities/users/api/use-get-me";
 import { useMarkersData } from "@/src/entities/markers/api/use-markers-data";
@@ -29,8 +29,8 @@ import ChatPointIcon from "@/src/shared/icons/chat-point-icon";
 import { ModalWrapper } from "@/src/shared/ui/modal-wrapper/modal-wrapper";
 import { PointTypeContent } from "./point-type-bottom-sheet";
 import { BetBottomContent } from "./bet-bottom-sheet";
-import { CreateApplicationModal } from "./create-application-modal";
 import { PreviewConfirmationSheet } from "./preview-confirmation-sheet";
+import { CreateApplicationModal } from "./create-application-modal";
 
 const { width, height } = Dimensions.get("window");
 
@@ -45,6 +45,7 @@ export const Map = () => {
   const mapRef = useRef<MapView>(null);
   const [selectedMarker, setSelectedMarker] = useState<MarkerData | null>(null);
   const [stateMarkerById, setStateMarkerById] = useState<string | null>(null);
+  const [requestSent, setRequestSent] = useState<boolean>(false);
   const [isLoadingChat, setIsLoadingChat] = useState(false);
   const [isPrivate, setIsPrivate] = useState(true);
   const [previewCoordinate, setPreviewCoordinate] = useState<{
@@ -58,7 +59,8 @@ export const Map = () => {
   const { data: me } = useGetMe();
   const addToFavorites = useAddMarkerToFavorites();
   const { data: markerById } = useMarkerDataById(stateMarkerById);
-  const { setName, setAvatar } = useChatStore();
+  const { setName, setAvatar, setCurrentChatMarkerId, currentChatMarkerId } =
+    useChatStore();
   const { open: openPointType } = useVisibleStore("pointType");
   const { open: openCreateApplication } = useVisibleStore("createApplication");
   const {
@@ -205,9 +207,20 @@ export const Map = () => {
     }
   }, [markerById]);
 
+  // Refetch markers when screen comes into focus (e.g., after creating a private point)
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log("Map screen focused - refetching markers");
+      if (isPrivate) {
+        availableMarkersRefetch();
+      }
+      return () => {};
+    }, [isPrivate, availableMarkersRefetch])
+  );
+
   useEffect(() => {
     console.log("MARKERS available:", markersList);
-  }, []);
+  }, [markersList]);
 
   return (
     <View style={{ width: width, height: height }}>
@@ -316,7 +329,9 @@ export const Map = () => {
           <Marker coordinate={markerPosition}>
             <View
               className="bg-[#2E2E2E] w-[25px] h-[25px] border-[2px] rounded-full"
-              style={{ borderColor: isPrivate ? "#FFFFFF" : getMarkerBorderColor(type) }}
+              style={{
+                borderColor: isPrivate ? "#FFFFFF" : getMarkerBorderColor(type),
+              }}
             />
           </Marker>
         )}
@@ -344,13 +359,29 @@ export const Map = () => {
                   tooltip
                   onPress={() => {
                     if (marker.type === "chat") {
+                      if (marker.isPrivate && marker.ownerId !== me?.id) {
+                        setStateMarkerById(marker.id);
+                        openCreateApplication();
+                        return;
+                      }
+
                       const chatId = marker.chats?.[0]?.id;
+
                       if (!chatId || !me?.id) return;
 
                       setName(marker.name ?? `Point #${marker?.map_id}`);
                       setAvatar(marker.image ?? null);
+                      setCurrentChatMarkerId(marker.id);
+                      setStateMarkerById(marker.id);
 
-                      useChatStore.getState().connect(chatId, me.id, true);
+                      console.log(
+                        "setCurrentChatMarkerId",
+                        currentChatMarkerId
+                      );
+
+                      useChatStore
+                        .getState()
+                        .connect(chatId, me.id, true, marker.id);
 
                       if (marker.ownerId !== me.id && marker.id) {
                         console.log("Added to favorite", marker.id);
@@ -453,7 +484,12 @@ export const Map = () => {
       />
       <ModalWrapper
         isBottomSheet
-        children={<CreateApplicationModal markerId={stateMarkerById ?? ""} />}
+        children={
+          <CreateApplicationModal
+            markerId={stateMarkerById ?? ""}
+            isSent={requestSent}
+          />
+        }
         storeKey="createApplication"
       />
       <ModalWrapper
@@ -467,7 +503,7 @@ export const Map = () => {
               if (previewCoordinate) {
                 setMarkerPosition(previewCoordinate);
               }
-              
+
               // Clear preview marker
               setPreviewCoordinate(null);
 

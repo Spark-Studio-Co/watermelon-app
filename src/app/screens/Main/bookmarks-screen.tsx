@@ -5,7 +5,7 @@ import { SavedPointTab } from "@/src/features/bookmarks/ui/saved-point-tab";
 import { BookmarkTab } from "@/src/features/bookmarks/ui/bookmark-tab";
 
 import { useActiveStore } from "@/src/shared/model/use-active-store";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { useFavoritesData } from "@/src/entities/markers/api/use-favorites-data";
 import { useFavoritesChats } from "@/src/features/chat/api/use-get-favorites";
 import { useGetFriends } from "@/src/entities/friends/api/use-friends-data";
@@ -32,7 +32,7 @@ import { useBookmarksSearchStore } from "@/src/features/bookmarks/model/use-book
 export const BookmarksScreen = () => {
   const { active } = useActiveStore("bookmarks", "Point");
   const { data: markers } = useFavoritesData();
-  const { data: chats } = useFavoritesChats();
+  const { data: chats, refetch: chatFavRefetch } = useFavoritesChats();
   const navigation = useNavigation();
   const { setActive, active: activeFriends } = useActiveFriendsStore();
   const { mutate: sendFriendRequest } = useSendFriendRequest();
@@ -52,6 +52,20 @@ export const BookmarksScreen = () => {
   const { data: friendSearchResults } = useSearchFriends(search);
   const { data: pointSearchResults } = useSearchPoints(search);
   const { data: chatSearchResults } = useSearchChats(search);
+
+  // Initial fetch when component mounts
+  useEffect(() => {
+    chatFavRefetch();
+  }, []);
+
+  // Refetch when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log("BookmarksScreen focused - refetching chats");
+      chatFavRefetch();
+      return () => {};
+    }, [])
+  );
 
   const handleChatNavigate = async (id: string | null) => {
     if (!id || !me?.id) return;
@@ -94,7 +108,6 @@ export const BookmarksScreen = () => {
           } as never
         );
 
-        // Connect to chat room after navigation has started
         setTimeout(() => {
           const { connect } = useChatStore.getState();
           connect(chatResponse.chatId, me.id);
@@ -140,13 +153,11 @@ export const BookmarksScreen = () => {
             } as never
           );
 
-          // Connect to chat room after navigation has started
           setTimeout(() => {
             const { connect } = useChatStore.getState();
             connect(chatId, me.id);
           }, 100);
         } else {
-          // If it's another error, rethrow it
           throw getError;
         }
       }
@@ -366,6 +377,19 @@ export const BookmarksScreen = () => {
               )
             ) : (
               <>
+                {Array.isArray(incomingFriends) &&
+                  incomingFriends.map((friend: any) => (
+                    <View key={`incoming-${friend.id}`} className="mb-4">
+                      <FriendTab
+                        id={friend.id}
+                        avatar={friend.requester.avatar}
+                        username={friend.name || "User Name"}
+                        nickname={`@${friend.requester.username}`}
+                        isIncoming
+                        isPremium={friend.isPremium}
+                      />
+                    </View>
+                  ))}
                 {Array.isArray(friends) &&
                   friends.map((friend: any) => (
                     <View key={`friend-${friend.id}`} className="mb-4">
@@ -393,20 +417,6 @@ export const BookmarksScreen = () => {
                         isAddToFriends
                         onPress={() => handleSendRequest(friend.id)}
                         isAdded={!!activeFriends[friend.id]}
-                        isPremium={friend.isPremium}
-                      />
-                    </View>
-                  ))}
-
-                {Array.isArray(incomingFriends) &&
-                  incomingFriends.map((friend: any) => (
-                    <View key={`incoming-${friend.id}`} className="mb-4">
-                      <FriendTab
-                        id={friend.id}
-                        avatar={friend.requester.avatar}
-                        username={friend.name || "User Name"}
-                        nickname={`@${friend.requester.username}`}
-                        isIncoming
                         isPremium={friend.isPremium}
                       />
                     </View>

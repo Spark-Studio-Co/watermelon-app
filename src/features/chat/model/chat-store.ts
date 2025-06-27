@@ -22,6 +22,7 @@ interface IChatStore {
   messages: Message[];
   currentChatId: string | null;
   currentUserId: string | null;
+  currentChatMarkerId: string | null; // Added for chat applications
   avatar: any;
   status: Status;
   name: string;
@@ -29,7 +30,12 @@ interface IChatStore {
   onlineAmount: number;
   participants: string[];
   joinedRooms: Set<string>;
-  connect: (chatId: string, userId: string, isGroup?: boolean) => void;
+  connect: (
+    chatId: string,
+    userId: string,
+    isGroup?: boolean,
+    markerId?: string
+  ) => void;
   disconnect: () => void;
   getStatuses: (userIds: string[]) => void;
   setMetadataLoaded: (val: boolean) => void;
@@ -44,6 +50,7 @@ interface IChatStore {
   setName: (name: string) => void;
   setAvatar: (avatar: any) => void;
   setParticipants: (participants: string[]) => void;
+  setCurrentChatMarkerId: (markerId: string | null) => void;
 }
 
 const lastEmittedMessages = new Map<string, number>();
@@ -146,6 +153,7 @@ export const useChatStore = create<IChatStore>((set, get) => ({
   messages: [],
   currentChatId: null,
   currentUserId: null,
+  currentChatMarkerId: null,
   avatar: user_image,
   status: "Offline",
   name: "Jack Jallenhell",
@@ -155,7 +163,7 @@ export const useChatStore = create<IChatStore>((set, get) => ({
   joinedRooms: new Set<string>(),
   isChatMetadataLoaded: false,
 
-  connect: (chatId, userId, isGroup = false) => {
+  connect: (chatId, userId, isGroup = false, markerId = "") => {
     const { joinedRooms } = get();
 
     if (get().currentChatId === chatId && joinedRooms.has(chatId)) {
@@ -176,12 +184,13 @@ export const useChatStore = create<IChatStore>((set, get) => ({
       get().participants.length > 0
         ? get().participants
         : isGroup
-          ? []
-          : [userId];
+        ? []
+        : [userId];
 
     set({
       currentChatId: chatId,
       currentUserId: userId,
+      currentChatMarkerId: markerId,
       participants: currentParticipants,
     });
 
@@ -290,6 +299,7 @@ export const useChatStore = create<IChatStore>((set, get) => ({
       messages: [],
       currentChatId: null,
       currentUserId: null,
+      currentChatMarkerId: null,
       isChatMetadataLoaded: false,
     });
   },
@@ -420,4 +430,6 @@ export const useChatStore = create<IChatStore>((set, get) => ({
   setName: (name) => set({ name }),
   setStatus: (status) => set({ status }),
   setMetadataLoaded: (val: boolean) => set({ isChatMetadataLoaded: val }),
+  setCurrentChatMarkerId: (markerId: string | null) =>
+    set({ currentChatMarkerId: markerId }),
 }));

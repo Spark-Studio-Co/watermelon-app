@@ -6,7 +6,7 @@ export const useRequestMarkerAccess = () => {
   return useMutation<void, AxiosError, string>({
     mutationKey: ["requestMarkerAccess"],
     mutationFn: async (markerId) => {
-      await apiClient.post(`/api/markers/${markerId}/access-request`);
+      await apiClient.post(`/markers/${markerId}/access-request`);
     },
     retry: 2,
     retryDelay: 1000,

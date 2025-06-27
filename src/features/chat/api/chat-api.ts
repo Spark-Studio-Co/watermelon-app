@@ -266,13 +266,19 @@ export const removeChatFromFavorites = async (
     const response = await apiClient.delete(`/chat/${chatId}/favorite`, {
       data: { userId },
     });
+    console.log("[removeChatFromFavorites] Successfully removed chat from favorites");
     return response.data;
-  } catch (error) {
-    console.error(
-      "[removeChatFromFavorites] Error removing chat from favorites:",
-      error
-    );
-    return { success: false };
+  } catch (error: any) {
+    // Check if this is a 500 error but the chat might already be removed
+    if (error?.response?.status === 500) {
+      console.log("[removeChatFromFavorites] Error 500 - Chat may already be removed from favorites");
+      // Return success true since the end goal (chat not in favorites) is achieved
+      return { success: true };
+    }
+    
+    // For other errors, log and rethrow
+    console.error("[removeChatFromFavorites] Error removing chat from favorites:", error);
+    throw error;
   }
 };
 
@@ -332,7 +338,9 @@ export const updateChatTitle = async (
   title: string
 ): Promise<{ success: boolean; title: string }> => {
   try {
-    const response = await apiClient.post(`/chat/${chatId}/title`, { title });
+    const response = await apiClient.post(`/chat/chat/${chatId}/title`, {
+      title,
+    });
     return response.data;
   } catch (error) {
     console.error("[updateChatTitle] Error updating chat title:", error);

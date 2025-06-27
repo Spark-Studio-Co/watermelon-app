@@ -17,10 +17,11 @@ export const PrivateChatScreen = () => {
   const route = useRoute();
   const [isLoading, setIsLoading] = useState(true);
 
-  const { chatId, participants, chatType } = route.params as {
+  const { chatId, participants, chatType, markerId } = route.params as {
     chatId: string;
     participants: string[];
     chatType: string;
+    markerId?: string;
   };
 
   const {
@@ -49,7 +50,7 @@ export const PrivateChatScreen = () => {
     let isMounted = true;
     setIsLoading(true);
 
-    connect(chatId, userId, chatType === "group");
+    connect(chatId, userId, chatType === "group", markerId || "");
     getStatuses(participants);
 
     setIsLoading(false);

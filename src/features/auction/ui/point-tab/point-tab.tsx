@@ -8,6 +8,7 @@ import CircleMinus from "@/src/shared/icons/circle-minus";
 
 import { useApproveApplication } from "@/src/entities/markers/api/use-approve-application";
 import { useDeclineApplication } from "@/src/entities/markers/api/use-decline-application";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface IPointTabProps {
   status?: "New" | "On sold" | "My bet";
@@ -16,6 +17,7 @@ interface IPointTabProps {
   subscribers?: number | null;
   views?: number | null;
   members?: number | null;
+  avatar?: string | null;
 
   isApplication?: boolean;
   username?: string;
@@ -28,12 +30,15 @@ export const PointTab = ({
   subscribers,
   views,
   members,
+  avatar,
   isApplication = false,
   username,
   requestId,
 }: IPointTabProps) => {
   const { mutate: approveApplication } = useApproveApplication();
   const { mutate: declineApplication } = useDeclineApplication();
+
+  const queryClient = useQueryClient();
 
   return (
     <View
@@ -50,7 +55,11 @@ export const PointTab = ({
           <View style={{ height: 37.76081466674805, width: 37.76081466674805 }}>
             <Image
               className="w-full h-full rounded-full"
-              source={require("../../../../images/user_image.png")}
+              source={
+                avatar
+                  ? { uri: avatar }
+                  : require("../../../../images/user_image.png")
+              }
             />
           </View>
           <View className="flex flex-col ml-[15px]">
@@ -102,6 +111,9 @@ export const PointTab = ({
                 declineApplication(requestId!, {
                   onSuccess: () => {
                     console.log("❌ Заявка отклонена:", requestId);
+                    queryClient.invalidateQueries({
+                      queryKey: ["markerApplications"],
+                    });
                   },
                   onError: (error) => {
                     console.error("Ошибка при отклонении заявки:", error);
@@ -111,7 +123,21 @@ export const PointTab = ({
             >
               <CircleMinus />
             </Button>
-            <Button onPress={() => approveApplication(requestId!)}>
+            <Button
+              onPress={() =>
+                approveApplication(requestId!, {
+                  onSuccess: () => {
+                    console.log("✅ Заявка одобрена:", requestId);
+                    queryClient.invalidateQueries({
+                      queryKey: ["markerApplications"],
+                    });
+                  },
+                  onError: (error) => {
+                    console.error("Ошибка при одобрении заявки:", error);
+                  },
+                })
+              }
+            >
               <CirclePlus />
             </Button>
           </View>

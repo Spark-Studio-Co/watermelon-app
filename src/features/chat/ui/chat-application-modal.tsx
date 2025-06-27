@@ -1,38 +1,31 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { ScrollView, View } from "react-native";
 import Text from "@/src/shared/ui/text/text";
 import { Button } from "@/src/shared/ui/button/button";
 import { PointTab } from "../../auction/ui/point-tab/point-tab";
 
 import { useVisibleStore } from "@/src/shared/model/use-visible-store";
+import { useMarkerApplications } from "@/src/entities/markers/api/use-marker-applications";
+import { useChatStore } from "../../chat/model/chat-store";
 
 import CrossIcon from "@/src/shared/icons/cross-icon";
 
 export const ChatApplicationModal = () => {
   const { close } = useVisibleStore("chatApplications");
+  const { currentChatMarkerId } = useChatStore();
 
-  const applications = [
-    {
-      name: "Rayo Valecano",
-      username: "@publicEleminator",
-    },
-    {
-      name: "Rayo Valecano",
-      username: "@publicEleminator",
-    },
-    {
-      name: "Rayo Valecano",
-      username: "@publicEleminator",
-    },
-    {
-      name: "Rayo Valecano",
-      username: "@publicEleminator",
-    },
-    {
-      name: "Rayo Valecano",
-      username: "@publicEleminator",
-    },
-  ];
+  console.log(
+    "ChatApplicationModal - currentChatMarkerId:",
+    currentChatMarkerId
+  );
+
+  const { data: applications, isLoading } = useMarkerApplications(
+    currentChatMarkerId || ""
+  );
+
+  useEffect(() => {
+    console.log("applications", applications);
+  });
 
   return (
     <View
@@ -49,16 +42,41 @@ export const ChatApplicationModal = () => {
         className="w-[90%] max-h-[60vh] mt-6"
         showsVerticalScrollIndicator={false}
       >
-        {applications.map((application, index) => (
-          <View key={index} className="mb-4">
-            <PointTab
-              type="standard"
-              isApplication
-              username={application.username}
-              name={application.name}
-            />
+        {!currentChatMarkerId ? (
+          <View className="py-4 px-2">
+            <Text weight="regular" className="text-gray-400 text-center">
+              No chat marker selected. Please select a chat point first.
+            </Text>
           </View>
-        ))}
+        ) : isLoading ? (
+          <View className="py-4 px-2">
+            <Text weight="regular" className="text-gray-400 text-center">
+              Loading applications...
+            </Text>
+          </View>
+        ) : applications && applications.length > 0 ? (
+          applications.map((application, index) => (
+            <View key={index} className="mb-4">
+              <PointTab
+                type="standard"
+                isApplication
+                //@ts-ignore
+                username={application.user.username}
+                //@ts-ignore
+                name={application.user.name}
+                //@ts-ignore
+                avatar={application.user.avatar}
+                requestId={application.id}
+              />
+            </View>
+          ))
+        ) : (
+          <View className="py-4 px-2">
+            <Text weight="regular" className="text-gray-400 text-center">
+              No applications found for this chat.
+            </Text>
+          </View>
+        )}
       </ScrollView>
     </View>
   );

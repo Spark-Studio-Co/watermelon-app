@@ -13,12 +13,13 @@ export const useLeaveChat = (userId: string) => {
     mutationFn: async (chatId: string) => {
       // First leave the chat
       const leaveResult = await leaveChat(chatId);
-      
+
+      console.log("Leave result:", leaveResult);
+
       if (leaveResult.success) {
-        // If leaving was successful, also remove from favorites
         await removeChatFromFavorites(chatId, userId);
       }
-      
+
       return leaveResult;
     },
     onSuccess: () => {
@@ -26,7 +27,9 @@ export const useLeaveChat = (userId: string) => {
       queryClient.invalidateQueries({ queryKey: ["chatMessages"] });
       queryClient.invalidateQueries({ queryKey: ["chatMetadata"] });
       queryClient.invalidateQueries({ queryKey: ["favorites"] });
-      
+      queryClient.invalidateQueries({ queryKey: ["favChats"] });
+      queryClient.invalidateQueries({ queryKey: ["searchChats"] });
+
       // Navigate back after leaving the chat
       navigation.goBack();
     },
