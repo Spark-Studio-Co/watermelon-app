@@ -19,6 +19,7 @@ import { useMarkersData } from "@/src/entities/markers/api/use-markers-data";
 import { useChatStore } from "../../chat/model/chat-store";
 import { useMarkerDataById } from "@/src/entities/markers/api/use-marker-data-by-id";
 import { useAddMarkerToFavorites } from "@/src/features/chat/api/use-add-marker-to-favorites";
+import { useCheckMarkerAccess } from "@/src/entities/markers/api/use-check-marker-access";
 
 // icons
 import CenterMeIcon from "@/src/shared/icons/center-me-icon";
@@ -48,6 +49,7 @@ export const Map = () => {
   const [requestSent, setRequestSent] = useState<boolean>(false);
   const [isLoadingChat, setIsLoadingChat] = useState(false);
   const [isPrivate, setIsPrivate] = useState(true);
+  const [isCheckingAccess, setIsCheckingAccess] = useState(false);
   const [previewCoordinate, setPreviewCoordinate] = useState<{
     latitude: number;
     longitude: number;
@@ -59,6 +61,8 @@ export const Map = () => {
   const { data: me } = useGetMe();
   const addToFavorites = useAddMarkerToFavorites();
   const { data: markerById } = useMarkerDataById(stateMarkerById);
+  const { data: accessData, refetch: checkAccess } =
+    useCheckMarkerAccess(stateMarkerById);
   const { setName, setAvatar, setCurrentChatMarkerId, currentChatMarkerId } =
     useChatStore();
   const { open: openPointType } = useVisibleStore("pointType");
@@ -357,22 +361,45 @@ export const Map = () => {
               {!marker.isWon && !isPrivate ? null : (
                 <Callout
                   tooltip
-                  onPress={() => {
-                    if (marker.type === "chat") {
-                      if (marker.isPrivate && marker.ownerId !== me?.id) {
-                        setStateMarkerById(marker.id);
+                  onPress={async () => {
+                    // Set marker ID first for access check
+                    setStateMarkerById(marker.id);
+
+                    // Check if the marker is owned by the current user
+                    const isOwner = marker.ownerId === me?.id;
+
+                    // If it's a private marker and not owned by the user, check access
+                    if (marker.isPrivate && !isOwner) {
+                      setIsCheckingAccess(true);
+                      try {
+                        // Check if user has access to this marker
+                        const result = await checkAccess();
+                        const hasAccess = result.data?.hasAccess;
+
+                        // If no access, open application modal
+                        if (!hasAccess) {
+                          openCreateApplication();
+                          setIsCheckingAccess(false);
+                          return;
+                        }
+                      } catch (error) {
+                        console.error("Error checking marker access:", error);
+                        // If error occurs, default to opening application
                         openCreateApplication();
+                        setIsCheckingAccess(false);
                         return;
                       }
+                      setIsCheckingAccess(false);
+                    }
 
+                    // Handle chat type markers
+                    if (marker.type === "chat") {
                       const chatId = marker.chats?.[0]?.id;
-
                       if (!chatId || !me?.id) return;
 
                       setName(marker.name ?? `Point #${marker?.map_id}`);
                       setAvatar(marker.image ?? null);
                       setCurrentChatMarkerId(marker.id);
-                      setStateMarkerById(marker.id);
 
                       console.log(
                         "setCurrentChatMarkerId",
@@ -395,14 +422,7 @@ export const Map = () => {
                         chatType: "group",
                       });
                     } else {
-                      // 🔒 Приватный поинт, но не твой — откроем модалку заявки
-                      if (marker.isPrivate && marker.ownerId !== me?.id) {
-                        setStateMarkerById(marker.id); // сохранить id для отправки заявки
-                        openCreateApplication();
-                        return;
-                      }
-
-                      // 👤 Обычный поинт — открыть bio
+                      // Navigate to point bio
                       //@ts-ignore
                       navigation.navigate("PointBio" as never, {
                         id: marker?.id,

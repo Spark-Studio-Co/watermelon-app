@@ -23,10 +23,6 @@ export const ChatApplicationModal = () => {
     currentChatMarkerId || ""
   );
 
-  useEffect(() => {
-    console.log("applications", applications);
-  });
-
   return (
     <View
       className="bg-[#313034] w-full py-5 rounded-[15px] flex flex-col items-center justify-center relative"

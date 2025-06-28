@@ -5,6 +5,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 interface ISwitchStore {
     enabled: boolean
     setEnabled: (callback?: (newState: boolean) => void) => void
+    reset: () => void
 }
 
 const switchStorage: Record<string, UseBoundStore<StoreApi<ISwitchStore>>> = {};
@@ -20,7 +21,8 @@ export const useSwitchStore = (storeKey: string) => {
                             const newState = !state.enabled;
                             callback?.(newState);
                             return { enabled: newState };
-                        })
+                        }),
+                    reset: () => set({ enabled: false })
                 }),
                 {
                     name: `switch-${storeKey}`,
@@ -40,4 +42,12 @@ export const useSwitchStore = (storeKey: string) => {
             ))
     }
     return switchStorage[storeKey]()
+}
+
+// Function to clear all switch stores when logging out
+export const clearAllSwitchStores = () => {
+    Object.keys(switchStorage).forEach(key => {
+        const store = switchStorage[key];
+        store.getState().reset();
+    });
 }

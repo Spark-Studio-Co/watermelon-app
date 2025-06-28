@@ -9,7 +9,9 @@ import { useChatStore } from "../model/chat-store";
 import { useDeleteChat } from "../api/use-delete-chat";
 import { useUpdateChatTitle } from "../api/use-update-chat-title";
 import { useUpdateMarker } from "@/src/entities/markers/api/use-update-marker";
+import { useDeleteMarker } from "@/src/entities/markers/api/use-delete-marker";
 import { useQueryClient } from "@tanstack/react-query";
+import { useNavigation } from "@react-navigation/native";
 
 export const ChatSettingsModal = () => {
   const { close } = useVisibleStore("globalChatSettings");
@@ -27,6 +29,12 @@ export const ChatSettingsModal = () => {
 
   // Use the delete chat hook
   const { mutate: deleteChat, isPending: isDeleting } = useDeleteChat();
+
+  // Use the delete marker hook
+  const { mutate: deleteMarker } = useDeleteMarker();
+  
+  // Navigation
+  const navigation = useNavigation();
 
   // Use the update chat title hook
   const { mutate: updateTitle, isPending: isUpdatingTitle } =
@@ -232,6 +240,13 @@ export const ChatSettingsModal = () => {
                     // Delete the chat globally
                     if (currentChatId) {
                       deleteChat(currentChatId);
+                      
+                      // Also delete the associated marker if available
+                      if (markerId) {
+                        deleteMarker(markerId);
+                        // Navigate to Map screen after deletion
+                        navigation.navigate("Map" as never);
+                      }
                     }
                   },
                   style: "destructive",

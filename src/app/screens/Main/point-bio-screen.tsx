@@ -508,7 +508,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
         )}
       </View>
       <ModalWrapper storeKey="pointSettings" isMini className="w-[90%]">
-        <PointSettings />
+        <PointSettings markerId={markerId} />
       </ModalWrapper>
       <ModalWrapper storeKey="pointRadius" isMini className="w-[90%]">
         <PointRadiusSettings />

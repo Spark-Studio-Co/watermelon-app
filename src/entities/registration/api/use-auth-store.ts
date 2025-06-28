@@ -1,6 +1,7 @@
 import reactQueryClient from '@/src/app/config/queryClient';
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { create } from "zustand";
+import { clearAllSwitchStores } from '@/src/shared/model/use-switch-store';
 
 interface IAuthStore {
     token: string | null | undefined;
@@ -45,6 +46,8 @@ export const useAuthStore = create<IAuthStore>((set) => ({
         await AsyncStorage.removeItem("userId");
         reactQueryClient.resetQueries();
         reactQueryClient.clear();
+        // Clear all switch stores when logging out
+        clearAllSwitchStores();
         set({ token: null, isNewLogin: false, id: null });
     },
 

@@ -9,11 +9,14 @@ import { useVisibleStore } from "@/src/shared/model/use-visible-store";
 import { useMarkerStore } from "@/src/entities/markers/model/use-marker-store";
 import { useDeleteMarker } from "@/src/entities/markers/api/use-delete-marker";
 import { useNavigation } from "@react-navigation/native";
+import { useMarkerApplications } from "@/src/entities/markers/api/use-marker-applications";
 
-export const PointSettings = () => {
+export const PointSettings = ({ markerId }: { markerId: string }) => {
   const { id } = useMarkerStore();
   const { mutate: deleteMarker } = useDeleteMarker();
   const navigation = useNavigation();
+
+  const { data: applications } = useMarkerApplications(markerId);
 
   const { close } = useVisibleStore("pointSettings");
   const { open: openRadiusSettings } = useVisibleStore("pointRadius");
@@ -57,7 +60,7 @@ export const PointSettings = () => {
     },
     {
       title: "Заявки",
-      applications: 123,
+      applications: applications?.length || 0,
     },
     {
       title: "Название",

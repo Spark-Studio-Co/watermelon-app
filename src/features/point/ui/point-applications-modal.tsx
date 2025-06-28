@@ -34,8 +34,12 @@ export const PointApplicationsModal = ({ markerId }: { markerId: string }) => {
             <PointTab
               type="standard"
               isApplication
-              username={application.username}
-              name={application.name}
+              //@ts-ignore
+              username={application.user.username}
+              //@ts-ignore
+              name={application.user.name}
+              //@ts-ignore
+              avatar={application.user.avatar}
               requestId={application.id}
             />
           </View>

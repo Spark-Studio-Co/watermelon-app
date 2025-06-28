@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View } from "react-native";
 import Text from "@/src/shared/ui/text/text";
 import { Button } from "@/src/shared/ui/button/button";
 
 import { useVisibleStore } from "@/src/shared/model/use-visible-store";
 import { useRequestMarkerAccess } from "@/src/entities/markers/api/use-request-marker";
+import { useCheckPendingRequest } from "@/src/entities/markers/api/use-check-pending-request";
 import queryClient from "@/src/app/config/queryClient";
 
 export const CreateApplicationModal = ({
@@ -15,7 +16,15 @@ export const CreateApplicationModal = ({
   markerId: string;
 }) => {
   const { close } = useVisibleStore("createApplication");
-  const { mutate } = useRequestMarkerAccess();
+  const { mutate, isPending: isMutating } = useRequestMarkerAccess();
+  const { data: pendingData, isLoading } = useCheckPendingRequest(markerId);
+  const [isPending, setIsPending] = useState(false);
+
+  useEffect(() => {
+    if (pendingData && !isLoading) {
+      setIsPending(pendingData.isPending || false);
+    }
+  }, [pendingData, isLoading]);
 
   const handleSendApplication = () => {
     mutate(markerId, {
@@ -44,12 +53,16 @@ export const CreateApplicationModal = ({
         onPress={handleSendApplication}
         variant="custom"
         className={`mt-auto w-full h-[50px] rounded-[10px] flex items-center justify-center ${
-          isSent ? "bg-[#898989]" : "bg-white"
+          isSent || isPending || isMutating ? "bg-[#898989]" : "bg-white"
         }`}
-        disabled={isSent}
+        disabled={isSent || isPending || isMutating}
       >
         <Text weight="medium" className="text-dark text-[20px]">
-          {isSent ? "Заявка отправлена" : "Отправить заявку"}
+          {isPending
+            ? "Заявка на рассмотрении"
+            : isSent || isMutating
+            ? "Заявка отправлена"
+            : "Отправить заявку"}
         </Text>
       </Button>
       <Button
