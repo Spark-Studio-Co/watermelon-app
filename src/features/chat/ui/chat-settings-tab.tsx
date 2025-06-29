@@ -1,5 +1,5 @@
 import React from "react";
-import { View } from "react-native";
+import { View, ActivityIndicator } from "react-native";
 import Text from "@/src/shared/ui/text/text";
 
 import RightArrowIcon from "@/src/shared/icons/right-arrow-icon";
@@ -12,6 +12,7 @@ export const ChatSettingsTab = ({
   isClicked = false,
   isApplication = false,
   applications,
+  isLoading = false,
   onPress,
 }: {
   title: string;
@@ -20,6 +21,7 @@ export const ChatSettingsTab = ({
   isClicked?: boolean;
   isApplication?: boolean;
   applications?: number;
+  isLoading?: boolean;
   onPress: () => void;
 }) => {
   return (
@@ -30,20 +32,27 @@ export const ChatSettingsTab = ({
         }`}
       >
         <Text className={`text-[16px] text-white font-[400]`}>{title}</Text>
+        {applications && (
+          <View className="flex justify-center items-center bg-white rounded-[5px] w-[25.961538314819336px] h-[13px] ml-2">
+            <Text className="text-[10px] text-dark">{applications}...</Text>
+          </View>
+        )}
         {description && (
           <Text className="text-[14px] text-[#6B6B6B] mt-[2px]">
             {description}
           </Text>
         )}
       </View>
-      <Button onPress={onPress}>
+      <Button onPress={onPress} disabled={isLoading}>
         {isRadioButton ? (
           <View
             className={`border-white border-[2px] rounded-full w-[22px] h-[22px] flex items-center justify-center`}
           >
-            {isClicked && (
+            {isLoading ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : isClicked ? (
               <View className="bg-white w-[14px] h-[14px] rounded-full"></View>
-            )}
+            ) : null}
           </View>
         ) : (
           <RightArrowIcon />

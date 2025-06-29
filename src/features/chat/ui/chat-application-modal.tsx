@@ -14,11 +14,6 @@ export const ChatApplicationModal = () => {
   const { close } = useVisibleStore("chatApplications");
   const { currentChatMarkerId } = useChatStore();
 
-  console.log(
-    "ChatApplicationModal - currentChatMarkerId:",
-    currentChatMarkerId
-  );
-
   const { data: applications, isLoading } = useMarkerApplications(
     currentChatMarkerId || ""
   );

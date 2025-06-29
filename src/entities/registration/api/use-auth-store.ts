@@ -42,12 +42,31 @@ export const useAuthStore = create<IAuthStore>((set) => ({
     },
 
     logout: async () => {
-        await AsyncStorage.removeItem("authToken");
-        await AsyncStorage.removeItem("userId");
+        try {
+            // Clear the entire AsyncStorage
+            await AsyncStorage.clear();
+            console.log("✅ Successfully cleared all AsyncStorage data");
+        } catch (error) {
+            console.error("❌ Error clearing AsyncStorage:", error);
+            
+            // Fallback: try to remove critical items individually
+            try {
+                await AsyncStorage.removeItem("authToken");
+                await AsyncStorage.removeItem("userId");
+                console.log("✅ Cleared critical auth items from AsyncStorage");
+            } catch (fallbackError) {
+                console.error("❌ Error clearing critical auth items:", fallbackError);
+            }
+        }
+        
+        // Reset query client
         reactQueryClient.resetQueries();
         reactQueryClient.clear();
+        
         // Clear all switch stores when logging out
         clearAllSwitchStores();
+        
+        // Reset state
         set({ token: null, isNewLogin: false, id: null });
     },
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { View, Alert, TextInput, Modal } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import Text from "@/src/shared/ui/text/text";
 import { Button } from "@/src/shared/ui/button/button";
 import CrossIcon from "@/src/shared/icons/cross-icon";
@@ -12,6 +13,9 @@ import { useUpdateMarker } from "@/src/entities/markers/api/use-update-marker";
 import { useDeleteMarker } from "@/src/entities/markers/api/use-delete-marker";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigation } from "@react-navigation/native";
+import { useMarkerApplications } from "@/src/entities/markers/api/use-marker-applications";
+import { useMarkerDataById } from "@/src/entities/markers/api/use-marker-data-by-id";
+import { apiClient } from "@/src/app/config/apiClient";
 
 export const ChatSettingsModal = () => {
   const { close } = useVisibleStore("globalChatSettings");
@@ -22,17 +26,60 @@ export const ChatSettingsModal = () => {
   const currentChatId = useChatStore((state) => state.currentChatId);
   const currentChatName = useChatStore((state) => state.name);
 
+  const { currentChatMarkerId } = useChatStore();
+  const { data: applications } = useMarkerApplications(
+    currentChatMarkerId || ""
+  );
+
+  const { data: markerData } = useMarkerDataById(currentChatMarkerId || "");
+
+  const isPrivateMarker = markerData?.chats?.[0].isPrivate;
+
+  useEffect(() => {
+    console.log("isPrivateMarker", isPrivateMarker);
+  }, []);
+
   // State for title editing
   const [showTitleModal, setShowTitleModal] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [markerId, setMarkerId] = useState<string>("");
+
+  // State for privacy toggle
+  const [isPrivate, setIsPrivate] = useState(!isPrivateMarker);
+  const [isTogglingPrivacy, setIsTogglingPrivacy] = useState(false);
+
+  useEffect(() => {
+    const loadPrivacyState = async () => {
+      try {
+        if (currentChatId) {
+          const storedPrivacy = await AsyncStorage.getItem(
+            `chat_privacy_${currentChatId}`
+          );
+
+          if (storedPrivacy !== null) {
+            setIsPrivate(storedPrivacy === "true");
+          } else if (markerData?.chats?.isPrivate !== undefined) {
+            setIsPrivate(markerData.chats.isPrivate);
+          }
+        }
+      } catch (error) {
+        console.error("Error loading privacy state from AsyncStorage:", error);
+        // Fallback to marker data
+        if (markerData?.chats?.isPrivate !== undefined) {
+          setIsPrivate(markerData.chats.isPrivate);
+        }
+      }
+    };
+
+    loadPrivacyState();
+  }, [markerData, currentChatId]);
 
   // Use the delete chat hook
   const { mutate: deleteChat, isPending: isDeleting } = useDeleteChat();
 
   // Use the delete marker hook
   const { mutate: deleteMarker } = useDeleteMarker();
-  
+
   // Navigation
   const navigation = useNavigation();
 
@@ -43,7 +90,7 @@ export const ChatSettingsModal = () => {
   // Use the update marker hook
   const { mutate: updateMarker } = useUpdateMarker(markerId);
 
-  // Fetch chat data to get markerId when component mounts
+  // Fetch chat data to get markerId and privacy status when component mounts
   useEffect(() => {
     if (currentChatId) {
       // Try to get chat data from cache first
@@ -51,11 +98,17 @@ export const ChatSettingsModal = () => {
         "chatMetadata",
         currentChatId,
       ]) as any;
-      if (chatData?.markerId) {
-        setMarkerId(chatData.markerId);
+      if (chatData) {
+        if (chatData.markerId) {
+          setMarkerId(chatData.markerId);
+        }
+        // Set privacy status if available
+        if (chatData.isPrivate !== undefined) {
+          setIsPrivate(chatData.isPrivate);
+        }
       } else {
         // If not in cache, we could fetch it here if needed
-        console.log("No markerId found in cache for chat:", currentChatId);
+        console.log("No chat data found in cache for chat:", currentChatId);
       }
     }
   }, [currentChatId, queryClient]);
@@ -67,6 +120,67 @@ export const ChatSettingsModal = () => {
   };
 
   // Handle saving the new title
+  // Handle privacy toggle
+  const handleTogglePrivacy = async () => {
+    if (!currentChatId || isTogglingPrivacy) return;
+
+    const newPrivacyStatus = !isPrivate;
+
+    // ✅ Меняем UI сразу
+    setIsPrivate(newPrivacyStatus);
+    setIsTogglingPrivacy(true);
+
+    try {
+      // Save to AsyncStorage first for immediate persistence
+      await AsyncStorage.setItem(
+        `chat_privacy_${currentChatId}`,
+        String(newPrivacyStatus)
+      );
+
+      // Then update on the server
+      await apiClient.post(`/chat/${currentChatId}/make-private`, {
+        isPrivate: newPrivacyStatus,
+      });
+
+      // Invalidate chat metadata
+      queryClient.invalidateQueries({
+        queryKey: ["chatMetadata", currentChatId],
+      });
+
+      // Also invalidate marker data if we have a marker ID
+      if (currentChatMarkerId) {
+        queryClient.invalidateQueries({
+          queryKey: ["markerById", currentChatMarkerId],
+        });
+      }
+
+      console.log(
+        `✅ Chat privacy updated to: ${newPrivacyStatus ? "private" : "public"}`
+      );
+    } catch (error) {
+      // Откат UI если ошибка
+      setIsPrivate(!newPrivacyStatus);
+
+      // Also revert in AsyncStorage
+      try {
+        await AsyncStorage.setItem(
+          `chat_privacy_${currentChatId}`,
+          String(!newPrivacyStatus)
+        );
+      } catch (storageError) {
+        console.error("Error reverting privacy in AsyncStorage:", storageError);
+      }
+
+      console.error("❌ Error updating chat privacy:", error);
+      Alert.alert(
+        "Ошибка",
+        "Не удалось обновить настройки приватности. Пожалуйста, попробуйте позже."
+      );
+    } finally {
+      setIsTogglingPrivacy(false);
+    }
+  };
+
   const handleSaveTitle = () => {
     if (!currentChatId || !newTitle.trim()) return;
 
@@ -118,13 +232,15 @@ export const ChatSettingsModal = () => {
       title: "Приватность",
       description: "Сделать чат закрытым",
       isRadioButton: true,
-      onPress: () => {},
+      isClicked: isPrivate,
+      isLoading: isTogglingPrivacy,
+      onPress: handleTogglePrivacy,
     },
     {
       title: "Заявки",
       isRadioButton: false,
       isApplication: true,
-      applications: 123,
+      applications: applications?.length || 0,
       onPress: () => {
         close();
         open();
@@ -213,6 +329,8 @@ export const ChatSettingsModal = () => {
               title={setting.title}
               description={setting.description}
               isRadioButton={setting.isRadioButton}
+              isClicked={setting.isClicked}
+              isLoading={setting.isLoading}
               onPress={setting.onPress}
               isApplication={setting.isApplication}
               applications={setting.applications}
@@ -240,7 +358,7 @@ export const ChatSettingsModal = () => {
                     // Delete the chat globally
                     if (currentChatId) {
                       deleteChat(currentChatId);
-                      
+
                       // Also delete the associated marker if available
                       if (markerId) {
                         deleteMarker(markerId);

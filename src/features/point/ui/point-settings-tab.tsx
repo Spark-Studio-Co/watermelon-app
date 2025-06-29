@@ -1,6 +1,6 @@
 import { Button } from "@/src/shared/ui/button/button";
 import Text from "@/src/shared/ui/text/text";
-import { View } from "react-native";
+import { View, ActivityIndicator } from "react-native";
 
 import RightArrowIcon from "@/src/shared/icons/right-arrow-icon";
 
@@ -11,6 +11,7 @@ interface IPointSettingsTab {
   onPress?: () => void;
   isClicked?: boolean;
   applications?: number;
+  isLoading?: boolean;
 }
 
 export const PointSettingsTab = ({
@@ -20,6 +21,7 @@ export const PointSettingsTab = ({
   isPrivate,
   isClicked,
   applications,
+  isLoading = false,
 }: IPointSettingsTab) => {
   return (
     <Button
@@ -39,16 +41,22 @@ export const PointSettingsTab = ({
             <Text className="text-[10px] text-dark">{applications}...</Text>
           </View>
         )}
-        <Text weight="regular" className="text-[#6B6B6B] text-[14px]">
-          {description}
-        </Text>
+        {description && (
+          <Text weight="regular" className="text-[#6B6B6B] text-[14px]">
+            {description}
+          </Text>
+        )}
       </View>
       {isPrivate ? (
         <View
           className={`border-white border-[2px] rounded-full w-[22px] h-[22px] flex items-center justify-center`}
         >
-          {isClicked && (
-            <View className="bg-white w-[14px] h-[14px] rounded-full"></View>
+          {isLoading ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            isClicked && (
+              <View className="bg-white w-[14px] h-[14px] rounded-full"></View>
+            )
           )}
         </View>
       ) : (
