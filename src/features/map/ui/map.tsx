@@ -110,12 +110,22 @@ export const Map = () => {
     }
   }, [markerById, isLoadingChat]);
 
-  // Clear preview marker when modal is closed
+  // Clear preview marker when modal is closed or when navigating away
   useEffect(() => {
     if (!isPreviewConfirmationVisible) {
       setPreviewCoordinate(null);
     }
   }, [isPreviewConfirmationVisible]);
+
+  // Clear preview marker when screen loses focus (e.g., after navigation)
+  useFocusEffect(
+    React.useCallback(() => {
+      return () => {
+        availableMarkersRefetch();
+        setPreviewCoordinate(null);
+      };
+    }, [])
+  );
 
   // Adjust map view when preview coordinate is set
   useEffect(() => {
@@ -218,6 +228,10 @@ export const Map = () => {
       if (isPrivate) {
         availableMarkersRefetch();
       }
+
+      // Clear any lingering preview markers when returning to map
+      setPreviewCoordinate(null);
+
       return () => {};
     }, [isPrivate, availableMarkersRefetch])
   );
@@ -522,19 +536,22 @@ export const Map = () => {
               // Set marker position for creation first
               if (previewCoordinate) {
                 setMarkerPosition(previewCoordinate);
-              }
 
-              // Clear preview marker
-              setPreviewCoordinate(null);
+                // Store coordinate for navigation before clearing
+                const coordinateForNavigation = { ...previewCoordinate };
 
-              // Handle point creation based on privacy setting
-              if (!isPrivate) {
-                openPointType();
-              } else {
-                //@ts-ignore
-                navigation.navigate("PrivatePointCreation" as never, {
-                  coordinate: previewCoordinate,
-                });
+                // Clear preview marker
+                setPreviewCoordinate(null);
+
+                // Handle point creation based on privacy setting
+                if (!isPrivate) {
+                  openPointType();
+                } else {
+                  //@ts-ignore
+                  navigation.navigate("PrivatePointCreation" as never, {
+                    coordinate: coordinateForNavigation,
+                  });
+                }
               }
             }}
             onCancel={() => {

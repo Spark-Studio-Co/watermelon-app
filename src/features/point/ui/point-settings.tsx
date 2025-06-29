@@ -26,7 +26,7 @@ export const PointSettings = ({ markerId }: { markerId: string }) => {
   const { data: markerData } = useMarkerDataById(markerId);
 
   // State for privacy toggle
-  const [isPrivate, setIsPrivate] = useState(false);
+  const [isContentRestricted, setIsContentRestricted] = useState(false);
   const [isTogglingPrivacy, setIsTogglingPrivacy] = useState(false);
 
   // Load privacy state from marker data or AsyncStorage
@@ -39,9 +39,9 @@ export const PointSettings = ({ markerId }: { markerId: string }) => {
           );
 
           if (storedPrivacy !== null) {
-            setIsPrivate(storedPrivacy === "true");
+            setIsContentRestricted(storedPrivacy === "true");
           } else if (markerData?.isPrivate !== undefined) {
-            setIsPrivate(markerData.isPrivate);
+            setIsContentRestricted(markerData.isPrivate);
           }
         }
       } catch (error) {
@@ -50,9 +50,7 @@ export const PointSettings = ({ markerId }: { markerId: string }) => {
           error
         );
         // Fallback to marker data
-        if (markerData?.isPrivate !== undefined) {
-          setIsPrivate(markerData.isPrivate);
-        }
+        setIsContentRestricted(false);
       }
     };
 
@@ -63,10 +61,10 @@ export const PointSettings = ({ markerId }: { markerId: string }) => {
   const handleTogglePrivacy = async () => {
     if (!markerId || isTogglingPrivacy) return;
 
-    const newPrivacyStatus = !isPrivate;
+    const newPrivacyStatus = isContentRestricted;
 
     // Update UI immediately
-    setIsPrivate(newPrivacyStatus);
+    setIsContentRestricted(newPrivacyStatus);
     setIsTogglingPrivacy(true);
 
     try {
@@ -76,9 +74,9 @@ export const PointSettings = ({ markerId }: { markerId: string }) => {
         String(newPrivacyStatus)
       );
 
-      // Then update on the server using the endpoint from the screenshot
-      await apiClient.patch(`/markers/${markerId}/set-private`, {
-        isPrivate: newPrivacyStatus,
+      // Then update on the server using the content restriction endpoint
+      await apiClient.patch(`/markers/${markerId}/set-content-restriction`, {
+        isContentRestricted: newPrivacyStatus,
       });
 
       // Invalidate marker data to refresh
@@ -93,7 +91,7 @@ export const PointSettings = ({ markerId }: { markerId: string }) => {
       );
     } catch (error) {
       // Revert UI if error
-      setIsPrivate(!newPrivacyStatus);
+      setIsContentRestricted(!newPrivacyStatus);
 
       // Also revert in AsyncStorage
       try {
@@ -157,7 +155,7 @@ export const PointSettings = ({ markerId }: { markerId: string }) => {
       title: "Приватность",
       description: "Сделать поинт закрытым",
       isPrivate: true,
-      isClicked: isPrivate,
+      isClicked: isContentRestricted,
       isLoading: isTogglingPrivacy,
       onPress: handleTogglePrivacy,
     },
