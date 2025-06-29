@@ -27,6 +27,7 @@ export const CreateApplicationModal = ({
   }, [pendingData, isLoading]);
 
   const handleSendApplication = () => {
+    console.log("APPLICATION SENT");
     mutate(markerId, {
       onSuccess: () => {
         console.log("Success created application");

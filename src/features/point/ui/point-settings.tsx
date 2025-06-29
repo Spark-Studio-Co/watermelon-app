@@ -61,7 +61,7 @@ export const PointSettings = ({ markerId }: { markerId: string }) => {
   const handleTogglePrivacy = async () => {
     if (!markerId || isTogglingPrivacy) return;
 
-    const newPrivacyStatus = isContentRestricted;
+    const newPrivacyStatus = !isContentRestricted;
 
     // Update UI immediately
     setIsContentRestricted(newPrivacyStatus);
@@ -74,23 +74,19 @@ export const PointSettings = ({ markerId }: { markerId: string }) => {
         String(newPrivacyStatus)
       );
 
-      // Then update on the server using the content restriction endpoint
-      await apiClient.patch(`/markers/${markerId}/set-content-restriction`, {
-        isContentRestricted: newPrivacyStatus,
-      });
+      // Then update on the server using the content restriction endpoint with query parameter
+      await apiClient.patch(
+        `/markers/${markerId}/set-content-restriction?isContentRestricted=${newPrivacyStatus}`
+      );
 
-      // Invalidate marker data to refresh
       queryClient.invalidateQueries({
         queryKey: ["markerById", markerId],
       });
 
       console.log(
-        `✅ Point privacy updated to: ${
-          newPrivacyStatus ? "private" : "public"
-        }`
+        `✅ Is Content restricted: ${newPrivacyStatus ? "true" : "false"}`
       );
     } catch (error) {
-      // Revert UI if error
       setIsContentRestricted(!newPrivacyStatus);
 
       // Also revert in AsyncStorage
@@ -199,7 +195,11 @@ export const PointSettings = ({ markerId }: { markerId: string }) => {
       <Text weight="regular" className="text-white text-[20px]">
         Настройки
       </Text>
-      <Button className="absolute right-3 top-3" onPress={close}>
+      <Button
+        className="absolute right-3 top-3"
+        onPress={close}
+        variant="custom"
+      >
         <CrossIcon />
       </Button>
       <View className="w-[90%] gap-y-7 mt-6">
@@ -222,6 +222,7 @@ export const PointSettings = ({ markerId }: { markerId: string }) => {
         ))}
       </View>
       <Button
+        variant="custom"
         onPress={handleDelete}
         className="flex items-center justify-center w-[90%] mt-16 mb-4"
       >

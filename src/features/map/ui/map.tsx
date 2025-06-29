@@ -61,8 +61,7 @@ export const Map = () => {
   const { data: me } = useGetMe();
   const addToFavorites = useAddMarkerToFavorites();
   const { data: markerById } = useMarkerDataById(stateMarkerById);
-  const { data: accessData, refetch: checkAccess } =
-    useCheckMarkerAccess(stateMarkerById);
+  const { refetch: checkAccess } = useCheckMarkerAccess(stateMarkerById);
   const { setName, setAvatar, setCurrentChatMarkerId, currentChatMarkerId } =
     useChatStore();
   const { open: openPointType } = useVisibleStore("pointType");
@@ -236,10 +235,6 @@ export const Map = () => {
     }, [isPrivate, availableMarkersRefetch])
   );
 
-  useEffect(() => {
-    console.log("MARKERS available:", markersList);
-  }, [markersList]);
-
   return (
     <View style={{ width: width, height: height }}>
       <MapView
@@ -388,7 +383,9 @@ export const Map = () => {
                       try {
                         // Check if user has access to this marker
                         const result = await checkAccess();
-                        const hasAccess = result.data?.hasAccess;
+                        const hasAccess = result.data?.hasContentAccess;
+
+                        console.log("hasAccess", hasAccess);
 
                         // If no access, open application modal
                         if (!hasAccess) {
