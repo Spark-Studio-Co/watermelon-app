@@ -369,9 +369,12 @@ export const BookmarksScreen = () => {
                         nickname={
                           friend.username ? `@${friend.username}` : friend.email
                         }
-                        onPress={() => handleChatNavigate(friend.id)}
+                        onPress={() => {
+                          handleSendRequest(friend.id);
+                        }}
                         isPremium={friend.isPremium}
-                        isIncoming
+                        isAddToFriends
+                        isAdded={!!activeFriends[friend.id]}
                       />
                     </View>
                   ))
@@ -395,26 +398,13 @@ export const BookmarksScreen = () => {
                         username={friend.name || "User Name"}
                         nickname={`@${friend.requester.username}`}
                         isPremium={friend.isPremium}
+                        isIncoming
                       />
                     </View>
                   ))}
                 {Array.isArray(friends) &&
                   friends.map((friend: any) => (
                     <View key={`friend-${friend.id}`} className="mb-4">
-                      <FriendTab
-                        avatar={friend.avatar}
-                        username={friend.name || "User Name"}
-                        nickname={
-                          friend.username ? `@${friend.username}` : "@user_name"
-                        }
-                        onPress={() => handleChatNavigate(friend.id)}
-                        isPremium={friend.isPremium}
-                      />
-                    </View>
-                  ))}
-                {Array.isArray(incomingFriends) &&
-                  incomingFriends.map((friend: any) => (
-                    <View key={`new-friend-${friend.id}`} className="mb-4">
                       <FriendTab
                         avatar={friend.avatar}
                         username={friend.name || "User Name"}
