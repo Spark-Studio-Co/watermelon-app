@@ -353,19 +353,28 @@ export const BookmarksScreen = () => {
             {search.length > 0 ? (
               Array.isArray(friendSearchResults) &&
               friendSearchResults.length > 0 ? (
-                friendSearchResults.map((friend: any) => (
-                  <View key={`search-${friend.id}`} className="mb-4">
-                    <FriendTab
-                      avatar={friend.avatar}
-                      username={friend.name || "User Name"}
-                      nickname={
-                        friend.username ? `@${friend.username}` : friend.email
-                      }
-                      onPress={() => handleChatNavigate(friend.id)}
-                      isPremium={friend.isPremium}
-                    />
-                  </View>
-                ))
+                // Sort the search results to show premium users first
+                [...friendSearchResults]
+                  .sort((a, b) => {
+                    // Sort by premium status (premium first)
+                    if (a.isPremium && !b.isPremium) return -1;
+                    if (!a.isPremium && b.isPremium) return 1;
+                    return 0;
+                  })
+                  .map((friend: any) => (
+                    <View key={`search-${friend.id}`} className="mb-4">
+                      <FriendTab
+                        avatar={friend.avatar}
+                        username={friend.name || "User Name"}
+                        nickname={
+                          friend.username ? `@${friend.username}` : friend.email
+                        }
+                        onPress={() => handleChatNavigate(friend.id)}
+                        isPremium={friend.isPremium}
+                        isIncoming
+                      />
+                    </View>
+                  ))
               ) : (
                 <Text
                   weight="regular"
@@ -385,7 +394,6 @@ export const BookmarksScreen = () => {
                         avatar={friend.requester.avatar}
                         username={friend.name || "User Name"}
                         nickname={`@${friend.requester.username}`}
-                        isIncoming
                         isPremium={friend.isPremium}
                       />
                     </View>
@@ -393,6 +401,20 @@ export const BookmarksScreen = () => {
                 {Array.isArray(friends) &&
                   friends.map((friend: any) => (
                     <View key={`friend-${friend.id}`} className="mb-4">
+                      <FriendTab
+                        avatar={friend.avatar}
+                        username={friend.name || "User Name"}
+                        nickname={
+                          friend.username ? `@${friend.username}` : "@user_name"
+                        }
+                        onPress={() => handleChatNavigate(friend.id)}
+                        isPremium={friend.isPremium}
+                      />
+                    </View>
+                  ))}
+                {Array.isArray(incomingFriends) &&
+                  incomingFriends.map((friend: any) => (
+                    <View key={`new-friend-${friend.id}`} className="mb-4">
                       <FriendTab
                         avatar={friend.avatar}
                         username={friend.name || "User Name"}

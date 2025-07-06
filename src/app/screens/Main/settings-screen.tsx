@@ -18,15 +18,28 @@ import PrivacyIcon from "@/src/shared/icons/privacy-icon";
 import BellIcon from "@/src/shared/icons/bell-icon";
 import ChangeLanguageIcon from "@/src/shared/icons/change-language-icon";
 import LogoutIcon from "@/src/shared/icons/logout-icon";
+import { apiClient } from "../../config/apiClient";
 
 export const SettingsScreen = () => {
   const { logout } = useAuthStore();
+  const { data: me } = useGetMe();
 
-  const handleLogOut = async () => {
-    setTimeout(() => logout(), 1000);
+  // Function to reset user settings before logout
+  const resetUserSettings = async () => {
+    try {
+      await apiClient.patch(`/users/user/${me?.id}/reset-settings`);
+      console.log("User settings reset successfully");
+    } catch (error) {
+      console.error("Failed to reset user settings:", error);
+    }
   };
 
-  const { data: me } = useGetMe();
+  const handleLogOut = async () => {
+    if (me?.id) {
+      await resetUserSettings();
+    }
+    setTimeout(() => logout(), 1000);
+  };
 
   const { navigate } = useNavigation();
 
