@@ -404,23 +404,6 @@ export const BookmarksScreen = () => {
                       />
                     </View>
                   ))}
-
-                {Array.isArray(formattedFriends) &&
-                  formattedFriends.map((friend: IGetUsersRDO) => (
-                    <View key={`formatted-${friend.id}`} className="mb-4">
-                      <FriendTab
-                        avatar={friend.avatar}
-                        username={friend.name || "User Name"}
-                        nickname={
-                          friend.username ? `@${friend.username}` : friend.email
-                        }
-                        isAddToFriends
-                        onPress={() => handleSendRequest(friend.id)}
-                        isAdded={!!activeFriends[friend.id]}
-                        isPremium={friend.isPremium}
-                      />
-                    </View>
-                  ))}
               </>
             )}
           </View>

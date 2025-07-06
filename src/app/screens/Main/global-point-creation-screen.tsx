@@ -1,5 +1,5 @@
 import { MainLayout } from "../../layouts/main-layout";
-import { View, Image, Keyboard, Dimensions } from "react-native";
+import { View, Image, Keyboard, Dimensions, ActivityIndicator } from "react-native";
 import Text from "@/src/shared/ui/text/text";
 import { Input } from "@/src/shared/ui/input/input";
 import { useEffect, useRef, useState } from "react";
@@ -20,6 +20,7 @@ import { useMarkerStore } from "@/src/entities/markers/model/use-marker-store";
 import { useMarkerDataById } from "@/src/entities/markers/api/use-marker-data-by-id";
 import { useUpdateMarker } from "@/src/entities/markers/api/use-update-marker";
 import queryClient from "../../config/queryClient";
+import { useChatStore } from "@/src/features/chat/model/chat-store";
 
 export const GlobalPointCreationScreen = ({
   route,
@@ -36,7 +37,48 @@ export const GlobalPointCreationScreen = ({
   const navigation = useNavigation();
   const bioInputRef = useRef(null);
 
+  // State for tracking the updated marker ID for chat navigation
+  const [updatedMarkerId, setUpdatedMarkerId] = useState<string | null>(null);
+  const [isLoadingChatCreation, setIsLoadingChatCreation] = useState(false);
+  
+  // Use marker data by ID for initial data and for fetching updated data with chat ID
   const { data: markerData } = useMarkerDataById(id);
+  const { data: updatedMarkerData, isLoading: isLoadingUpdatedMarker } = useMarkerDataById(updatedMarkerId);
+  
+  // Handle navigation when updated marker data is available
+  useEffect(() => {
+    if (updatedMarkerId && updatedMarkerData && !isLoadingUpdatedMarker) {
+      // Extract the chat ID from the marker data
+      const chatId = updatedMarkerData?.chats?.[0]?.id;
+      const participants = [updatedMarkerData?.ownerId];
+      
+      if (chatId) {
+        console.log(
+          `[GlobalPointCreation] Found chat ID in marker data: ${chatId}, markerId: ${updatedMarkerId}`
+        );
+        
+        // Navigate to the private chat screen
+        setIsLoadingChatCreation(false);
+        navigation.navigate("PrivateChat" as never, {
+          chatId,
+          participants,
+          chatType: "group",
+          markerId: updatedMarkerId,
+          isGlobal: true,
+        });
+        
+        // Reset the updated marker ID
+        setUpdatedMarkerId(null);
+      } else {
+        console.error(
+          "[GlobalPointCreation] Error: No chat ID in marker data!",
+          updatedMarkerData
+        );
+        setIsLoadingChatCreation(false);
+      }
+    }
+  }, [updatedMarkerData, isLoadingUpdatedMarker, updatedMarkerId, navigation]);
+  
   const { mutate: updatePoint } = useUpdateMarker(id);
   const {
     setName,
@@ -138,16 +180,39 @@ export const GlobalPointCreationScreen = ({
 
     updatePoint(data, {
       onSuccess: (data: any) => {
-        console.log("✅ Маркер успешно создан!", data);
+        console.log("✅ Маркер успешно обновлен!", data);
         queryClient.invalidateQueries({
           queryKey: ["markers"],
         });
+        
         setTimeout(() => {
-          //@ts-ignore
-          navigation.navigate("PointBio" as never, {
-            id: data?.id,
-            ownerId: data?.ownerId,
-          });
+          if (type === "chat") {
+            // For chat points, set loading state and fetch updated marker data
+            setIsLoadingChatCreation(true);
+            const markerId = data?.id;
+            
+            // Set chat name and avatar in chat store
+            const chatName = pointName || name || `Point #${markerId}`;
+            const chatStore = useChatStore.getState();
+            chatStore.setName(chatName);
+            chatStore.setAvatar(photoUri || image ? { uri: photoUri || image } : null);
+            chatStore.setCurrentChatMarkerId(markerId);
+            
+            console.log(
+              `[GlobalPointCreation] Setting markerId ${markerId} to fetch latest data with chat ID`
+            );
+            
+            // Set the marker ID to trigger the useMarkerDataById hook
+            setUpdatedMarkerId(markerId);
+            
+            // The rest of the navigation logic will be handled in the useEffect that watches updatedMarkerData
+          } else {
+            // For standard points, navigate to point bio
+            navigation.navigate("PointBio" as never, {
+              id: data?.id,
+              ownerId: data?.ownerId,
+            });
+          }
         }, 500);
       },
       onError: (error) => {
@@ -157,125 +222,156 @@ export const GlobalPointCreationScreen = ({
   };
 
   return (
-    <MainLayout>
-      <View className="flex flex-col items-end mt-4">
-        <Text weight="bold" className="text-white text-[24px]">
-          {name}
-        </Text>
-      </View>
-      <View className="w-full h-[182px] rounded-[12px] mt-1 overflow-hidden">
-        {mapRegion && markerData?.latitude && markerData?.longitude ? (
-          <MapView
-            style={{ width: "100%", height: "100%" }}
-            region={mapRegion}
-            customMapStyle={customMapStyle}
-            scrollEnabled={false}
-            zoomEnabled={false}
-            rotateEnabled={false}
-            pitchEnabled={false}
-            mapType="standard"
-            showsPointsOfInterest={false}
-            showsBuildings={false}
-            showsTraffic={false}
-            showsIndoors={false}
-          >
-            <Marker
-              coordinate={{
-                latitude: markerData.latitude,
-                longitude: markerData.longitude,
-              }}
-            >
-              <View
-                className="bg-[#2E2E2E] w-[25px] h-[25px] border-[2px] rounded-full"
-                style={{ borderColor: getMarkerBorderColor(type) }}
-              />
-            </Marker>
-          </MapView>
-        ) : (
-          <Image
-            source={
-              image ? { uri: image } : require("@/src/images/point_image.png")
-            }
-            className="w-full h-[182px]"
-          />
-        )}
-      </View>
-      <View
-        style={{ boxShadow: "0px 4px 4px 0px #00000040" }}
-        className="rounded-[12px] "
-      >
-        <View className="flex flex-col py-2  w-[95%] justify-center mx-auto">
-          <Input
-            placeholder="Point name user"
-            maxLength={50}
-            className="h-[65px] placeholder:text-[#5C5A5A] text-[#5C5A5A] text-[20px] pl-6 mt-6 border-[1px] border-[#999999] rounded-[15px] w-full"
-            onChangeText={setName}
-          />
-          <Text weight="bold" className="mt-6 text-white text-[24px]">
-            Add bio
-          </Text>
-          <Input
-            ref={bioInputRef}
-            returnKeyType="done"
-            multiline
-            placeholder="bio information..."
-            className="placeholder:text-[#5C5A5A] text-[#5C5A5A] text-[20px] px-6 mt-6 pt-6 border-[1px] h-[156px] border-[#999999] rounded-[15px] w-full"
-            onSubmitEditing={() => {
-              Keyboard.dismiss();
+    <>
+      {isLoadingChatCreation && (
+        <View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            zIndex: 1000,
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: "white",
+              padding: 20,
+              borderRadius: 10,
+              alignItems: "center",
             }}
-            onChangeText={setDescription}
-          />
-        </View>
-        <View className="flex items-center justify-center mt-5">
-          <View className="flex flex-col items-center gap-y-5">
-            <Text weight="bold" className="text-white text-[24px]">
-              Add photo
-            </Text>
-            <Button
-              onPress={openGlobalChoice}
-              variant="custom"
-              className="bg-[#1B1C1E] flex items-center justify-center border border-[#222328] rounded-[15px] w-[100px] h-[100px]"
-              style={{ boxShadow: "0px 4px 4px 0px #00000040" }}
-            >
-              <CameraIcon />
-            </Button>
-          </View>
-        </View>
-        <View className="mt-10 mb-9 flex items-center justify-center">
-          <Button
-            onPress={handleSubmit}
-            variant="custom"
-            className="w-[134px] py-3.5 rounded-[6px] bg-[#14A278] flex items-center justify-center"
           >
-            <Text weight="regular" className="text-white text-[16px]">
-              CREATE
-            </Text>
-          </Button>
+            <ActivityIndicator size="large" color="#0000ff" />
+            <Text style={{ marginTop: 10 }}>Creating chat...</Text>
+          </View>
         </View>
-      </View>
-      <ModalWrapper storeKey="globalChoice">
-        <View className=" bg-[#38373A] w-[90%] px-8 rounded-lg">
-          <View className="flex flex-row items-center justify-between w-[100%] h-[200px]">
-            <Button
-              className="bg-[#27262A] px-4 py-3 rounded-md"
-              onPress={openCamera}
+      )}
+      <MainLayout>
+        <View className="flex flex-col items-end mt-4">
+          <Text weight="bold" className="text-white text-[24px]">
+            {name}
+          </Text>
+        </View>
+        <View className="w-full h-[182px] rounded-[12px] mt-1 overflow-hidden">
+          {mapRegion && markerData?.latitude && markerData?.longitude ? (
+            <MapView
+              style={{ width: "100%", height: "100%" }}
+              region={mapRegion}
+              customMapStyle={customMapStyle}
+              scrollEnabled={false}
+              zoomEnabled={false}
+              rotateEnabled={false}
+              pitchEnabled={false}
+              mapType="standard"
+              showsPointsOfInterest={false}
+              showsBuildings={false}
+              showsTraffic={false}
+              showsIndoors={false}
             >
-              <Text weight="medium" className="text-white">
-                Make a photo
+              <Marker
+                coordinate={{
+                  latitude: markerData.latitude,
+                  longitude: markerData.longitude,
+                }}
+              >
+                <View
+                  className="bg-[#2E2E2E] w-[25px] h-[25px] border-[2px] rounded-full"
+                  style={{ borderColor: getMarkerBorderColor(type) }}
+                />
+              </Marker>
+            </MapView>
+          ) : (
+            <Image
+              source={
+                image ? { uri: image } : require("@/src/images/point_image.png")
+              }
+              className="w-full h-[182px]"
+            />
+          )}
+        </View>
+        
+        <View
+          style={{ boxShadow: "0px 4px 4px 0px #00000040" }}
+          className="rounded-[12px]"
+        >
+          <View className="flex flex-col py-2 w-[95%] justify-center mx-auto">
+            <Input
+              placeholder="Point name user"
+              maxLength={50}
+              className="h-[65px] placeholder:text-[#5C5A5A] text-[#5C5A5A] text-[20px] pl-6 mt-6 border-[1px] border-[#999999] rounded-[15px] w-full"
+              onChangeText={setName}
+            />
+            <Text weight="bold" className="mt-6 text-white text-[24px]">
+              Add bio
+            </Text>
+            <Input
+              ref={bioInputRef}
+              returnKeyType="done"
+              multiline
+              placeholder="bio information..."
+              className="placeholder:text-[#5C5A5A] text-[#5C5A5A] text-[20px] px-6 mt-6 pt-6 border-[1px] h-[156px] border-[#999999] rounded-[15px] w-full"
+              onSubmitEditing={() => {
+                Keyboard.dismiss();
+              }}
+              onChangeText={setDescription}
+            />
+          </View>
+          <View className="flex items-center justify-center mt-5">
+            <View className="flex flex-col items-center gap-y-5">
+              <Text weight="bold" className="text-white text-[24px]">
+                Add photo
               </Text>
-            </Button>
+              <Button
+                onPress={openGlobalChoice}
+                variant="custom"
+                className="bg-[#1B1C1E] flex items-center justify-center border border-[#222328] rounded-[15px] w-[100px] h-[100px]"
+                style={{ boxShadow: "0px 4px 4px 0px #00000040" }}
+              >
+                <CameraIcon />
+              </Button>
+            </View>
+          </View>
+          <View className="mt-10 mb-9 flex items-center justify-center">
             <Button
-              className="bg-[#27262A] px-4 py-3 rounded-md"
-              onPress={pickImage}
+              onPress={handleSubmit}
+              variant="custom"
+              className="w-[134px] py-3.5 rounded-[6px] bg-[#14A278] flex items-center justify-center"
             >
-              <Text weight="medium" className="text-white">
-                Pick from gallery
+              <Text weight="regular" className="text-white text-[16px]">
+                CREATE
               </Text>
             </Button>
           </View>
         </View>
-      </ModalWrapper>
-      <CameraModalWidget storeKey="globalCamera" />
-    </MainLayout>
+        
+        <ModalWrapper storeKey="globalChoice">
+          <View className=" bg-[#38373A] w-[90%] px-8 rounded-lg">
+            <View className="flex flex-row items-center justify-between w-[100%] h-[200px]">
+              <Button
+                className="bg-[#27262A] px-4 py-3 rounded-md"
+                onPress={openCamera}
+              >
+                <Text weight="medium" className="text-white">
+                  Make a photo
+                </Text>
+              </Button>
+              <Button
+                className="bg-[#27262A] px-4 py-3 rounded-md"
+                onPress={pickImage}
+              >
+                <Text weight="medium" className="text-white">
+                  Pick from gallery
+                </Text>
+              </Button>
+            </View>
+          </View>
+        </ModalWrapper>
+        <CameraModalWidget storeKey="globalCamera" />
+      </MainLayout>
+    </>
   );
 };

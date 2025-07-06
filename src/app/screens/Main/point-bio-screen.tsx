@@ -19,10 +19,8 @@ import { ChatViolationModal } from "@/src/features/chat/ui/chat-violation-modal"
 import MailIcon from "@/src/shared/icons/mail-icon";
 import ThreeDotIcon from "@/src/shared/icons/three-dot-icon";
 import RightArrowIcon from "@/src/shared/icons/right-arrow-icon";
-import PlusIcon from "@/src/shared/icons/plus-icon";
 import CameraIcon from "@/src/shared/icons/camera-icon";
 
-import { usePointBioStore } from "@/src/features/point/model/point-bio-store";
 import { useActiveStore } from "@/src/shared/model/use-active-store";
 import { useVisibleStore } from "@/src/shared/model/use-visible-store";
 import {
@@ -104,6 +102,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
   useEffect(() => {
     setId(markerId);
     setIsPrivate(isPrivate);
+    console.log("MARKER DATA", marker);
   }, [markerId]);
 
   const alternatingHeightsImages =
@@ -216,56 +215,40 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
   }, [publications, active === "Публикации"]);
 
   const isOwner = ownerId === me?.id;
-  
+
   // Debug logs to understand what's happening
   useEffect(() => {
     console.log("DEBUG - Owner check:", {
       ownerId,
       myId: me?.id,
-      isOwner
+      isOwner,
     });
   }, [ownerId, me?.id, isOwner]);
-  
-  // Direct check against marker data to avoid any state synchronization issues
-  // Owner always sees content, non-owners only see if isContentRestricted is false
-  const shouldShowContent = isOwner || marker?.isContentRestricted === false;
-  
-  // Debug the visibility decision
-  useEffect(() => {
-    console.log("DEBUG - Visibility decision:", {
-      isOwner,
-      isContentRestricted: marker?.isContentRestricted,
-      shouldShowContent,
-      markerData: marker
-    });
-  }, [isOwner, marker, shouldShowContent]);
 
-  // Force component to re-render when marker data changes
   const [forceUpdate, setForceUpdate] = useState(0);
-  
+
   useEffect(() => {
     if (marker) {
       // Trigger re-render when marker data changes
-      setForceUpdate(prev => prev + 1);
+      setForceUpdate((prev) => prev + 1);
       console.log("Marker data updated:", {
         id: marker.id,
         isContentRestricted: marker.isContentRestricted,
-        forceUpdateCount: forceUpdate + 1
+        forceUpdateCount: forceUpdate + 1,
       });
     }
   }, [marker]);
-  
+
   // Log complete visibility status for debugging
   useEffect(() => {
-    console.log("COMPLETE VISIBILITY STATUS:", { 
-      isOwner, 
+    console.log("COMPLETE VISIBILITY STATUS:", {
+      isOwner,
       ownerId,
       myId: me?.id,
       markerIsContentRestricted: marker?.isContentRestricted,
-      shouldShowContent,
-      forceUpdateCount: forceUpdate
+      forceUpdateCount: forceUpdate,
     });
-  }, [isOwner, marker?.isContentRestricted, shouldShowContent, forceUpdate, ownerId, me?.id]);
+  }, [isOwner, marker?.isContentRestricted, forceUpdate, ownerId, me?.id]);
 
   return (
     <MainLayout>
@@ -277,310 +260,283 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
           onPress={openSettings}
         />
       </View>
-      {shouldShowContent && (
-        <View className="flex flex-row items-center mt-12 w-[90%] mx-auto relative">
-          {ownerId === me?.id ? (
-            <View className="ml-10" />
-          ) : (
-            <>
-              <Button
-                variant="follow"
-                onPress={handleSaveMarker}
-                disabled={
-                  saveMarkerMutation.isPending || unsaveMarkerMutation.isPending
-                }
-              >
-                <Text weight="bold" className="text-[#5992FF] text-[13.82px]">
-                  {saveMarkerMutation.isPending ||
-                  unsaveMarkerMutation.isPending
-                    ? "Loading..."
-                    : marker?.isSaved
-                    ? "Unsave"
-                    : "+ Save"}
-                </Text>
-              </Button>
-              <Button
-                onPress={async () => {
-                  if (!ownerId || !me?.id) return;
+      <View className="flex flex-row items-center mt-12 w-[90%] mx-auto relative">
+        {ownerId === me?.id ? (
+          <View className="ml-10" />
+        ) : (
+          <>
+            <Button
+              variant="follow"
+              onPress={handleSaveMarker}
+              disabled={
+                saveMarkerMutation.isPending || unsaveMarkerMutation.isPending
+              }
+            >
+              <Text weight="bold" className="text-[#5992FF] text-[13.82px]">
+                {saveMarkerMutation.isPending || unsaveMarkerMutation.isPending
+                  ? "Loading..."
+                  : marker?.isSaved
+                  ? "Unsave"
+                  : "+ Save"}
+              </Text>
+            </Button>
+            <Button
+              onPress={async () => {
+                if (!ownerId || !me?.id) return;
 
-                  // Fetch user data
-                  const result = await refetchUsersData();
-                  const userData = result.data;
+                // Use point data for the chat
+                const pointName = marker?.name ?? `Point #${marker?.map_id}`;
+                const pointAvatar = marker?.avatar || null;
 
-                  if (!userData) return;
+                // Set point info in chat store
+                setName(pointName);
+                setAvatar(pointAvatar);
 
-                  // Set user info in chat store
-                  setName(userData.name ?? "User Name");
-                  setAvatar(userData.avatar);
-
+                try {
+                  // First try to get an existing chat
                   try {
-                    // First try to get an existing chat
-                    try {
-                      // Try to get or create the chat
-                      const chatResponse = await getPrivateChat.mutateAsync({
-                        userId: me.id,
-                        targetUserId: ownerId,
-                      });
+                    // Try to get or create the chat
+                    const chatResponse = await getPrivateChat.mutateAsync({
+                      userId: me.id,
+                      targetUserId: ownerId,
+                    });
+
+                    // Ensure we have a valid chat ID
+                    if (!chatResponse || !chatResponse.chatId) {
+                      throw new Error("Invalid chat response: missing chat ID");
+                    }
+
+                    console.log("Got chat ID:", chatResponse.chatId);
+                    console.log("Participants:", chatResponse.participants);
+
+                    navigation.navigate(
+                      "PrivateChat" as never,
+                      {
+                        chatId: chatResponse.chatId,
+                        participants: chatResponse.participants,
+                        chatType: "private",
+                      } as never
+                    );
+                  } catch (getError: any) {
+                    // If we get a 500 error, the chat doesn't exist yet, so create it
+                    if (getError?.response?.status === 500) {
+                      console.log("Chat does not exist, creating new chat...");
+
+                      // Create a new chat
+                      const newChatResponse =
+                        await createPrivateChat.mutateAsync({
+                          userA: me.id,
+                          userB: ownerId,
+                        });
 
                       // Ensure we have a valid chat ID
-                      if (!chatResponse || !chatResponse.chatId) {
+                      if (!newChatResponse || !newChatResponse.id) {
                         throw new Error(
-                          "Invalid chat response: missing chat ID"
+                          "Invalid chat creation response: missing chat ID"
                         );
                       }
 
-                      console.log("Got chat ID:", chatResponse.chatId);
-                      console.log("Participants:", chatResponse.participants);
+                      console.log("Created new chat:", newChatResponse.id);
+
+                      // Extract participants from the response or use default
+                      const participants = newChatResponse.participants
+                        ? newChatResponse.participants.map((p) => p.userId)
+                        : [me.id, ownerId];
+
+                      // Get the chat ID, ensuring it's a string
+                      const chatId =
+                        newChatResponse.id || newChatResponse.chatId || "";
+
+                      if (!chatId) {
+                        throw new Error("Missing chat ID in response");
+                      }
 
                       navigation.navigate(
                         "PrivateChat" as never,
                         {
-                          chatId: chatResponse.chatId,
-                          participants: chatResponse.participants,
+                          chatId: chatId,
+                          participants: participants,
                           chatType: "private",
                         } as never
                       );
-                    } catch (getError: any) {
-                      // If we get a 500 error, the chat doesn't exist yet, so create it
-                      if (getError?.response?.status === 500) {
-                        console.log(
-                          "Chat does not exist, creating new chat..."
-                        );
-
-                        // Create a new chat
-                        const newChatResponse =
-                          await createPrivateChat.mutateAsync({
-                            userA: me.id,
-                            userB: ownerId,
-                          });
-
-                        // Ensure we have a valid chat ID
-                        if (!newChatResponse || !newChatResponse.id) {
-                          throw new Error(
-                            "Invalid chat creation response: missing chat ID"
-                          );
-                        }
-
-                        console.log("Created new chat:", newChatResponse.id);
-
-                        // Extract participants from the response or use default
-                        const participants = newChatResponse.participants
-                          ? newChatResponse.participants.map((p) => p.userId)
-                          : [me.id, ownerId];
-
-                        // Get the chat ID, ensuring it's a string
-                        const chatId =
-                          newChatResponse.id || newChatResponse.chatId || "";
-
-                        if (!chatId) {
-                          throw new Error("Missing chat ID in response");
-                        }
-
-                        navigation.navigate(
-                          "PrivateChat" as never,
-                          {
-                            chatId: chatId,
-                            participants: participants,
-                            chatType: "private",
-                          } as never
-                        );
-                      } else {
-                        throw getError;
-                      }
+                    } else {
+                      throw getError;
                     }
-                  } catch (error) {
-                    console.error("Failed to handle chat navigation:", error);
                   }
-                }}
-                variant="custom"
-                className="w-[32.822383880615234px] h-[32.822383880615234px] bg-[#8888882E] rounded-[7.77px] border-[0.86px] border-[#888888] flex items-center justify-center ml-2"
-              >
-                <MailIcon />
-              </Button>
-            </>
-          )}
-          <View className="flex flex-col ml-6">
-            <Text weight="medium" className="text-white text-[13.82px]">
-              {marker?.totalEngagementCount}
-            </Text>
-            <Text weight="regular" className="text-[#888888] text-[11.23px]">
-              Saved
-            </Text>
-          </View>
-          <Button
-            onPress={open}
-            variant="custom"
-            className="ml-6 w-[32.822383880615234px] h-[32.822383880615234px] bg-[#313034] rounded-[7.77px] flex items-center justify-center"
-          >
-            <ThreeDotIcon />
-          </Button>
-          <ModalWrapper
-            storeKey="pointBio"
-            isMini
-            className={`${ownerId === me?.id ? "-top-44" : "-top-40"} w-[80%]`}
-          >
-            <View
-              className="bg-[#313034] w-full py-5 rounded-[15px] flex flex-col items-center justify-center relative"
-              style={{ boxShadow: "0px 4px 4px 0px #00000040" }}
+                } catch (error) {
+                  console.error("Failed to handle chat navigation:", error);
+                }
+              }}
+              variant="custom"
+              className="w-[32.822383880615234px] h-[32.822383880615234px] bg-[#8888882E] rounded-[7.77px] border-[0.86px] border-[#888888] flex items-center justify-center ml-2"
             >
+              <MailIcon />
+            </Button>
+          </>
+        )}
+        <View className="flex flex-col ml-6">
+          <Text weight="medium" className="text-white text-[13.82px]">
+            {marker?.totalEngagementCount}
+          </Text>
+          <Text weight="regular" className="text-[#888888] text-[11.23px]">
+            Saved
+          </Text>
+        </View>
+        <Button
+          onPress={open}
+          variant="custom"
+          className="ml-6 w-[32.822383880615234px] h-[32.822383880615234px] bg-[#313034] rounded-[7.77px] flex items-center justify-center"
+        >
+          <ThreeDotIcon />
+        </Button>
+        <ModalWrapper
+          storeKey="pointBio"
+          isMini
+          className={`${ownerId === me?.id ? "-top-44" : "-top-40"} w-[80%]`}
+        >
+          <View
+            className="bg-[#313034] w-full py-5 rounded-[15px] flex flex-col items-center justify-center relative"
+            style={{ boxShadow: "0px 4px 4px 0px #00000040" }}
+          >
+            <Button
+              activeOpacity={0.9}
+              className="flex flex-row items-center justify-between w-full rounded-[15px] px-6"
+            >
+              <Text weight="regular" className="text-white text-[18px]">
+                Поделиться
+              </Text>
+              <RightArrowIcon />
+            </Button>
+            {ownerId !== me?.id && (
               <Button
                 activeOpacity={0.9}
-                className="flex flex-row items-center justify-between w-full rounded-[15px] px-6"
+                onPress={() => {
+                  close();
+                  openViolationModal();
+                }}
+                className="flex flex-row items-center justify-between w-full rounded-[15px] px-6 mt-6"
               >
                 <Text weight="regular" className="text-white text-[18px]">
-                  Поделиться
+                  Сообщить о нарушении
                 </Text>
                 <RightArrowIcon />
               </Button>
-              {ownerId !== me?.id && (
-                <Button
-                  activeOpacity={0.9}
-                  onPress={() => {
-                    close();
-                    openViolationModal();
-                  }}
-                  className="flex flex-row items-center justify-between w-full rounded-[15px] px-6 mt-6"
-                >
-                  <Text weight="regular" className="text-white text-[18px]">
-                    Сообщить о нарушении
-                  </Text>
-                  <RightArrowIcon />
-                </Button>
-              )}
-            </View>
-          </ModalWrapper>
-        </View>
-      )}
-      {shouldShowContent && (
-        <View className="mx-auto flex flex-row gap-x-4 items-center justify-center mt-6">
-          {buttons.map((button, index) => (
-            <View className="flex flex-row items-center" key={index}>
-              <Button
-                storeKey="pointBio"
-                onPress={() => handleOpenSection(button)}
-                variant="settings"
-                label={button}
-              >
-                <Text weight="regular" className="text-white text-[14px]">
-                  {button}
-                </Text>
-              </Button>
-            </View>
-          ))}
-          {ownerId === me?.id && (
-            <TouchableOpacity
-              onPress={() => setActive("post")}
-              className="bg-[#2A292C] w-[40px] h-[40px] rounded-full flex items-center justify-center"
+            )}
+          </View>
+        </ModalWrapper>
+      </View>
+      <View className="mx-auto flex flex-row gap-x-4 items-center justify-center mt-6">
+        {buttons.map((button, index) => (
+          <View className="flex flex-row items-center" key={index}>
+            <Button
+              storeKey="pointBio"
+              onPress={() => handleOpenSection(button)}
+              variant="settings"
+              label={button}
             >
-              <View className="bg-[#313034] w-[30px] h-[30px] rounded-full" />
-            </TouchableOpacity>
-          )}
-        </View>
-      )}
-      {shouldShowContent && (
-        <View className="w-[95%] mx-auto flex flex-col mt-6">
-          {active === "bio" && (
-            <View>
-              <Text className="text-[#888888] text-[11.23px]">About</Text>
-              <Text className="text-white mt-1 text-[13.82px] w-[80%]">
-                {marker?.description}
+              <Text weight="regular" className="text-white text-[14px]">
+                {button}
               </Text>
-            </View>
-          )}
-          {active === "Публикации" &&
-            (!publications || publications.length === 0 ? (
-              <View className="flex items-center justify-center w-full h-full">
-                <Text className="text-white text-[16px]">No publications</Text>
-              </View>
-            ) : isLoading ? (
-              <View className="flex items-center justify-center w-full h-full">
-                <Text className="text-white text-[16px]">Loading...</Text>
-              </View>
-            ) : (
-              <MasonryList
-                images={alternatingHeightsImages}
-                columns={2}
-                spacing={2}
-                backgroundColor="transparent"
-                imageContainerStyle={{ borderRadius: 23.03 }}
-                onPressImage={(item: any) => {
-                  const { id } = item;
-                  //@ts-ignore
-                  navigation.navigate("FullPost" as never, {
-                    id,
-                  });
-                }}
-              />
-            ))}
-          {active === "post" && (
-            <View className="flex items-center justify-center mt-8">
-              <Text weight="bold" className=" text-white text-[24px]">
-                Add text
-              </Text>
-              <Input
-                ref={bioInputRef}
-                returnKeyType="done"
-                value={caption ?? ""}
-                multiline
-                onChangeText={setCaption}
-                placeholder="Ваше сообщение..."
-                className="placeholder:text-[#5C5A5A] text-[#5C5A5A] text-[20px] px-6 mt-6 pt-6 border-[1px] h-[156px] border-[#999999] rounded-[15px] w-full"
-                onSubmitEditing={() => {
-                  Keyboard.dismiss();
-                }}
-              />
-              {image ? (
-                <Image
-                  source={
-                    image
-                      ? { uri: image }
-                      : require("@/src/images/point_image.png")
-                  }
-                  className="w-[100%] h-[300px] mt-7 rounded-[12px]"
-                />
-              ) : (
-                <View className="mt-7 flex flex-col items-center gap-y-5">
-                  <Text weight="bold" className="text-white text-[24px]">
-                    Add photo
-                  </Text>
-                  <Button
-                    onPress={openChoice}
-                    variant="custom"
-                    className="bg-[#1B1C1E] flex items-center justify-center border border-[#222328] rounded-[15px] w-[100px] h-[100px]"
-                    style={{ boxShadow: "0px 4px 4px 0px #00000040" }}
-                  >
-                    <CameraIcon />
-                  </Button>
-                </View>
-              )}
-              <Button
-                onPress={createPost}
-                variant="custom"
-                className="w-[134px] mt-[55px] py-3.5 rounded-[6px] bg-[#14A278] flex items-center justify-center"
-              >
-                <Text weight="regular" className="text-white text-[16px]">
-                  CREATE
-                </Text>
-              </Button>
-            </View>
-          )}
-        </View>
-      )}
-      {!shouldShowContent && (
-        <View className="w-[95%] h-full mx-auto flex items-center justify-center">
-          <Text className="text-white text-[16px] text-center">
-            Чтобы получить доступ, отправьте заявку Администратору поинта.
-          </Text>
-          <Button
-            variant="custom"
-            className="px-4 mt-[55px] py-3.5 rounded-[6px] bg-[#14A278] flex items-center justify-center"
+            </Button>
+          </View>
+        ))}
+        {ownerId === me?.id && (
+          <TouchableOpacity
+            onPress={() => setActive("post")}
+            className="bg-[#2A292C] w-[40px] h-[40px] rounded-full flex items-center justify-center"
           >
-            <Text weight="regular" className="text-white text-[16px]">
-              Отправить заявку
+            <View className="bg-[#313034] w-[30px] h-[30px] rounded-full" />
+          </TouchableOpacity>
+        )}
+      </View>
+      <View className="w-[95%] mx-auto flex flex-col mt-6">
+        {active === "bio" && (
+          <View>
+            <Text className="text-[#888888] text-[11.23px]">About</Text>
+            <Text className="text-white mt-1 text-[13.82px] w-[80%]">
+              {marker?.description}
             </Text>
-          </Button>
-        </View>
-      )}
+          </View>
+        )}
+        {active === "Публикации" &&
+          (!publications || publications.length === 0 ? (
+            <View className="flex items-center justify-center w-full h-full">
+              <Text className="text-white text-[16px]">No publications</Text>
+            </View>
+          ) : isLoading ? (
+            <View className="flex items-center justify-center w-full h-full">
+              <Text className="text-white text-[16px]">Loading...</Text>
+            </View>
+          ) : (
+            <MasonryList
+              images={alternatingHeightsImages}
+              columns={2}
+              spacing={2}
+              backgroundColor="transparent"
+              imageContainerStyle={{ borderRadius: 23.03 }}
+              onPressImage={(item: any) => {
+                const { id } = item;
+                //@ts-ignore
+                navigation.navigate("FullPost" as never, {
+                  id,
+                });
+              }}
+            />
+          ))}
+        {active === "post" && (
+          <View className="flex items-center justify-center mt-8">
+            <Text weight="bold" className=" text-white text-[24px]">
+              Add text
+            </Text>
+            <Input
+              ref={bioInputRef}
+              returnKeyType="done"
+              value={caption ?? ""}
+              multiline
+              onChangeText={setCaption}
+              placeholder="Ваше сообщение..."
+              className="placeholder:text-[#5C5A5A] text-[#5C5A5A] text-[20px] px-6 mt-6 pt-6 border-[1px] h-[156px] border-[#999999] rounded-[15px] w-full"
+              onSubmitEditing={() => {
+                Keyboard.dismiss();
+              }}
+            />
+            {image ? (
+              <Image
+                source={
+                  image
+                    ? { uri: image }
+                    : require("@/src/images/point_image.png")
+                }
+                className="w-[100%] h-[300px] mt-7 rounded-[12px]"
+              />
+            ) : (
+              <View className="mt-7 flex flex-col items-center gap-y-5">
+                <Text weight="bold" className="text-white text-[24px]">
+                  Add photo
+                </Text>
+                <Button
+                  onPress={openChoice}
+                  variant="custom"
+                  className="bg-[#1B1C1E] flex items-center justify-center border border-[#222328] rounded-[15px] w-[100px] h-[100px]"
+                  style={{ boxShadow: "0px 4px 4px 0px #00000040" }}
+                >
+                  <CameraIcon />
+                </Button>
+              </View>
+            )}
+            <Button
+              onPress={createPost}
+              variant="custom"
+              className="w-[134px] mt-[55px] py-3.5 rounded-[6px] bg-[#14A278] flex items-center justify-center"
+            >
+              <Text weight="regular" className="text-white text-[16px]">
+                CREATE
+              </Text>
+            </Button>
+          </View>
+        )}
+      </View>
+
       <ModalWrapper storeKey="pointSettings" isMini className="w-[90%]">
         <PointSettings markerId={markerId} />
       </ModalWrapper>

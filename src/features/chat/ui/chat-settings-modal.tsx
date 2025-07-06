@@ -33,46 +33,43 @@ export const ChatSettingsModal = () => {
 
   const { data: markerData } = useMarkerDataById(currentChatMarkerId || "");
 
-  const isPrivateMarker = markerData?.chats?.[0].isPrivate;
-
-  useEffect(() => {
-    console.log("isPrivateMarker", isPrivateMarker);
-  }, []);
-
   // State for title editing
   const [showTitleModal, setShowTitleModal] = useState(false);
   const [newTitle, setNewTitle] = useState("");
-  const [markerId, setMarkerId] = useState<string>("");
 
   // State for privacy toggle
-  const [isPrivate, setIsPrivate] = useState(!isPrivateMarker);
+  const [isContentRestricted, setIsContentRestricted] = useState(
+    markerData?.isContentRestricted
+  );
   const [isTogglingPrivacy, setIsTogglingPrivacy] = useState(false);
 
+  // Load privacy state from marker data or AsyncStorage
   useEffect(() => {
     const loadPrivacyState = async () => {
       try {
-        if (currentChatId) {
+        if (currentChatMarkerId) {
           const storedPrivacy = await AsyncStorage.getItem(
-            `chat_privacy_${currentChatId}`
+            `point_privacy_${currentChatMarkerId}`
           );
 
           if (storedPrivacy !== null) {
-            setIsPrivate(storedPrivacy === "true");
-          } else if (markerData?.chats?.isPrivate !== undefined) {
-            setIsPrivate(markerData.chats.isPrivate);
+            setIsContentRestricted(storedPrivacy === "true");
+          } else if (markerData?.isContentRestricted !== undefined) {
+            setIsContentRestricted(markerData.isContentRestricted);
           }
         }
       } catch (error) {
-        console.error("Error loading privacy state from AsyncStorage:", error);
+        console.error(
+          "Error loading point privacy state from AsyncStorage:",
+          error
+        );
         // Fallback to marker data
-        if (markerData?.chats?.isPrivate !== undefined) {
-          setIsPrivate(markerData.chats.isPrivate);
-        }
+        setIsContentRestricted(false);
       }
     };
 
     loadPrivacyState();
-  }, [markerData, currentChatId]);
+  }, [markerData, currentChatMarkerId]);
 
   // Use the delete chat hook
   const { mutate: deleteChat, isPending: isDeleting } = useDeleteChat();
@@ -88,9 +85,9 @@ export const ChatSettingsModal = () => {
     useUpdateChatTitle();
 
   // Use the update marker hook
-  const { mutate: updateMarker } = useUpdateMarker(markerId);
+  const { mutate: updateMarker } = useUpdateMarker(currentChatMarkerId || "");
 
-  // Fetch chat data to get markerId and privacy status when component mounts
+  // Fetch chat data to get privacy status when component mounts
   useEffect(() => {
     if (currentChatId) {
       // Try to get chat data from cache first
@@ -99,12 +96,9 @@ export const ChatSettingsModal = () => {
         currentChatId,
       ]) as any;
       if (chatData) {
-        if (chatData.markerId) {
-          setMarkerId(chatData.markerId);
-        }
         // Set privacy status if available
-        if (chatData.isPrivate !== undefined) {
-          setIsPrivate(chatData.isPrivate);
+        if (chatData.isContentRestricted !== undefined) {
+          setIsContentRestricted(chatData.isContentRestricted);
         }
       } else {
         // If not in cache, we could fetch it here if needed
@@ -122,56 +116,52 @@ export const ChatSettingsModal = () => {
   // Handle saving the new title
   // Handle privacy toggle
   const handleTogglePrivacy = async () => {
-    if (!currentChatId || isTogglingPrivacy) return;
+    if (!currentChatMarkerId || isTogglingPrivacy) return;
 
-    const newPrivacyStatus = !isPrivate;
+    const newPrivacyStatus = !isContentRestricted;
 
-    // ✅ Меняем UI сразу
-    setIsPrivate(newPrivacyStatus);
+    // Update UI immediately
+    setIsContentRestricted(newPrivacyStatus);
     setIsTogglingPrivacy(true);
 
     try {
       // Save to AsyncStorage first for immediate persistence
       await AsyncStorage.setItem(
-        `chat_privacy_${currentChatId}`,
+        `point_privacy_${currentChatMarkerId}`,
         String(newPrivacyStatus)
       );
 
-      // Then update on the server
-      await apiClient.post(`/chat/${currentChatId}/make-private`, {
-        isPrivate: newPrivacyStatus,
-      });
+      // Then update on the server using the content restriction endpoint with query parameter
+      await apiClient.patch(
+        `/markers/${currentChatMarkerId}/set-content-restriction?isContentRestricted=${newPrivacyStatus}`
+      );
 
-      // Invalidate chat metadata
+      // Invalidate marker data query to refresh data
       queryClient.invalidateQueries({
-        queryKey: ["chatMetadata", currentChatId],
+        queryKey: ["markerById", currentChatMarkerId],
       });
-
-      // Also invalidate marker data if we have a marker ID
-      if (currentChatMarkerId) {
-        queryClient.invalidateQueries({
-          queryKey: ["markerById", currentChatMarkerId],
-        });
-      }
 
       console.log(
-        `✅ Chat privacy updated to: ${newPrivacyStatus ? "private" : "public"}`
+        `✅ Is Content restricted: ${newPrivacyStatus ? "true" : "false"}`
       );
     } catch (error) {
-      // Откат UI если ошибка
-      setIsPrivate(!newPrivacyStatus);
+      // Revert UI state if there's an error
+      setIsContentRestricted(!newPrivacyStatus);
 
       // Also revert in AsyncStorage
       try {
         await AsyncStorage.setItem(
-          `chat_privacy_${currentChatId}`,
+          `point_privacy_${currentChatMarkerId}`,
           String(!newPrivacyStatus)
         );
       } catch (storageError) {
-        console.error("Error reverting privacy in AsyncStorage:", storageError);
+        console.error(
+          "Error reverting point privacy in AsyncStorage:",
+          storageError
+        );
       }
 
-      console.error("❌ Error updating chat privacy:", error);
+      console.error("❌ Error updating point privacy:", error);
       Alert.alert(
         "Ошибка",
         "Не удалось обновить настройки приватности. Пожалуйста, попробуйте позже."
@@ -197,8 +187,11 @@ export const ChatSettingsModal = () => {
           useChatStore.getState().setName(newTitle.trim());
 
           // Also update the associated point name if we have a markerId
-          if (markerId) {
-            console.log("Also updating point name for marker ID:", markerId);
+          if (currentChatMarkerId) {
+            console.log(
+              "Also updating point name for marker ID:",
+              currentChatMarkerId
+            );
 
             const data = new FormData();
             data.append("name", newTitle.trim());
@@ -208,7 +201,7 @@ export const ChatSettingsModal = () => {
                 console.log("✅ Point name also updated successfully");
                 // Invalidate marker queries to refresh data
                 queryClient.invalidateQueries({
-                  queryKey: ["markerById", markerId],
+                  queryKey: ["markerById", currentChatMarkerId],
                 });
               },
               onError: (error) => {
@@ -232,7 +225,7 @@ export const ChatSettingsModal = () => {
       title: "Приватность",
       description: "Сделать чат закрытым",
       isRadioButton: true,
-      isClicked: isPrivate,
+      isClicked: isContentRestricted,
       isLoading: isTogglingPrivacy,
       onPress: handleTogglePrivacy,
     },
@@ -240,7 +233,8 @@ export const ChatSettingsModal = () => {
       title: "Заявки",
       isRadioButton: false,
       isApplication: true,
-      applications: applications?.length || 0,
+      applications:
+        applications?.length === 0 ? null : <Text>{applications?.length}</Text>,
       onPress: () => {
         close();
         open();
@@ -360,8 +354,8 @@ export const ChatSettingsModal = () => {
                       deleteChat(currentChatId);
 
                       // Also delete the associated marker if available
-                      if (markerId) {
-                        deleteMarker(markerId);
+                      if (currentChatMarkerId) {
+                        deleteMarker(currentChatMarkerId);
                         // Navigate to Map screen after deletion
                         navigation.navigate("Map" as never);
                       }

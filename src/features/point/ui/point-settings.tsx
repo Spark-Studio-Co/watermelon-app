@@ -40,8 +40,8 @@ export const PointSettings = ({ markerId }: { markerId: string }) => {
 
           if (storedPrivacy !== null) {
             setIsContentRestricted(storedPrivacy === "true");
-          } else if (markerData?.isPrivate !== undefined) {
-            setIsContentRestricted(markerData.isPrivate);
+          } else if (markerData?.isContentRestricted !== undefined) {
+            setIsContentRestricted(markerData.isContentRestricted);
           }
         }
       } catch (error) {
@@ -157,7 +157,8 @@ export const PointSettings = ({ markerId }: { markerId: string }) => {
     },
     {
       title: "Заявки",
-      applications: applications?.length || 0,
+      applications:
+        applications?.length === 0 ? null : <Text>{applications?.length}</Text>,
     },
     {
       title: "Название",

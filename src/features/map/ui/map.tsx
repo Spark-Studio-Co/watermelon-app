@@ -377,8 +377,12 @@ export const Map = () => {
                     // Check if the marker is owned by the current user
                     const isOwner = marker.ownerId === me?.id;
 
-                    // If it's a private marker and not owned by the user, check access
-                    if (marker.isPrivate && !isOwner) {
+                    // If content is not restricted, always navigate to marker bio
+                    if (!marker.isContentRestricted) {
+                      // Skip access check and proceed to navigation
+                    } 
+                    // If content is restricted and user is not the owner, check access
+                    else if (marker.isContentRestricted && !isOwner) {
                       setIsCheckingAccess(true);
                       try {
                         // Check if user has access to this marker
@@ -387,15 +391,36 @@ export const Map = () => {
 
                         console.log("hasAccess", hasAccess);
 
-                        // If no access, open application modal
+                        // If no access, open application modal and stop navigation
+                        if (!hasAccess) {
+                          openCreateApplication();
+                          setIsCheckingAccess(false);
+                          return;
+                        }
+                        // If has access, continue to navigation below
+                      } catch (error) {
+                        console.error("Error checking marker access:", error);
+                        // If error occurs, default to opening application
+                        openCreateApplication();
+                        setIsCheckingAccess(false);
+                        return;
+                      }
+                      setIsCheckingAccess(false);
+                    }
+                    // For private markers (that aren't content restricted), maintain existing behavior
+                    else if (marker.isPrivate && !isOwner) {
+                      setIsCheckingAccess(true);
+                      try {
+                        const result = await checkAccess();
+                        const hasAccess = result.data?.hasContentAccess;
+                        
                         if (!hasAccess) {
                           openCreateApplication();
                           setIsCheckingAccess(false);
                           return;
                         }
                       } catch (error) {
-                        console.error("Error checking marker access:", error);
-                        // If error occurs, default to opening application
+                        console.error("Error checking private marker access:", error);
                         openCreateApplication();
                         setIsCheckingAccess(false);
                         return;

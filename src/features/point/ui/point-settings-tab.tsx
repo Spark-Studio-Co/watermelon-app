@@ -3,6 +3,7 @@ import Text from "@/src/shared/ui/text/text";
 import { View, ActivityIndicator } from "react-native";
 
 import RightArrowIcon from "@/src/shared/icons/right-arrow-icon";
+import { ReactNode } from "react";
 
 interface IPointSettingsTab {
   isPrivate?: boolean;
@@ -10,7 +11,7 @@ interface IPointSettingsTab {
   description?: string;
   onPress?: () => void;
   isClicked?: boolean;
-  applications?: number;
+  applications?: number | ReactNode;
   isLoading?: boolean;
 }
 

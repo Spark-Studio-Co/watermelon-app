@@ -1,5 +1,11 @@
 import { MainLayout } from "../../layouts/main-layout";
-import { View, Image, Keyboard, Dimensions } from "react-native";
+import {
+  View,
+  Image,
+  Keyboard,
+  Dimensions,
+  ActivityIndicator,
+} from "react-native";
 import Text from "@/src/shared/ui/text/text";
 import { Input } from "@/src/shared/ui/input/input";
 import { useRef, useState, useEffect, useMemo } from "react";
@@ -18,6 +24,8 @@ import { useMarkerStore } from "@/src/entities/markers/model/use-marker-store";
 import { useCreateMarker } from "@/src/entities/markers/api/use-create-marker";
 import { useQueryClient } from "@tanstack/react-query";
 import { customMapStyle } from "@/src/features/map/config/map-styles";
+import { useChatStore } from "@/src/features/chat/model/chat-store";
+import { useMarkerDataById } from "@/src/entities/markers/api/use-marker-data-by-id";
 
 import CameraIcon from "@/src/shared/icons/camera-icon";
 
@@ -40,7 +48,6 @@ export const PrivatePointCreationScreen = () => {
   const navigation = useNavigation();
   const route = useRoute<PrivatePointCreationScreenRouteProp>();
   const bioInputRef = useRef(null);
-  const { width } = Dimensions.get("window");
 
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [pointType, setPointType] = useState<string>("standard");
@@ -55,8 +62,48 @@ export const PrivatePointCreationScreen = () => {
   const { open: openChoice, close: closeChoice } =
     useVisibleStore("cameraChoice");
   const [permission, requestPermission] = useCameraPermissions();
-
+  const [isLoadingChatCreation, setIsLoadingChatCreation] = useState(false);
+  const [createdMarkerId, setCreatedMarkerId] = useState<string | null>(null);
   const { mutate: createPoint } = useCreateMarker();
+
+  // Use the marker data query to get the chat ID
+  const { data: markerData, isLoading: isLoadingMarkerData } =
+    useMarkerDataById(createdMarkerId);
+
+  // Handle navigation when marker data is available
+  useEffect(() => {
+    if (createdMarkerId && markerData && !isLoadingMarkerData) {
+      // Extract the chat ID from the marker data
+      const chatId = markerData?.chats?.[0]?.id;
+      const participants = [markerData?.ownerId];
+
+      if (chatId) {
+        console.log(
+          `[PointCreation] Found chat ID in marker data: ${chatId}, markerId: ${createdMarkerId}`
+        );
+
+        // Navigate to the private chat screen
+        setIsLoadingChatCreation(false);
+        navigation.navigate("PrivateChat" as never, {
+          chatId,
+          participants,
+          chatType: "group",
+          markerId: createdMarkerId,
+          isGlobal: true,
+        });
+
+        // Reset the created marker ID
+        setCreatedMarkerId(null);
+      } else {
+        console.error(
+          "[PointCreation] Error: No chat ID in marker data!",
+          markerData
+        );
+        setIsLoadingChatCreation(false);
+      }
+    }
+  }, [markerData, isLoadingMarkerData, createdMarkerId, navigation]);
+
   const {
     setName,
     setDescription,
@@ -151,11 +198,33 @@ export const PrivatePointCreationScreen = () => {
         setImage(null);
 
         setTimeout(() => {
-          //@ts-ignore
-          navigation.navigate("PointBio" as never, {
-            id: data?.id,
-            ownerId: data?.ownerId,
-          });
+          if (pointType === "chat") {
+            setIsLoadingChatCreation(true);
+            const markerId = data?.id;
+            const participants = [data?.ownerId];
+            const chatStore = useChatStore.getState();
+            const chatName = name || `Point #${markerId}`;
+
+            // Set basic chat info immediately
+            chatStore.setName(chatName);
+            chatStore.setAvatar(photoToSend ? { uri: photoToSend } : null);
+            chatStore.setCurrentChatMarkerId(markerId);
+
+            console.log(
+              `[PointCreation] Setting markerId ${markerId} to fetch latest data with chat ID`
+            );
+
+            // Set the marker ID to trigger the useMarkerDataById hook
+            setCreatedMarkerId(markerId);
+
+            // The rest of the navigation logic will be handled in the useEffect that watches markerData
+          } else {
+            setIsLoadingChatCreation(false);
+            navigation.navigate("PointBio" as never, {
+              id: data?.id,
+              ownerId: data?.ownerId,
+            });
+          }
         }, 500);
       },
       onError: (error) => {
@@ -169,9 +238,21 @@ export const PrivatePointCreationScreen = () => {
     return `Point #${randomId}`;
   });
 
-  const markerStyle = useMemo(() => ({
-    borderColor: pointType === "standard" ? "#FFFFFF" : "#93E0FF"
-  }), [pointType]);
+  const markerStyle = useMemo(
+    () => ({
+      borderColor: pointType === "standard" ? "#FFFFFF" : "#93E0FF",
+    }),
+    [pointType]
+  );
+
+  {
+    isLoadingChatCreation && (
+      <View className="flex items-center justify-center mt-6">
+        <Text className="text-white text-[18px] mb-2">Создаём чат...</Text>
+        <ActivityIndicator size="large" color="#E9D66B" />
+      </View>
+    );
+  }
 
   return (
     <MainLayout>
@@ -196,7 +277,7 @@ export const PrivatePointCreationScreen = () => {
             showsTraffic={false}
             showsIndoors={false}
           >
-            <Marker 
+            <Marker
               key={`marker-${latitude}-${longitude}`}
               coordinate={{ latitude, longitude }}
               tracksViewChanges={true}

@@ -4,6 +4,7 @@ import Text from "@/src/shared/ui/text/text";
 
 import RightArrowIcon from "@/src/shared/icons/right-arrow-icon";
 import { Button } from "@/src/shared/ui/button/button";
+import { ReactNode } from "react";
 
 export const ChatSettingsTab = ({
   title,
@@ -20,7 +21,7 @@ export const ChatSettingsTab = ({
   isRadioButton?: boolean;
   isClicked?: boolean;
   isApplication?: boolean;
-  applications?: number;
+  applications?: number | ReactNode;
   isLoading?: boolean;
   onPress: () => void;
 }) => {
@@ -50,9 +51,11 @@ export const ChatSettingsTab = ({
           >
             {isLoading ? (
               <ActivityIndicator size="small" color="#FFFFFF" />
-            ) : isClicked ? (
-              <View className="bg-white w-[14px] h-[14px] rounded-full"></View>
-            ) : null}
+            ) : (
+              isClicked && (
+                <View className="bg-white w-[14px] h-[14px] rounded-full"></View>
+              )
+            )}
           </View>
         ) : (
           <RightArrowIcon />

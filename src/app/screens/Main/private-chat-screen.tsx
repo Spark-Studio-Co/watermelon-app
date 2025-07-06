@@ -45,6 +45,13 @@ export const PrivateChatScreen = () => {
   );
 
   useEffect(() => {
+    console.log("[PrivateChatScreen] chatId:", chatId);
+    console.log("[PrivateChatScreen] participants:", participants);
+    console.log("[PrivateChatScreen] chatType:", chatType);
+    console.log("[PrivateChatScreen] markerId:", markerId);
+  }, []);
+
+  useEffect(() => {
     if (!userId || !chatId || !participants.length) return;
 
     let isMounted = true;
