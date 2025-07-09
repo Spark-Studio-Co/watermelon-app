@@ -7,5 +7,14 @@ export interface IUserMeRDO {
     level: { expNeeded: number, id: number },
     balance: number,
     isVerified: boolean,
-    isPremium: boolean
+    isPremium: boolean,
+    registrationDate?: string,
+    // Privacy settings
+    isMapAccess?: boolean,
+    isAuction?: boolean,
+    isActivities?: boolean,
+    // Notification settings
+    isAllNotifications?: boolean,
+    isNewMessages?: boolean,
+    isFriendsRequests?: boolean
 }
