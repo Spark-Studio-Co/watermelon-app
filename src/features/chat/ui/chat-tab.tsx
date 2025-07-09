@@ -94,6 +94,7 @@ export const ChatTab = ({ isGlobal }: IChatTabProps) => {
         </View>
       </View>
       <Button
+        className="w-[20px] h-[20px]"
         onPress={() => {
           if (isOwner) {
             open();
