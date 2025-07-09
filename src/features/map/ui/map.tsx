@@ -380,7 +380,7 @@ export const Map = () => {
                     // If content is not restricted, always navigate to marker bio
                     if (!marker.isContentRestricted) {
                       // Skip access check and proceed to navigation
-                    } 
+                    }
                     // If content is restricted and user is not the owner, check access
                     else if (marker.isContentRestricted && !isOwner) {
                       setIsCheckingAccess(true);
@@ -413,14 +413,17 @@ export const Map = () => {
                       try {
                         const result = await checkAccess();
                         const hasAccess = result.data?.hasContentAccess;
-                        
+
                         if (!hasAccess) {
                           openCreateApplication();
                           setIsCheckingAccess(false);
                           return;
                         }
                       } catch (error) {
-                        console.error("Error checking private marker access:", error);
+                        console.error(
+                          "Error checking private marker access:",
+                          error
+                        );
                         openCreateApplication();
                         setIsCheckingAccess(false);
                         return;
@@ -469,7 +472,7 @@ export const Map = () => {
                   }}
                 >
                   <View
-                    className="bg-[#272836] border-[2px] p-3 rounded-lg shadow-lg min-w-[220px] min-h-24"
+                    className="bg-[#272836] border-[2px] p-3 rounded-lg shadow-lg min-w-[230px] min-h-24"
                     style={{ borderColor: getMarkerBorderColor(marker.type) }}
                   >
                     <View className="absolute bottom-[5px] left-1/2 -translate-x-1/2"></View>
@@ -478,9 +481,13 @@ export const Map = () => {
                         <View className="flex-row items-center mb-1">
                           <Text
                             weight="medium"
-                            className="text-white text-[20px] whitespace-pre-wrap"
+                            className="text-white text-[20px] truncate"
                           >
-                            {marker.name ?? "Point"} #{marker?.map_id}
+                            {marker.name
+                              ? marker.name.length > 25
+                                ? `${marker.name.slice(0, 25)}…`
+                                : marker.name
+                              : `Point #${marker?.map_id}`}
                           </Text>
                         </View>
                         <Text

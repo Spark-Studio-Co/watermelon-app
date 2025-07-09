@@ -66,7 +66,7 @@ export const ChatTab = ({ isGlobal }: IChatTabProps) => {
           </Button>
         )}
         <Image
-          source={isGlobal ? chat_image : avatar === null ? user_image : avatar}
+          source={avatar === null ? user_image : avatar}
           className="w-[54px] h-full rounded-full"
         />
         <View className="flex flex-col justify-between ml-7">
