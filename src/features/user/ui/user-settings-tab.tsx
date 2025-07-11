@@ -89,7 +89,7 @@ export const UserSettingsTab = ({ username, nickname, lvl }: IUserTab) => {
             source={{
               uri: me?.avatar
                 ? me.avatar
-                : require("../../../images/user_image.png"),
+                : require("../../../images/fallback.png"),
             }}
           />
         ) : (

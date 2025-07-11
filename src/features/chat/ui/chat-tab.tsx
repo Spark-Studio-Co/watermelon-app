@@ -12,8 +12,7 @@ import { useChatOwnerData } from "../api/use-chat-owner-data";
 import { useChatTitle } from "../api/use-chat-title";
 import { useAuthStore } from "@/src/entities/registration/api/use-auth-store";
 
-import user_image from "../../../images/user_image.png";
-import chat_image from "../../../images/chat.png";
+import fallback from "@/src/images/fallback.png";
 
 import { ModalWrapper } from "@/src/shared/ui/modal-wrapper/modal-wrapper";
 
@@ -66,10 +65,12 @@ export const ChatTab = ({ isGlobal }: IChatTabProps) => {
           </Button>
         )}
         <Image
-          source={avatar === null ? user_image : avatar}
-          className="w-[54px] h-full rounded-full"
+          source={avatar === null ? fallback : avatar}
+          className={`w-[54px] h-full rounded-full ${
+            avatar === null && "-ml-3 mr-2"
+          }`}
         />
-        <View className="flex flex-col justify-between ml-7">
+        <View className="flex flex-col justify-between ml-2">
           <Text weight="regular" className="text-white text-[17.4px]">
             {isGlobal && chatTitleData?.title
               ? chatTitleData.title
@@ -110,7 +111,7 @@ export const ChatTab = ({ isGlobal }: IChatTabProps) => {
         isMini
         className="w-[90%] absolute top-48"
       >
-        <ChatSettingsModal />
+        <ChatSettingsModal isGlobal={isGlobal || false} />
       </ModalWrapper>
       <ModalWrapper
         storeKey="userChatSettings"

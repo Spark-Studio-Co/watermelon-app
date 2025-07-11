@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { socket } from "../api/socket";
-import user_image from "@/src/images/user_image.png";
+import fallback from "@/src/images/fallback.png";
 import { getChatMessages, getChatMetadata } from "../api/chat-api";
 import uuid from "react-native-uuid";
 
@@ -154,7 +154,7 @@ export const useChatStore = create<IChatStore>((set, get) => ({
   currentChatId: null,
   currentUserId: null,
   currentChatMarkerId: null,
-  avatar: user_image,
+  avatar: fallback,
   status: "Offline",
   name: "Jack Jallenhell",
   members: 0,

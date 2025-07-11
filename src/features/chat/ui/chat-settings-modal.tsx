@@ -17,7 +17,7 @@ import { useMarkerApplications } from "@/src/entities/markers/api/use-marker-app
 import { useMarkerDataById } from "@/src/entities/markers/api/use-marker-data-by-id";
 import { apiClient } from "@/src/app/config/apiClient";
 
-export const ChatSettingsModal = () => {
+export const ChatSettingsModal = ({ isGlobal }: { isGlobal: boolean }) => {
   const { close } = useVisibleStore("globalChatSettings");
   const { open } = useVisibleStore("chatApplications");
   const queryClient = useQueryClient();
@@ -250,62 +250,61 @@ export const ChatSettingsModal = () => {
 
   return (
     <>
-      {/* Title Edit Modal */}
-      <Modal
-        visible={showTitleModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowTitleModal(false)}
-      >
-        <View className="flex-1 justify-center items-center bg-black/50">
-          <View className="bg-[#313034] w-[90%] p-5 rounded-[15px]">
-            <Text
-              weight="regular"
-              className="text-white text-[20px] mb-4 text-center"
-            >
-              Редактировать название
-            </Text>
-
-            <TextInput
-              className="bg-[#3A393C] text-white p-3 rounded-md w-full mb-4"
-              placeholder="Введите новое название..."
-              placeholderTextColor="#8E8E93"
-              value={newTitle}
-              onChangeText={setNewTitle}
-              maxLength={50}
-            />
-
-            <View className="flex flex-row justify-between">
-              <Button
-                className="py-2 px-4 rounded-md bg-[#3A393C] flex-1 mr-2"
-                onPress={() => setShowTitleModal(false)}
+      {isGlobal && (
+        <Modal
+          visible={showTitleModal}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowTitleModal(false)}
+        >
+          <View className="flex-1 justify-center items-center bg-black/50">
+            <View className="bg-[#313034] w-[90%] p-5 rounded-[15px]">
+              <Text
+                weight="regular"
+                className="text-white text-[20px] mb-4 text-center"
               >
-                <Text
-                  weight="regular"
-                  className="text-white text-[14px] text-center"
-                >
-                  Отмена
-                </Text>
-              </Button>
+                Редактировать название
+              </Text>
 
-              <Button
-                className="py-2 px-4 rounded-md bg-[#007AFF] flex-1 ml-2"
-                onPress={handleSaveTitle}
-                disabled={isUpdatingTitle || !newTitle.trim()}
-              >
-                <Text
-                  weight="regular"
-                  className="text-white text-[14px] text-center"
+              <TextInput
+                className="bg-[#3A393C] text-white p-3 rounded-md w-full mb-4"
+                placeholder="Введите новое название..."
+                placeholderTextColor="#8E8E93"
+                value={newTitle}
+                onChangeText={setNewTitle}
+                maxLength={50}
+              />
+
+              <View className="flex flex-row justify-between">
+                <Button
+                  className="py-2 px-4 rounded-md bg-[#3A393C] flex-1 mr-2"
+                  onPress={() => setShowTitleModal(false)}
                 >
-                  {isUpdatingTitle ? "Сохранение..." : "Сохранить"}
-                </Text>
-              </Button>
+                  <Text
+                    weight="regular"
+                    className="text-white text-[14px] text-center"
+                  >
+                    Отмена
+                  </Text>
+                </Button>
+
+                <Button
+                  className="py-2 px-4 rounded-md bg-[#007AFF] flex-1 ml-2"
+                  onPress={handleSaveTitle}
+                  disabled={isUpdatingTitle || !newTitle.trim()}
+                >
+                  <Text
+                    weight="regular"
+                    className="text-white text-[14px] text-center"
+                  >
+                    {isUpdatingTitle ? "Сохранение..." : "Сохранить"}
+                  </Text>
+                </Button>
+              </View>
             </View>
           </View>
-        </View>
-      </Modal>
-
-      {/* Main Settings Modal */}
+        </Modal>
+      )}
       <View
         className="bg-[#313034] w-full py-5 rounded-[15px] flex flex-col items-center justify-center relative"
         style={{ boxShadow: "0px 4px 4px 0px #00000040" }}
@@ -316,21 +315,23 @@ export const ChatSettingsModal = () => {
         <Button className="absolute right-3 top-3" onPress={close}>
           <CrossIcon />
         </Button>
-        <View className="flex flex-col items-center w-[90%] mt-6 gap-y-4">
-          {settings.map((setting, index) => (
-            <ChatSettingsTab
-              key={index}
-              title={setting.title}
-              description={setting.description}
-              isRadioButton={setting.isRadioButton}
-              isClicked={setting.isClicked}
-              isLoading={setting.isLoading}
-              onPress={setting.onPress}
-              isApplication={setting.isApplication}
-              applications={setting.applications}
-            />
-          ))}
-        </View>
+        {isGlobal && (
+          <View className="flex flex-col items-center w-[90%] mt-6 gap-y-4">
+            {settings.map((setting, index) => (
+              <ChatSettingsTab
+                key={index}
+                title={setting.title}
+                description={setting.description}
+                isRadioButton={setting.isRadioButton}
+                isClicked={setting.isClicked}
+                isLoading={setting.isLoading}
+                onPress={setting.onPress}
+                isApplication={setting.isApplication}
+                applications={setting.applications}
+              />
+            ))}
+          </View>
+        )}
         <Button
           className="w-[90%] mt-6 flex items-center justify-center"
           onPress={() => {

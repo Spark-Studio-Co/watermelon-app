@@ -12,7 +12,7 @@ import UserMessageIcon from "@/src/shared/icons/user-message-icon";
 import CheckMarkIcon from "@/src/shared/icons/check-mark-icon";
 import CircleMinus from "@/src/shared/icons/circle-minus";
 import CirclePlus from "@/src/shared/icons/circle-plus";
-import user_image from "@/src/images/user_image.png";
+import fallback from "@/src/images/fallback.png";
 
 interface IFriendTabProps {
   avatar: string | null;
@@ -80,7 +80,7 @@ export const FriendTab = ({
               source={{ uri: fullAvatar }}
             />
           ) : (
-            <Image className="w-full h-full rounded-full" source={user_image} />
+            <Image className="w-full h-full rounded-full" source={fallback} />
           )}
         </View>
         <View className="flex flex-col">

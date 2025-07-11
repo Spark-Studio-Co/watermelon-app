@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { View, Image } from "react-native";
 import Text from "@/src/shared/ui/text/text";
 import { Button } from "@/src/shared/ui/button/button";
@@ -58,7 +58,7 @@ export const PointTab = ({
               source={
                 avatar
                   ? { uri: avatar }
-                  : require("../../../../images/user_image.png")
+                  : require("../../../../images/fallback.png")
               }
             />
           </View>

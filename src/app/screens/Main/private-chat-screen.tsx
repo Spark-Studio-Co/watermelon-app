@@ -7,7 +7,7 @@ import { useGetMe } from "@/src/entities/users/api/use-get-me";
 import { useRoute } from "@react-navigation/native";
 import { useShallow } from "zustand/react/shallow";
 
-import user_image from "../../../images/user_image.png";
+import fallback from "../../../images/fallback.png";
 
 import { ChatInputType } from "../../layouts/main-layout";
 
@@ -154,7 +154,7 @@ export const PrivateChatScreen = () => {
         messages.map((message, index) => (
           <View className="flex flex-col mb-10" key={index}>
             <ChatMessage
-              avatar={message.avatar || (!message.isMy ? avatar : user_image)}
+              avatar={message.avatar || (!message.isMy ? avatar : fallback)}
               {...message}
             />
           </View>
