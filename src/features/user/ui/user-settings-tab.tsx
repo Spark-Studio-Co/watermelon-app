@@ -107,7 +107,7 @@ export const UserSettingsTab = ({ username, nickname, lvl }: IUserTab) => {
           <View className="w-[127px] h-[5px] bg-[#4D4747] rounded-full overflow-hidden">
             <View
               className="h-full bg-white"
-              style={{ width: `${Math.min(4, 1) * 40}%` }}
+              style={{ width: `${Math.min(4, 1) * (me?.expPercent || 0)}%` }}
             />
           </View>
           <Text className="text-white text-[14px]">

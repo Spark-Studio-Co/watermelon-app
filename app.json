@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "watermelon",
-    "slug": "watermelon",
+    "name": "pointapp",
+    "slug": "pointapp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -9,25 +9,26 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "googleServicesFile": "./ios/GoogleService-Info.plist",
+      "bundleIdentifier": "com.pointapp.pointapp"
     },
     "android": {
-      "package": "com.watermelon.watermelon",
+      "package": "com.pointapp.pointapp",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
-    },
-    "web": {
-      "bundler": "metro",
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "plugins": [
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow watermelon to access your camera"
+          "cameraPermission": "Allow pointapp to access your camera"
         }
       ],
       "expo-router",

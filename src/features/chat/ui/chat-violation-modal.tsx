@@ -7,14 +7,32 @@ import { useVisibleStore } from "@/src/shared/model/use-visible-store";
 import { useChatStore } from "../model/chat-store";
 import { useReportViolation } from "../api/use-report-violation";
 
-export const ChatViolationModal = () => {
+type EntityType = 'chat' | 'point';
+
+type ChatViolationModalProps = {
+  /**
+   * The type of entity being reported (chat or point)
+   * @default 'chat'
+   */
+  entityType?: EntityType;
+  /**
+   * The ID of the entity being reported
+   * If not provided, will use currentChatId from chat store (for backward compatibility)
+   */
+  entityId?: string;
+};
+
+export const ChatViolationModal = ({ entityType = 'chat', entityId }: ChatViolationModalProps = {}) => {
   const { close } = useVisibleStore("chatViolations");
   const [selectedReason, setSelectedReason] = useState<string | null>(null);
   const [details, setDetails] = useState<string>("");
   const [showDetailsInput, setShowDetailsInput] = useState(false);
   
-  // Get current chat ID
+  // Get current chat ID (as fallback if entityId is not provided)
   const currentChatId = useChatStore((state) => state.currentChatId);
+  
+  // Determine the actual entity ID to use
+  const actualEntityId = entityId || (entityType === 'chat' ? currentChatId : undefined);
   
   // Use the report violation hook
   const { mutate: reportViolation, isPending: isReporting } = useReportViolation();
@@ -49,12 +67,12 @@ export const ChatViolationModal = () => {
   
   // Handle report submission
   const handleSubmitReport = () => {
-    if (!selectedReason || !currentChatId) return;
+    if (!selectedReason || !actualEntityId) return;
     
     reportViolation(
       {
-        type: 'chat',
-        entityId: currentChatId,
+        type: entityType,
+        entityId: actualEntityId,
         reason: selectedReason,
         details: details.trim() || undefined
       },
@@ -83,7 +101,7 @@ export const ChatViolationModal = () => {
       style={{ boxShadow: "0px 4px 4px 0px #00000040" }}
     >
       <Text weight="regular" className="text-white text-[20px]">
-        {showDetailsInput ? "Детали жалобы" : "Сообщить о нарушении"}
+        {showDetailsInput ? "Детали жалобы" : `Сообщить о нарушении ${entityType === 'point' ? 'точки' : 'чата'}`}
       </Text>
       <Button className="absolute right-3 top-3" onPress={close}>
         <CrossIcon />

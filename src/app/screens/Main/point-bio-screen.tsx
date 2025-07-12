@@ -586,7 +586,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
         onPhotoTaken={(uri) => setPhotoUri(uri)}
       />
       <ModalWrapper storeKey="chatViolations" isMini className="w-[90%]">
-        <ChatViolationModal />
+        <ChatViolationModal entityType="point" entityId={markerId} />
       </ModalWrapper>
     </MainLayout>
   );
