@@ -64,7 +64,7 @@ export const SettingsScreen = () => {
       <Text weight="medium" className="text-white text-[22px] ml-4 mt-4">
         Settings
       </Text>
-      <View className="flex flex-col mx-auto">
+      <View className="px-4">
         <UserSettingsTab
           username={me?.name ? me?.name : "User Name"}
           nickname={me?.username ? me?.username : "user_name"}
@@ -74,7 +74,7 @@ export const SettingsScreen = () => {
           }
         />
       </View>
-      <View className="max-w-[331px] mx-auto">
+      <View className="px-4 ">
         <View
           className={`px-4 ${
             Platform.OS === "ios" ? "mt-10" : "mt-6"

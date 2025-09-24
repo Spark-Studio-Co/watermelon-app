@@ -81,7 +81,7 @@ export const UserSettingsTab = ({ username, nickname, lvl }: IUserTab) => {
   };
 
   return (
-    <View className="flex flex-row items-center justify-center gap-x-10 mt-8">
+    <View className="flex flex-row items-center justify-between px-8 mt-8">
       <Button onPress={openChoice} style={{ height: 96, width: 96 }}>
         {me?.avatar ? (
           <Image

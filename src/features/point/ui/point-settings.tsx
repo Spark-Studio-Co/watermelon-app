@@ -1,4 +1,4 @@
-import { View, Alert } from "react-native";
+import { View, Alert, Modal } from "react-native";
 import Text from "@/src/shared/ui/text/text";
 import { Button } from "@/src/shared/ui/button/button";
 import { PointSettingsTab } from "./point-settings-tab";
@@ -57,11 +57,19 @@ export const PointSettings = ({ markerId }: { markerId: string }) => {
     loadPrivacyState();
   }, [markerData, markerId]);
 
-  // Handle privacy toggle
-  const handleTogglePrivacy = async () => {
+  // Handle privacy toggle - just open confirmation popup
+  const handleTogglePrivacy = () => {
+    openPrivacyConfirm();
+  };
+
+  // Handle privacy confirmation
+  const handleConfirmPrivacy = async () => {
     if (!markerId || isTogglingPrivacy) return;
 
     const newPrivacyStatus = !isContentRestricted;
+
+    // Close confirmation popup first
+    closePrivacyConfirm();
 
     // Update UI immediately
     setIsContentRestricted(newPrivacyStatus);
@@ -119,6 +127,8 @@ export const PointSettings = ({ markerId }: { markerId: string }) => {
   const { open: openPointBioSettings } = useVisibleStore("pointBioSettings");
   const { open: openPointApplicationsSettings } =
     useVisibleStore("pointApplications");
+  const { open: openPrivacyConfirm, close: closePrivacyConfirm } =
+    useVisibleStore("privacyConfirm");
 
   const handleOpenSettings = (title: string) => {
     close();
@@ -231,6 +241,58 @@ export const PointSettings = ({ markerId }: { markerId: string }) => {
           Удалить Point
         </Text>
       </Button>
+
+      {/* Privacy Confirmation Modal */}
+      <Modal
+        visible={useVisibleStore("privacyConfirm").isVisible}
+        animationType="fade"
+        transparent={true}
+      >
+        <View
+          className="flex-1 justify-center items-center"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
+          <View className="bg-[#313034] w-[90%] mx-auto rounded-[15px] p-6">
+            <Text
+              weight="regular"
+              className="text-white text-[18px] text-center mb-4"
+            >
+              {isContentRestricted
+                ? "Если Поинт будет закрытым"
+                : "Если Поинт будет открытым"}
+            </Text>
+            <Text
+              weight="regular"
+              className="text-[#888888] text-[14px] text-center mb-8"
+            >
+              {isContentRestricted
+                ? "Публикации будут открытыми для всех"
+                : "Публикации в нем будут открытыми для всех"}
+            </Text>
+            <View className="flex flex-row justify-between gap-x-4">
+              <Button
+                variant="custom"
+                onPress={closePrivacyConfirm}
+                className="flex-1 py-3 bg-[#2A292C] rounded-[8px] flex items-center justify-center"
+              >
+                <Text weight="regular" className="text-white text-[16px]">
+                  Отменить
+                </Text>
+              </Button>
+              <Button
+                variant="custom"
+                onPress={handleConfirmPrivacy}
+                className="flex-1 py-3 bg-[#14A278] rounded-[8px] flex items-center justify-center"
+                disabled={isTogglingPrivacy}
+              >
+                <Text weight="regular" className="text-white text-[16px]">
+                  {isTogglingPrivacy ? "..." : "Принять"}
+                </Text>
+              </Button>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
