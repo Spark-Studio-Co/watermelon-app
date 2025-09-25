@@ -258,8 +258,8 @@ export const PointSettings = ({ markerId }: { markerId: string }) => {
               className="text-white text-[18px] text-center mb-4"
             >
               {isContentRestricted
-                ? "Если Поинт будет закрытым"
-                : "Если Поинт будет открытым"}
+                ? "Если Поинт будет открытым"
+                : "Если Поинт будет закрытым"}
             </Text>
             <Text
               weight="regular"
@@ -267,7 +267,7 @@ export const PointSettings = ({ markerId }: { markerId: string }) => {
             >
               {isContentRestricted
                 ? "Публикации будут открытыми для всех"
-                : "Публикации в нем будут открытыми для всех"}
+                : "Публикации не будут попадать в ленту"}
             </Text>
             <View className="flex flex-row justify-between gap-x-4">
               <Button
