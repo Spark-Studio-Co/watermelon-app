@@ -64,6 +64,7 @@ export const PrivatePointCreationScreen = () => {
   const [permission, requestPermission] = useCameraPermissions();
   const [isLoadingChatCreation, setIsLoadingChatCreation] = useState(false);
   const [createdMarkerId, setCreatedMarkerId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { mutate: createPoint } = useCreateMarker();
 
   // Use the marker data query to get the chat ID
@@ -82,14 +83,23 @@ export const PrivatePointCreationScreen = () => {
           `[PointCreation] Found chat ID in marker data: ${chatId}, markerId: ${createdMarkerId}`
         );
 
-        // Navigate to the private chat screen
+        // Reset navigation stack and navigate to the private chat screen to prevent going back
         setIsLoadingChatCreation(false);
-        navigation.navigate("PrivateChat" as never, {
-          chatId,
-          participants,
-          chatType: "group",
-          markerId: createdMarkerId,
-          isGlobal: true,
+        setIsSubmitting(false);
+        navigation.reset({
+          index: 0,
+          routes: [
+            {
+              name: "PrivateChat" as never,
+              params: {
+                chatId,
+                participants,
+                chatType: "group",
+                markerId: createdMarkerId,
+                isGlobal: true,
+              },
+            },
+          ],
         });
 
         // Reset the created marker ID
@@ -100,6 +110,7 @@ export const PrivatePointCreationScreen = () => {
           markerData
         );
         setIsLoadingChatCreation(false);
+        setIsSubmitting(false);
       }
     }
   }, [markerData, isLoadingMarkerData, createdMarkerId, navigation]);
@@ -159,6 +170,10 @@ export const PrivatePointCreationScreen = () => {
   };
 
   const handleSubmit = () => {
+    // Prevent multiple submissions
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
     const data = new FormData();
 
     const photoToSend = photoUri || image;
@@ -220,15 +235,25 @@ export const PrivatePointCreationScreen = () => {
             // The rest of the navigation logic will be handled in the useEffect that watches markerData
           } else {
             setIsLoadingChatCreation(false);
-            navigation.navigate("PointBio" as never, {
-              id: data?.id,
-              ownerId: data?.ownerId,
+            // Reset navigation stack to prevent going back to point creation
+            navigation.reset({
+              index: 0,
+              routes: [
+                {
+                  name: "PointBio" as never,
+                  params: {
+                    id: data?.id,
+                    ownerId: data?.ownerId,
+                  },
+                },
+              ],
             });
           }
         }, 500);
       },
       onError: (error) => {
         console.error("❌ Ошибка при создании маркера:", error.response);
+        setIsSubmitting(false);
       },
     });
   };
@@ -309,7 +334,7 @@ export const PrivatePointCreationScreen = () => {
             onChangeText={setName}
             placeholder="Point name user"
             maxLength={50}
-            className="h-[65px] placeholder:text-[#5C5A5A] text-[#5C5A5A] text-[20px] pl-6 mt-6 border-[1px] border-[#999999] rounded-[15px] w-full"
+            className="h-[65px] text-[#5C5A5A] text-[20px] pl-6 mt-6 border-[1px] border-[#999999] rounded-[15px] w-full"
           />
           <Text weight="bold" className="mt-6 text-white text-[24px]">
             Add bio
@@ -321,7 +346,7 @@ export const PrivatePointCreationScreen = () => {
             returnKeyType="done"
             multiline
             placeholder="bio information..."
-            className="placeholder:text-[#5C5A5A] text-[#5C5A5A] text-[20px] px-6 mt-6 pt-6 border-[1px] h-[156px] border-[#999999] rounded-[15px] w-full"
+            className="text-[#5C5A5A] text-[20px] px-6 mt-6 pt-6 border-[1px] h-[156px] border-[#999999] rounded-[15px] w-full"
             onSubmitEditing={() => {
               Keyboard.dismiss();
             }}
@@ -357,10 +382,13 @@ export const PrivatePointCreationScreen = () => {
           <Button
             onPress={handleSubmit}
             variant="custom"
-            className="w-[134px] py-3.5 rounded-[6px] bg-[#14A278] flex items-center justify-center"
+            className={`w-[134px] py-3.5 rounded-[6px] ${
+              isSubmitting ? "bg-[#888888]" : "bg-[#14A278]"
+            } flex items-center justify-center`}
+            disabled={isSubmitting}
           >
             <Text weight="regular" className="text-white text-[16px]">
-              CREATE
+              {isSubmitting ? "CREATING..." : "CREATE"}
             </Text>
           </Button>
         </View>

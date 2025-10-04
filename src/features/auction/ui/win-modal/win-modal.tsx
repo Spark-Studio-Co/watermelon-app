@@ -26,11 +26,20 @@ export const WinModal = ({
 
   const handlePointNavigate = () => {
     onClose();
+    // Reset navigation stack to prevent going back to auction after point creation
     //@ts-ignore
-    navigation.navigate("GlobalPointCreation" as never, {
-      id: id,
-      name: name,
-      type: type,
+    navigation.reset({
+      index: 0,
+      routes: [
+        {
+          name: "GlobalPointCreation" as never,
+          params: {
+            id: id,
+            name: name,
+            type: type,
+          },
+        },
+      ],
     });
   };
 

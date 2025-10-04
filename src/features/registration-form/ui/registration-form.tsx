@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { View } from "react-native";
 import Text from "@/src/shared/ui/text/text";
 import { Input } from "@/src/shared/ui/input/input";
@@ -7,15 +7,18 @@ import { useNavigation } from "@react-navigation/native";
 import { useSendVerificationStore } from "@/src/entities/registration/model/send-verification-store";
 import { StepsIndicator } from "@/src/shared/ui/steps-indicator/steps-indicator";
 import { useActiveStore } from "@/src/shared/model/use-active-store";
+import CheckIcon from "@/src/shared/icons/check-icon";
 
 import { useSendVerification } from "@/src/entities/registration/api/use-send-verification";
 
 export const RegistrationForm = () => {
   const navigation = useNavigation();
   const { setActive } = useActiveStore("steps", "Registration");
-  const { email, secretKey, setEmail, setSecretKey } =
+  const { email, secretKey, setEmail, setSecretKey, clearForm } =
     useSendVerificationStore();
-  const { mutate, isPending } = useSendVerification();
+  const { mutate, isPending, isError } = useSendVerification();
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [showTermsError, setShowTermsError] = useState(false);
 
   const handleSubmit = () => {
     if (!email.trim()) {
@@ -23,10 +26,17 @@ export const RegistrationForm = () => {
       return;
     }
 
+    if (!acceptedTerms) {
+      setShowTermsError(true);
+      return;
+    }
+
+    setShowTermsError(false);
     mutate(
       { email },
       {
         onSuccess: () => {
+          clearForm();
           navigation.navigate("CodeConfirmation" as never);
           setActive("CodeConfirmation");
         },
@@ -66,6 +76,47 @@ export const RegistrationForm = () => {
             your invite code
           </Text>
         </Button>
+
+        {/* Terms and conditions checkbox */}
+        <View className="flex flex-row items-center mt-6 w-full">
+          <Button
+            variant="custom"
+            className={`border border-[#D9D9D9] rounded-[3px] w-[20px] h-[20px] mr-3 flex items-center justify-center ${
+              acceptedTerms ? "bg-[#57AEF1] border-[#57AEF1]" : "bg-transparent"
+            }`}
+            onPress={() => setAcceptedTerms(!acceptedTerms)}
+          >
+            {acceptedTerms && <CheckIcon />}
+          </Button>
+          <Text weight="regular" className="text-[14px] text-[#FFFFFF] flex-1">
+            I agree to the{" "}
+            <Text
+              weight="bold"
+              className="text-[14px] text-[#57AEF1] underline"
+            >
+              Terms and Conditions
+            </Text>{" "}
+            and{" "}
+            <Text
+              weight="bold"
+              className="text-[14px] text-[#57AEF1] underline"
+            >
+              Privacy Policy
+            </Text>
+          </Text>
+        </View>
+
+        {/* Error messages */}
+        {showTermsError && (
+          <Text className="text-[16px] text-red-500 mt-4 text-center">
+            Please accept the terms and conditions
+          </Text>
+        )}
+        {isError && (
+          <Text className="text-[16px] text-red-500 mt-4 text-center">
+            Error sending verification code
+          </Text>
+        )}
       </View>
       <View className="mb-10 w-full">
         <Button

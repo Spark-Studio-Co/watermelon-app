@@ -14,7 +14,7 @@ import LogoIcon from "@/src/shared/icons/logo-icon";
 export const LoginForm = () => {
   const { mutate, isPending, isError } = useLogin();
   const { navigate } = useNavigation();
-  const { password, email, setPassword, setEmail, setResponseData } =
+  const { password, email, setPassword, setEmail, setResponseData, clearForm } =
     useLoginStore();
   const { setId, id } = useAuthStore();
 
@@ -33,6 +33,7 @@ export const LoginForm = () => {
           } else {
             console.log("There is an error with data");
           }
+          clearForm();
           navigate("SuccessSignUp" as never);
         },
         onError: (error: any) => {

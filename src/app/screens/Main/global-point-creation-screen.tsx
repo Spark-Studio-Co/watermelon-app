@@ -1,5 +1,11 @@
 import { MainLayout } from "../../layouts/main-layout";
-import { View, Image, Keyboard, Dimensions, ActivityIndicator } from "react-native";
+import {
+  View,
+  Image,
+  Keyboard,
+  Dimensions,
+  ActivityIndicator,
+} from "react-native";
 import Text from "@/src/shared/ui/text/text";
 import { Input } from "@/src/shared/ui/input/input";
 import { useEffect, useRef, useState } from "react";
@@ -40,33 +46,44 @@ export const GlobalPointCreationScreen = ({
   // State for tracking the updated marker ID for chat navigation
   const [updatedMarkerId, setUpdatedMarkerId] = useState<string | null>(null);
   const [isLoadingChatCreation, setIsLoadingChatCreation] = useState(false);
-  
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   // Use marker data by ID for initial data and for fetching updated data with chat ID
   const { data: markerData } = useMarkerDataById(id);
-  const { data: updatedMarkerData, isLoading: isLoadingUpdatedMarker } = useMarkerDataById(updatedMarkerId);
-  
+  const { data: updatedMarkerData, isLoading: isLoadingUpdatedMarker } =
+    useMarkerDataById(updatedMarkerId);
+
   // Handle navigation when updated marker data is available
   useEffect(() => {
     if (updatedMarkerId && updatedMarkerData && !isLoadingUpdatedMarker) {
       // Extract the chat ID from the marker data
       const chatId = updatedMarkerData?.chats?.[0]?.id;
       const participants = [updatedMarkerData?.ownerId];
-      
+
       if (chatId) {
         console.log(
           `[GlobalPointCreation] Found chat ID in marker data: ${chatId}, markerId: ${updatedMarkerId}`
         );
-        
-        // Navigate to the private chat screen
+
+        // Reset navigation stack and navigate to the private chat screen to prevent going back
         setIsLoadingChatCreation(false);
-        navigation.navigate("PrivateChat" as never, {
-          chatId,
-          participants,
-          chatType: "group",
-          markerId: updatedMarkerId,
-          isGlobal: true,
+        setIsSubmitting(false);
+        navigation.reset({
+          index: 0,
+          routes: [
+            {
+              name: "PrivateChat" as never,
+              params: {
+                chatId,
+                participants,
+                chatType: "group",
+                markerId: updatedMarkerId,
+                isGlobal: true,
+              },
+            },
+          ],
         });
-        
+
         // Reset the updated marker ID
         setUpdatedMarkerId(null);
       } else {
@@ -75,10 +92,11 @@ export const GlobalPointCreationScreen = ({
           updatedMarkerData
         );
         setIsLoadingChatCreation(false);
+        setIsSubmitting(false);
       }
     }
   }, [updatedMarkerData, isLoadingUpdatedMarker, updatedMarkerId, navigation]);
-  
+
   const { mutate: updatePoint } = useUpdateMarker(id);
   const {
     setName,
@@ -151,6 +169,10 @@ export const GlobalPointCreationScreen = ({
   };
 
   const handleSubmit = () => {
+    // Prevent multiple submissions
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
     const data = new FormData();
 
     const photoToSend = photoUri || image;
@@ -184,39 +206,56 @@ export const GlobalPointCreationScreen = ({
         queryClient.invalidateQueries({
           queryKey: ["markers"],
         });
-        
+
+        // Clear all fields after successful submission
+        setName("");
+        setDescription("");
+        setPhotoUri(null);
+        setImage(null);
+
         setTimeout(() => {
           if (type === "chat") {
             // For chat points, set loading state and fetch updated marker data
             setIsLoadingChatCreation(true);
             const markerId = data?.id;
-            
+
             // Set chat name and avatar in chat store
             const chatName = pointName || name || `Point #${markerId}`;
             const chatStore = useChatStore.getState();
             chatStore.setName(chatName);
-            chatStore.setAvatar(photoUri || image ? { uri: photoUri || image } : null);
+            chatStore.setAvatar(
+              photoUri || image ? { uri: photoUri || image } : null
+            );
             chatStore.setCurrentChatMarkerId(markerId);
-            
+
             console.log(
               `[GlobalPointCreation] Setting markerId ${markerId} to fetch latest data with chat ID`
             );
-            
+
             // Set the marker ID to trigger the useMarkerDataById hook
             setUpdatedMarkerId(markerId);
-            
+
             // The rest of the navigation logic will be handled in the useEffect that watches updatedMarkerData
           } else {
-            // For standard points, navigate to point bio
-            navigation.navigate("PointBio" as never, {
-              id: data?.id,
-              ownerId: data?.ownerId,
+            // For standard points, reset navigation stack to prevent going back
+            navigation.reset({
+              index: 0,
+              routes: [
+                {
+                  name: "PointBio" as never,
+                  params: {
+                    id: data?.id,
+                    ownerId: data?.ownerId,
+                  },
+                },
+              ],
             });
           }
         }, 500);
       },
       onError: (error) => {
         console.error("❌ Ошибка при создании маркера:", error.response);
+        setIsSubmitting(false);
       },
     });
   };
@@ -293,27 +332,29 @@ export const GlobalPointCreationScreen = ({
             />
           )}
         </View>
-        
+
         <View
           style={{ boxShadow: "0px 4px 4px 0px #00000040" }}
           className="rounded-[12px]"
         >
           <View className="flex flex-col py-2 w-[95%] justify-center mx-auto">
             <Input
+              value={pointName}
               placeholder="Point name user"
               maxLength={50}
-              className="h-[65px] placeholder:text-[#5C5A5A] text-[#5C5A5A] text-[20px] pl-6 mt-6 border-[1px] border-[#999999] rounded-[15px] w-full"
+              className="h-[65px] text-[#5C5A5A] text-[20px] pl-6 mt-6 border-[1px] border-[#999999] rounded-[15px] w-full"
               onChangeText={setName}
             />
             <Text weight="bold" className="mt-6 text-white text-[24px]">
               Add bio
             </Text>
             <Input
+              value={description}
               ref={bioInputRef}
               returnKeyType="done"
               multiline
               placeholder="bio information..."
-              className="placeholder:text-[#5C5A5A] text-[#5C5A5A] text-[20px] px-6 mt-6 pt-6 border-[1px] h-[156px] border-[#999999] rounded-[15px] w-full"
+              className="text-[#5C5A5A] text-[20px] px-6 mt-6 pt-6 border-[1px] h-[156px] border-[#999999] rounded-[15px] w-full"
               onSubmitEditing={() => {
                 Keyboard.dismiss();
               }}
@@ -339,15 +380,18 @@ export const GlobalPointCreationScreen = ({
             <Button
               onPress={handleSubmit}
               variant="custom"
-              className="w-[134px] py-3.5 rounded-[6px] bg-[#14A278] flex items-center justify-center"
+              className={`w-[134px] py-3.5 rounded-[6px] ${
+                isSubmitting ? "bg-[#888888]" : "bg-[#14A278]"
+              } flex items-center justify-center`}
+              disabled={isSubmitting}
             >
               <Text weight="regular" className="text-white text-[16px]">
-                CREATE
+                {isSubmitting ? "CREATING..." : "CREATE"}
               </Text>
             </Button>
           </View>
         </View>
-        
+
         <ModalWrapper storeKey="globalChoice">
           <View className=" bg-[#38373A] w-[90%] px-8 rounded-lg">
             <View className="flex flex-row items-center justify-between w-[100%] h-[200px]">
