@@ -196,7 +196,19 @@ export const PrivatePointCreationScreen = () => {
     if (longitude) data.append("longitude", String(longitude));
     if (ownerId) data.append("ownerId", ownerId);
     data.append("startingBid", "0");
-    data.append("isPrivate", String(isPrivate));
+    // Force isPrivate to true since this is the private point creation screen
+    data.append("isPrivate", "true");
+
+    // Debug logging for private point creation
+    console.log("🔒 Creating private point with data:", {
+      name,
+      description,
+      pointType,
+      latitude,
+      longitude,
+      ownerId,
+      isPrivate: true, // Always true for private points
+    });
 
     createPoint(data, {
       onSuccess: (data: any) => {
@@ -334,7 +346,7 @@ export const PrivatePointCreationScreen = () => {
             onChangeText={setName}
             placeholder="Point name user"
             maxLength={50}
-            className="h-[65px] text-[#5C5A5A] text-[20px] pl-6 mt-6 border-[1px] border-[#999999] rounded-[15px] w-full"
+            className="h-[65px] text-[#5C5A5A] placeholder:text-[#5C5A5A] text-[20px] pl-6 mt-6 border-[1px] border-[#999999] rounded-[15px] w-full"
           />
           <Text weight="bold" className="mt-6 text-white text-[24px]">
             Add bio
@@ -346,7 +358,7 @@ export const PrivatePointCreationScreen = () => {
             returnKeyType="done"
             multiline
             placeholder="bio information..."
-            className="text-[#5C5A5A] text-[20px] px-6 mt-6 pt-6 border-[1px] h-[156px] border-[#999999] rounded-[15px] w-full"
+            className="text-[#5C5A5A] placeholder:text-[#5C5A5A] text-[20px] px-6 mt-6 pt-6 border-[1px] h-[156px] border-[#999999] rounded-[15px] w-full"
             onSubmitEditing={() => {
               Keyboard.dismiss();
             }}

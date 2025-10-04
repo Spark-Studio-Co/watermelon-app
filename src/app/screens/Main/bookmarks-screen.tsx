@@ -39,7 +39,16 @@ export const BookmarksScreen = () => {
   const { setName, setAvatar } = useChatStore();
   const addToFavorites = useAddMarkerToFavorites();
   const { data: friends } = useGetFriends();
-  const { data: newFriends } = useGetUsers(undefined, true);
+  const {
+    data: newFriends,
+    isLoading: isLoadingNewFriends,
+    error: newFriendsError,
+  } = useGetUsers(undefined, true);
+
+  // Debug logging
+  console.log("New friends data:", newFriends);
+  console.log("Is loading new friends:", isLoadingNewFriends);
+  console.log("New friends error:", newFriendsError);
   const { data: me } = useGetMe();
   const { data: incomingFriends } = useIncomingFriendsData();
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -77,9 +86,13 @@ export const BookmarksScreen = () => {
 
     if (!userData) return;
 
+    // Ensure userData is a single user object, not an array
+    const user = Array.isArray(userData) ? userData[0] : userData;
+    if (!user) return;
+
     // Set user info in chat store
-    setName(userData.name ?? "User Name");
-    setAvatar(userData.avatar);
+    setName(user.name ?? "User Name");
+    setAvatar(user.avatar);
 
     try {
       // First try to get an existing chat
@@ -416,6 +429,42 @@ export const BookmarksScreen = () => {
                       />
                     </View>
                   ))}
+                {isLoadingNewFriends ? (
+                  <Text
+                    weight="regular"
+                    className="text-white text-center text-[16px]"
+                    style={{ textAlign: "center" }}
+                  >
+                    Загрузка предложений...
+                  </Text>
+                ) : Array.isArray(formattedFriends) &&
+                  formattedFriends.length > 0 ? (
+                  formattedFriends.map((friend: IGetUsersRDO) => (
+                    <View key={`new-friend-${friend.id}`} className="mb-4">
+                      <FriendTab
+                        avatar={friend.avatar}
+                        username={friend.name || "User Name"}
+                        nickname={
+                          friend.username ? `@${friend.username}` : friend.email
+                        }
+                        onPress={() => {
+                          handleSendRequest(friend.id);
+                        }}
+                        isPremium={friend.isPremium}
+                        isAddToFriends
+                        isAdded={!!activeFriends[friend.id]}
+                      />
+                    </View>
+                  ))
+                ) : newFriendsError ? (
+                  <Text
+                    weight="regular"
+                    className="text-red-400 text-center text-[16px]"
+                    style={{ textAlign: "center" }}
+                  >
+                    Ошибка загрузки предложений
+                  </Text>
+                ) : null}
               </>
             )}
           </View>

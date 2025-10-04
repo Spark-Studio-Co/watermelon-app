@@ -342,7 +342,7 @@ export const GlobalPointCreationScreen = ({
               value={pointName}
               placeholder="Point name user"
               maxLength={50}
-              className="h-[65px] text-[#5C5A5A] text-[20px] pl-6 mt-6 border-[1px] border-[#999999] rounded-[15px] w-full"
+              className="h-[65px] text-[#5C5A5A] placeholder:text-[#5C5A5A] text-[20px] pl-6 mt-6 border-[1px] border-[#999999] rounded-[15px] w-full"
               onChangeText={setName}
             />
             <Text weight="bold" className="mt-6 text-white text-[24px]">
@@ -354,7 +354,7 @@ export const GlobalPointCreationScreen = ({
               returnKeyType="done"
               multiline
               placeholder="bio information..."
-              className="text-[#5C5A5A] text-[20px] px-6 mt-6 pt-6 border-[1px] h-[156px] border-[#999999] rounded-[15px] w-full"
+              className="text-[#5C5A5A] placeholder:text-[#5C5A5A] text-[20px] px-6 mt-6 pt-6 border-[1px] h-[156px] border-[#999999] rounded-[15px] w-full"
               onSubmitEditing={() => {
                 Keyboard.dismiss();
               }}

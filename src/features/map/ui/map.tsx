@@ -16,6 +16,7 @@ import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { useMarkerStore } from "@/src/entities/markers/model/use-marker-store";
 import { useGetMe } from "@/src/entities/users/api/use-get-me";
 import { useMarkersData } from "@/src/entities/markers/api/use-markers-data";
+import { useQueryClient } from "@tanstack/react-query";
 import { useChatStore } from "../../chat/model/chat-store";
 import { useMarkerDataById } from "@/src/entities/markers/api/use-marker-data-by-id";
 import { useAddMarkerToFavorites } from "@/src/features/chat/api/use-add-marker-to-favorites";
@@ -58,6 +59,7 @@ export const Map = () => {
   const [isInLowerPart, setIsInLowerPart] = useState(false); // Track if marker is in lower part of screen
 
   const navigation = useNavigation();
+  const queryClient = useQueryClient();
   const { data: me } = useGetMe();
   const addToFavorites = useAddMarkerToFavorites();
   const { data: markerById } = useMarkerDataById(stateMarkerById);
@@ -86,6 +88,70 @@ export const Map = () => {
   const { data: allMarkers } = useMarkersData(false);
 
   const markersList = isPrivate ? availableMarkers : allMarkers;
+
+  // If user is not logged in, show empty markers list
+  const filteredMarkersList = me?.id ? markersList : [];
+
+  // Debug logging for marker filtering
+  useEffect(() => {
+    console.log("🔍 Map Debug Info:", {
+      isPrivate,
+      availableMarkersCount: availableMarkers?.length || 0,
+      allMarkersCount: allMarkers?.length || 0,
+      currentMarkersListCount: filteredMarkersList?.length || 0,
+      userId: me?.id,
+    });
+
+    if (filteredMarkersList?.length > 0) {
+      console.log(
+        "📍 First few markers:",
+        filteredMarkersList.slice(0, 3).map((m: any) => ({
+          id: m.id,
+          isPrivate: m.isPrivate,
+          ownerId: m.ownerId,
+          name: m.name,
+        }))
+      );
+    }
+  }, [isPrivate, availableMarkers, allMarkers, me?.id]);
+
+  // Clear cache when user changes (logout/login)
+  const [previousUserId, setPreviousUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const currentUserId = me?.id || null;
+
+    // If user ID changed (logout/login scenario)
+    if (previousUserId !== null && previousUserId !== currentUserId) {
+      console.log("🔄 User changed, clearing all cache:", {
+        previousUserId,
+        currentUserId,
+      });
+
+      // Clear all markers cache in React Query
+      queryClient.removeQueries({ queryKey: ["markers"] });
+
+      // Clear any other related cache
+      queryClient.removeQueries({ queryKey: ["marker"] });
+      queryClient.removeQueries({ queryKey: ["personalized-pub"] });
+
+      // Force refetch of both marker datasets
+      availableMarkersRefetch();
+
+      // Clear any local state
+      setSelectedMarker(null);
+      setStateMarkerById(null);
+      setPreviewCoordinate(null);
+      setRequestSent(false);
+      setIsLoadingChat(false);
+      setIsCheckingAccess(false);
+
+      // Reset private mode to default
+      setIsPrivate(true);
+    }
+
+    setPreviousUserId(currentUserId);
+  }, [me?.id, availableMarkersRefetch, queryClient]);
 
   useEffect(() => {
     if (isLoadingChat && markerById?.chats?.[0]?.id && me?.id) {
@@ -195,8 +261,14 @@ export const Map = () => {
         longitudeDelta: isPrivate ? 0.01 : 0.2,
       });
     }
+
+    // Clear cache and refetch when switching between private/public
+    console.log("🔄 Map mode changed, clearing cache and refetching:", {
+      isPrivate,
+    });
+    queryClient.removeQueries({ queryKey: ["markers"] });
     availableMarkersRefetch();
-  }, [isPrivate, coordinate]);
+  }, [isPrivate, coordinate, queryClient, availableMarkersRefetch]);
 
   const renderedMarkerType = (markerType: string) => {
     switch (markerType) {
@@ -224,15 +296,15 @@ export const Map = () => {
   useFocusEffect(
     React.useCallback(() => {
       console.log("Map screen focused - refetching markers");
-      if (isPrivate) {
-        availableMarkersRefetch();
-      }
+
+      // Always refetch markers when screen comes into focus
+      availableMarkersRefetch();
 
       // Clear any lingering preview markers when returning to map
       setPreviewCoordinate(null);
 
       return () => {};
-    }, [isPrivate, availableMarkersRefetch])
+    }, [availableMarkersRefetch])
   );
 
   return (
@@ -243,8 +315,8 @@ export const Map = () => {
           const pressCoordinate = e.nativeEvent.coordinate;
 
           const isWithinRadius =
-            Array.isArray(markersList) &&
-            markersList.some((marker: any) => {
+            Array.isArray(filteredMarkersList) &&
+            filteredMarkersList.some((marker: any) => {
               if (!marker.radius) return false;
 
               const distance = calculateDistance(
@@ -289,6 +361,14 @@ export const Map = () => {
           //@ts-ignore
           setOwnerId(me?.id);
 
+          // Debug logging for marker creation
+          console.log("🎯 Creating marker with:", {
+            isPrivate,
+            latitude: pressCoordinate.latitude,
+            longitude: pressCoordinate.longitude,
+            ownerId: me?.id,
+          });
+
           // Open preview confirmation modal
           openPreviewConfirmation();
         }}
@@ -307,8 +387,8 @@ export const Map = () => {
         showsTraffic={false}
         showsIndoors={false}
       >
-        {Array.isArray(markersList) &&
-          markersList?.map((marker: any, index: number) =>
+        {Array.isArray(filteredMarkersList) &&
+          filteredMarkersList?.map((marker: any, index: number) =>
             marker.radius ? (
               <Circle
                 key={`circle-${marker.id ?? index}`}
@@ -348,8 +428,8 @@ export const Map = () => {
             />
           </Marker>
         )}
-        {Array.isArray(markersList) &&
-          markersList?.map((marker: any, index: number) => (
+        {Array.isArray(filteredMarkersList) &&
+          filteredMarkersList?.map((marker: any, index: number) => (
             <Marker
               key={`marker-${marker.id ?? index}`}
               coordinate={{
