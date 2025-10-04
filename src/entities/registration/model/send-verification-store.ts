@@ -9,11 +9,14 @@ interface ISendVerificationStore {
 }
 
 export const useSendVerificationStore = create<ISendVerificationStore>(
-  (set) => ({
+  (set, get) => ({
     email: "",
     secretKey: "",
     setEmail: (email: string) => set({ email: email }),
     setSecretKey: (secretKey: string) => set({ secretKey: secretKey }),
-    clearForm: () => set({ email: "", secretKey: "" }),
+    clearForm: () => {
+      // Сохраняем email для использования в других формах, очищаем только secretKey
+      set({ secretKey: "" });
+    },
   })
 );
