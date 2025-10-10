@@ -44,6 +44,7 @@ import { useChatStore } from "@/src/features/chat/model/chat-store";
 import {
   useGetPrivateChat,
   useCreatePrivateChat,
+  useCreateOrGetMarkerPrivateChat,
 } from "@/src/features/chat/api/use-get-private-chat";
 import { PointApplicationsModal } from "@/src/features/point/ui/point-applications-modal";
 
@@ -87,6 +88,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
   const { mutate: uploadImage } = useUploadImage();
   const getPrivateChat = useGetPrivateChat();
   const createPrivateChat = useCreatePrivateChat();
+  const createOrGetMarkerPrivateChat = useCreateOrGetMarkerPrivateChat();
   const { setId, setIsPrivate } = useMarkerStore();
   const { data: marker, refetch: markerRefetch } = useMarkerDataById(markerId);
   const { data: me } = useGetMe();
@@ -336,13 +338,13 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
             </Button>
             <Button
               onPress={async () => {
-                console.log("Mail button pressed - starting chat navigation");
+                console.log(
+                  "Mail button pressed - starting marker chat navigation"
+                );
 
-                if (!effectiveOwnerId || !me?.id) {
+                if (!markerId || !me?.id) {
                   console.log("Missing required IDs:", {
-                    routeOwnerId: ownerId,
-                    markerOwnerId: marker?.ownerId,
-                    effectiveOwnerId,
+                    markerId,
                     myId: me?.id,
                   });
                   return;
@@ -359,88 +361,46 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
                 setAvatar(pointAvatar);
 
                 try {
-                  // First try to get an existing chat
-                  try {
-                    // Try to get or create the chat
-                    const chatResponse = await getPrivateChat.mutateAsync({
-                      userId: me.id,
-                      targetUserId: effectiveOwnerId,
+                  // Use the marker-specific chat endpoint
+                  const chatResponse =
+                    await createOrGetMarkerPrivateChat.mutateAsync({
+                      markerId: markerId,
                     });
 
-                    // Ensure we have a valid chat ID
-                    if (!chatResponse || !chatResponse.chatId) {
-                      throw new Error("Invalid chat response: missing chat ID");
-                    }
-
-                    console.log("Got chat ID:", chatResponse.chatId);
-                    console.log("Participants:", chatResponse.participants);
-
-                    // Navigate to chat
-                    navigateToChat(
-                      chatResponse.chatId,
-                      chatResponse.participants
-                    );
-
-                    // Connect to chat after navigation
-                    setTimeout(() => {
-                      console.log("Connecting to chat store...");
-                      const { connect } = useChatStore.getState();
-                      connect(chatResponse.chatId, me.id);
-                    }, 100);
-                  } catch (getError: any) {
-                    // If we get a 500 error, the chat doesn't exist yet, so create it
-                    if (getError?.response?.status === 500) {
-                      console.log("Chat does not exist, creating new chat...");
-
-                      // Create a new chat
-                      const newChatResponse =
-                        await createPrivateChat.mutateAsync({
-                          userA: me.id,
-                          userB: effectiveOwnerId,
-                        });
-
-                      // Ensure we have a valid chat ID
-                      if (!newChatResponse || !newChatResponse.id) {
-                        throw new Error(
-                          "Invalid chat creation response: missing chat ID"
-                        );
-                      }
-
-                      console.log("Created new chat:", newChatResponse.id);
-
-                      // Extract participants from the response or use default
-                      const participants = newChatResponse.participants
-                        ? newChatResponse.participants.map((p) => p.userId)
-                        : [me.id, effectiveOwnerId];
-
-                      // Get the chat ID, ensuring it's a string
-                      const chatId =
-                        newChatResponse.id || newChatResponse.chatId || "";
-
-                      if (!chatId) {
-                        throw new Error("Missing chat ID in response");
-                      }
-
-                      console.log("Navigating to new PrivateChat:", {
-                        chatId,
-                        participants,
-                      });
-
-                      // Navigate to new chat
-                      navigateToChat(chatId, participants);
-
-                      // Connect to chat after navigation
-                      setTimeout(() => {
-                        console.log("Connecting to new chat store...");
-                        const { connect } = useChatStore.getState();
-                        connect(chatId, me.id);
-                      }, 100);
-                    } else {
-                      throw getError;
-                    }
+                  // Ensure we have a valid chat ID
+                  if (!chatResponse || !chatResponse.id) {
+                    throw new Error("Invalid chat response: missing chat ID");
                   }
+
+                  console.log("Got marker chat ID:", chatResponse.id);
+                  console.log("Participants:", chatResponse.participants);
+
+                  // Extract participants from the response
+                  const participants = chatResponse.participants
+                    ? chatResponse.participants.map((p) => p.userId)
+                    : [me.id, effectiveOwnerId];
+
+                  const chatId = chatResponse.id;
+
+                  console.log("Navigating to marker PrivateChat:", {
+                    chatId,
+                    participants,
+                  });
+
+                  // Navigate to chat
+                  navigateToChat(chatId, participants);
+
+                  // Connect to chat after navigation
+                  setTimeout(() => {
+                    console.log("Connecting to marker chat store...");
+                    const { connect } = useChatStore.getState();
+                    connect(chatId, me.id);
+                  }, 100);
                 } catch (error) {
-                  console.error("Failed to handle chat navigation:", error);
+                  console.error(
+                    "Failed to handle marker chat navigation:",
+                    error
+                  );
                   // Show some user feedback
                   alert("Не удалось открыть чат. Попробуйте снова.");
                 }

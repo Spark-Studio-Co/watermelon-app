@@ -17,7 +17,7 @@ export const PasswordForm = () => {
   const { email } = useSendVerificationStore();
   const [password, setPassword] = useState<string>("");
   const navigation = useNavigation();
-  const { setId } = useAuthStore();
+  const { setId, setToken } = useAuthStore();
 
   const minLength = password.length >= 8;
   const hasNumber = /\d/.test(password);
@@ -33,10 +33,15 @@ export const PasswordForm = () => {
       {
         onSuccess: (data: any) => {
           console.log("Registered succsesfully");
+          console.log("ID", data.uuid);
+          console.log("Token", data.token);
+
+          // Сохраняем и ID и токен
+          setId(data.uuid);
+          setToken(data.token);
+
           navigation.navigate("AccountCreation" as never);
           setActive("AccountCreation");
-          console.log("ID", data.uuid);
-          setId(data.uuid);
         },
         onError: (error: any) => {
           console.log("Error", error);

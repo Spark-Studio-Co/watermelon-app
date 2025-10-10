@@ -33,9 +33,13 @@ export const AccountCreationForm = () => {
     useAccountCreationStore();
 
   const queryClient = useQueryClient();
-  const { id } = useAuthStore();
+  const { id, token, setRegistrationComplete } = useAuthStore();
   const { mutate, isPending } = useUpdateUser(id);
   const { data: isUsernameUnique, refetch } = useCheckNickname(username);
+
+  // Отладочная информация
+  console.log("AccountCreation - ID:", id);
+  console.log("AccountCreation - Token:", token ? "Token exists" : "No token");
 
   const [showUsernameError, setShowUsernameError] = useState(false);
   const { setImage, image } = useCameraStore("avatar");
@@ -124,6 +128,8 @@ export const AccountCreationForm = () => {
     mutate(data, {
       onSuccess: () => {
         console.log("User Data Changed");
+        // Отмечаем регистрацию как завершённую
+        setRegistrationComplete(true);
         queryClient.invalidateQueries({
           queryKey: ["userMe"],
         });

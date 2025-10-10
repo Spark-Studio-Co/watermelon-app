@@ -68,9 +68,8 @@ export const BookmarksScreen = () => {
     refetch: refetchMyMarkersWithNewMessages,
   } = useMyMarkersWithNewMessages();
 
-  // Initial fetch when component mounts
   useEffect(() => {
-    chatFavRefetch();
+    refetchMyMarkersWithNewMessages();
   }, []);
 
   // Refetch when screen comes into focus
@@ -287,46 +286,7 @@ export const BookmarksScreen = () => {
                   <View
                     key={`search-chat-${chat.id || index}`}
                     className="mb-4"
-                  >
-                    <SavedPointTab
-                      //@ts-ignore
-                      onPress={() => {
-                        const chatId = chat.id;
-                        if (!chatId || !me?.id) return;
-
-                        setName(
-                          chat.title === null
-                            ? `ChatHub #${chat.randomPointName}`
-                            : chat.title
-                        );
-                        setAvatar(chat?.marker?.image ?? null);
-
-                        useChatStore.getState().connect(chatId, me.id, true);
-
-                        if (chat.ownerId !== me.id && chat.markerId) {
-                          console.log("Added to favorite", chat.markerId);
-                          addToFavorites.mutate(chat.markerId);
-                        }
-
-                        //@ts-ignore
-                        navigation.navigate("PrivateChat", {
-                          chatId,
-                          participants: [me.id, chat.ownerId],
-                          chatType: "group",
-                        });
-                      }}
-                      image={chat?.marker?.image}
-                      type="chat"
-                      name={
-                        chat.title === null
-                          ? `ChatHub #${chat.randomPointName}`
-                          : chat.title
-                      }
-                      members={
-                        chat.participants?.length ?? chat.membersCount ?? 0
-                      }
-                    />
-                  </View>
+                  ></View>
                 );
               })
             ) : (
@@ -348,56 +308,64 @@ export const BookmarksScreen = () => {
                       weight="medium"
                       className="text-white text-[18px] mb-3"
                     >
-                      My Points with New Messages
+                      Point messages
                     </Text>
                   </View>
                 )}
               {Array.isArray(myMarkersWithNewMessages) &&
-                myMarkersWithNewMessages.map((marker: any, index: number) => (
-                  <View
-                    key={`my-marker-${marker.id || index}`}
-                    className="mb-4"
-                  >
-                    <EnhancedSavedPointTab
-                      //@ts-ignore
-                      onPress={() => {
-                        // Navigate to the first chat with new messages or the first chat
-                        const chatWithNewMessages = marker.chats?.find(
-                          (chat: any) => chat.hasNewMessages
-                        );
-                        const targetChat =
-                          chatWithNewMessages || marker.chats?.[0];
+                myMarkersWithNewMessages.map((marker: any, index: number) => {
+                  const totalNewMessages =
+                    marker.chats?.reduce(
+                      (total: number, chat: any) =>
+                        total +
+                        (chat.hasNewMessages ? chat.newMessagesCount || 1 : 0),
+                      0
+                    ) || 0;
 
-                        if (!targetChat?.id || !me?.id) return;
-
-                        setName(
-                          targetChat.title ||
-                            marker.name ||
-                            `Point #${marker.id}`
-                        );
-                        setAvatar(marker.image ?? null);
-
-                        useChatStore
-                          .getState()
-                          .connect(targetChat.id, me.id, true);
-
+                  return (
+                    <View
+                      key={`my-marker-${marker.id || index}`}
+                      className="mb-4"
+                    >
+                      <EnhancedSavedPointTab
                         //@ts-ignore
-                        navigation.navigate("PrivateChat", {
-                          chatId: targetChat.id,
-                          participants: [me.id, marker.ownerId],
-                          chatType: "group",
-                        });
-                      }}
-                      image={marker.image}
-                      type="chat"
-                      name={marker.name || `Point #${marker.id}`}
-                      members={marker.chats?.length || 0}
-                      newMessagesCount={marker.totalNewMessages}
-                    />
-                  </View>
-                ))}
+                        onPress={() => {
+                          const chatWithNewMessages = marker.chats?.find(
+                            (chat: any) => chat.hasNewMessages
+                          );
+                          const targetChat =
+                            chatWithNewMessages || marker.chats?.[0];
 
-              {/* Favorite chats */}
+                          if (!targetChat?.id || !me?.id) return;
+
+                          setName(
+                            targetChat.title ||
+                              marker.name ||
+                              `Point #${marker.id}`
+                          );
+                          setAvatar(marker.image ?? null);
+
+                          useChatStore
+                            .getState()
+                            .connect(targetChat.id, me.id, true);
+
+                          //@ts-ignore
+                          navigation.navigate("PrivateChat", {
+                            chatId: targetChat.id,
+                            participants: [me.id, marker.ownerId],
+                            chatType: "private",
+                          });
+                        }}
+                        image={marker.image}
+                        type={marker.type || "premium"} // Use the actual marker type instead of "chat"
+                        name={marker.name || `Point #${marker.id}`}
+                        newMessagesCount={totalNewMessages}
+                        subscribers={marker.favoriteCount}
+                        views={marker.views}
+                      />
+                    </View>
+                  );
+                })}
               {Array.isArray(chats) && chats.length > 0 && (
                 <View className="mb-4 mt-6">
                   <Text weight="medium" className="text-white text-[18px] mb-3">
@@ -409,6 +377,7 @@ export const BookmarksScreen = () => {
                 chats.map((item: any, index: number) => {
                   const chat = item.chat;
 
+                  // Show all group chats here (including Global Chat)
                   if (!chat || !chat.isGroup) return null;
 
                   return (
@@ -420,8 +389,8 @@ export const BookmarksScreen = () => {
                           if (!chatId || !me?.id) return;
 
                           setName(
-                            chat?.title === null
-                              ? `ChatHub ${chat?.randomPointName}`
+                            chat?.title === null || chat?.title === ""
+                              ? `ChatHub #${chat?.randomPointName}`
                               : chat?.title
                           );
                           setAvatar(chat?.marker?.image ?? null);
@@ -443,11 +412,15 @@ export const BookmarksScreen = () => {
                         image={chat?.marker?.image}
                         type="chat"
                         name={
-                          chat?.title === null
-                            ? `ChatHub #${chat?.randomPointName}`
+                          chat?.title === null || chat?.title === ""
+                            ? chat?.randomPointName === "global"
+                              ? "Global chat"
+                              : `ChatHub #${chat?.randomPointName}`
                             : chat?.title
                         }
-                        members={chat?.participants.length}
+                        members={
+                          chat?.participants?.length ?? chat?.membersCount ?? 0
+                        }
                       />
                     </View>
                   );

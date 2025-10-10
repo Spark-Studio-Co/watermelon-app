@@ -84,6 +84,41 @@ export const createPrivateChat = async (
 };
 
 /**
+ * Create or get a private chat tied to a marker
+ * @param markerId The ID of the marker
+ * @returns Promise with full chat response
+ */
+export const createOrGetMarkerPrivateChat = async (
+  markerId: string
+): Promise<PrivateChatFullResponse> => {
+  try {
+    const response = await apiClient.post<PrivateChatFullResponse>(
+      `/chat/marker/${markerId}/private-chat`
+    );
+
+    // Log the full response for debugging
+    console.log(
+      "[createOrGetMarkerPrivateChat] Full response:",
+      JSON.stringify(response.data)
+    );
+
+    // Check if we have a valid response
+    if (!response.data) {
+      console.error("[createOrGetMarkerPrivateChat] Empty response");
+      throw new Error("Empty response from API");
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error(
+      "[createOrGetMarkerPrivateChat] Error creating marker private chat:",
+      error
+    );
+    throw error;
+  }
+};
+
+/**
  * Get or create a private chat between two users
  * @param userId Current user's ID
  * @param targetUserId Target user's ID
@@ -266,18 +301,25 @@ export const removeChatFromFavorites = async (
     const response = await apiClient.delete(`/chat/${chatId}/favorite`, {
       data: { userId },
     });
-    console.log("[removeChatFromFavorites] Successfully removed chat from favorites");
+    console.log(
+      "[removeChatFromFavorites] Successfully removed chat from favorites"
+    );
     return response.data;
   } catch (error: any) {
     // Check if this is a 500 error but the chat might already be removed
     if (error?.response?.status === 500) {
-      console.log("[removeChatFromFavorites] Error 500 - Chat may already be removed from favorites");
+      console.log(
+        "[removeChatFromFavorites] Error 500 - Chat may already be removed from favorites"
+      );
       // Return success true since the end goal (chat not in favorites) is achieved
       return { success: true };
     }
-    
+
     // For other errors, log and rethrow
-    console.error("[removeChatFromFavorites] Error removing chat from favorites:", error);
+    console.error(
+      "[removeChatFromFavorites] Error removing chat from favorites:",
+      error
+    );
     throw error;
   }
 };

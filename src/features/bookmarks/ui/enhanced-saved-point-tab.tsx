@@ -30,12 +30,12 @@ export const EnhancedSavedPointTab = ({
     <Button
       onPress={onPress}
       className={`w-full flex justify-center pl-[15px] border-[0.94px] rounded-[15.1px] h-[76.46564483642578px] ${
-        type.toLowerCase() === "premium"
+        hasNewMessages
+          ? "border-[#14A278] bg-[#181A20]" // Green border for new messages
+          : type.toLowerCase() === "premium"
           ? "border-[#A009CD] bg-[#181A20]"
           : type === "chat"
-          ? hasNewMessages
-            ? "border-[#14A278] bg-[#181A20]" // Green border for new messages
-            : "border-[#93E0FF] bg-[#181A20]"
+          ? "border-[#93E0FF] bg-[#181A20]"
           : "border-[#262A34] bg-[#262A34]"
       }`}
     >
@@ -48,13 +48,6 @@ export const EnhancedSavedPointTab = ({
                 image ? { uri: image } : require("@/src/images/fallback.png")
               }
             />
-            {hasNewMessages && (
-              <View className="absolute -top-1 -right-1 bg-[#14A278] rounded-full min-w-[20px] h-[20px] flex items-center justify-center px-1">
-                <Text weight="bold" className="text-white text-[10px]">
-                  {newMessagesCount > 99 ? "99+" : newMessagesCount}
-                </Text>
-              </View>
-            )}
           </View>
           <View className="flex flex-col ml-[15px]">
             <Text weight="regular" className="text-white text-[15.1px]">
@@ -68,7 +61,7 @@ export const EnhancedSavedPointTab = ({
             </Text>
           </View>
         </View>
-        {(type === "premium" || type === "standard") && (
+        {(type === "premium" || type === "standard") && !hasNewMessages && (
           <View className="flex flex-col ml-[30px]">
             <Text weight="regular" className="text-white text-[15.1px]">
               {subscribers || 0}
@@ -78,33 +71,13 @@ export const EnhancedSavedPointTab = ({
             </Text>
           </View>
         )}
-        {(type === "premium" || type === "standard") && (
+        {(type === "premium" || type === "standard") && !hasNewMessages && (
           <View className="flex flex-col ml-[30px]">
             <Text weight="regular" className="text-white text-[15.1px]">
               {views || 0}
             </Text>
             <Text weight="regular" className="text-[#5E6272] text-[11.33px]">
               Views
-            </Text>
-          </View>
-        )}
-        {type === "chat" && (
-          <View className="flex flex-col ml-[30px]">
-            <Text weight="regular" className="text-white text-[15.1px]">
-              {members || 0}
-            </Text>
-            <Text weight="regular" className="text-[#5E6272] text-[11.33px]">
-              Members
-            </Text>
-          </View>
-        )}
-        {hasNewMessages && (
-          <View className="flex flex-col ml-[30px]">
-            <Text weight="regular" className="text-[#14A278] text-[15.1px]">
-              {newMessagesCount}
-            </Text>
-            <Text weight="regular" className="text-[#5E6272] text-[11.33px]">
-              New
             </Text>
           </View>
         )}
