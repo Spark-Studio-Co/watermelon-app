@@ -53,13 +53,17 @@ type PointBioRouteProp = {
 
 type RouteParams = {
   id: string;
-  ownerId: string;
+  ownerId?: string; // Make optional since it might come from marker data
   isPrivate: boolean;
 };
 
 // Define navigation type
 type RootStackParamList = {
-  PrivateChat: { avatar: any } | undefined;
+  PrivateChat: {
+    chatId: string;
+    participants: string[];
+    chatType: "private" | "group";
+  };
   [key: string]: object | undefined;
 };
 
@@ -68,6 +72,9 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
   const bioInputRef = useRef(null);
   const queryClient = useQueryClient();
   const { id: markerId, ownerId, isPrivate } = route.params as RouteParams;
+
+  // Debug route params
+  console.log("Route params received:", route.params);
 
   const {
     data: publications,
@@ -83,6 +90,9 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
   const { setId, setIsPrivate } = useMarkerStore();
   const { data: marker, refetch: markerRefetch } = useMarkerDataById(markerId);
   const { data: me } = useGetMe();
+
+  // Get ownerId from route params or marker data as fallback
+  const effectiveOwnerId = ownerId || marker?.ownerId;
   const { open: openPost } = useVisibleStore("post");
   const { open: openChoice, close: closeChoice } =
     useVisibleStore("cameraChoice");
@@ -214,16 +224,50 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
     refetch();
   }, [publications, active === "Публикации"]);
 
-  const isOwner = ownerId === me?.id;
+  const isOwner = effectiveOwnerId === me?.id;
+
+  // Navigation helper function
+  const navigateToChat = (chatId: string, participants: string[]) => {
+    console.log("Attempting navigation to PrivateChat with:", {
+      chatId,
+      participants,
+    });
+
+    if (!navigation) {
+      console.error("Navigation object is not available");
+      alert("Навигация недоступна");
+      return;
+    }
+
+    if (!chatId) {
+      console.error("Chat ID is missing");
+      alert("Отсутствует ID чата");
+      return;
+    }
+
+    try {
+      navigation.navigate("PrivateChat", {
+        chatId,
+        participants,
+        chatType: "private",
+      });
+      console.log("Navigation successful");
+    } catch (navError) {
+      console.error("Navigation error:", navError);
+      alert("Ошибка навигации в чат");
+    }
+  };
 
   // Debug logs to understand what's happening
   useEffect(() => {
     console.log("DEBUG - Owner check:", {
-      ownerId,
+      routeOwnerId: ownerId,
+      markerOwnerId: marker?.ownerId,
+      effectiveOwnerId,
       myId: me?.id,
       isOwner,
     });
-  }, [ownerId, me?.id, isOwner]);
+  }, [ownerId, marker?.ownerId, effectiveOwnerId, me?.id, isOwner]);
 
   const [forceUpdate, setForceUpdate] = useState(0);
 
@@ -243,25 +287,35 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
   useEffect(() => {
     console.log("COMPLETE VISIBILITY STATUS:", {
       isOwner,
-      ownerId,
+      routeOwnerId: ownerId,
+      markerOwnerId: marker?.ownerId,
+      effectiveOwnerId,
       myId: me?.id,
       markerIsContentRestricted: marker?.isContentRestricted,
       forceUpdateCount: forceUpdate,
     });
-  }, [isOwner, marker?.isContentRestricted, forceUpdate, ownerId, me?.id]);
+  }, [
+    isOwner,
+    marker?.isContentRestricted,
+    forceUpdate,
+    ownerId,
+    marker?.ownerId,
+    effectiveOwnerId,
+    me?.id,
+  ]);
 
   return (
     <MainLayout>
       <View className="w-[80%] mx-auto mt-4">
         <PointBioTab
-          isSettingsVisible={ownerId === me?.id}
+          isSettingsVisible={effectiveOwnerId === me?.id}
           pointname={marker?.name ?? `Point #${marker?.map_id}`}
           // nickname="point_name"
           onPress={openSettings}
         />
       </View>
       <View className="flex flex-row items-center mt-12 w-[90%] mx-auto relative">
-        {ownerId === me?.id ? (
+        {effectiveOwnerId === me?.id ? (
           <View className="ml-10" />
         ) : (
           <>
@@ -282,11 +336,23 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
             </Button>
             <Button
               onPress={async () => {
-                if (!ownerId || !me?.id) return;
+                console.log("Mail button pressed - starting chat navigation");
+
+                if (!effectiveOwnerId || !me?.id) {
+                  console.log("Missing required IDs:", {
+                    routeOwnerId: ownerId,
+                    markerOwnerId: marker?.ownerId,
+                    effectiveOwnerId,
+                    myId: me?.id,
+                  });
+                  return;
+                }
 
                 // Use point data for the chat
                 const pointName = marker?.name ?? `Point #${marker?.map_id}`;
                 const pointAvatar = marker?.avatar || null;
+
+                console.log("Setting chat info:", { pointName, pointAvatar });
 
                 // Set point info in chat store
                 setName(pointName);
@@ -298,7 +364,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
                     // Try to get or create the chat
                     const chatResponse = await getPrivateChat.mutateAsync({
                       userId: me.id,
-                      targetUserId: ownerId,
+                      targetUserId: effectiveOwnerId,
                     });
 
                     // Ensure we have a valid chat ID
@@ -309,14 +375,18 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
                     console.log("Got chat ID:", chatResponse.chatId);
                     console.log("Participants:", chatResponse.participants);
 
-                    navigation.navigate(
-                      "PrivateChat" as never,
-                      {
-                        chatId: chatResponse.chatId,
-                        participants: chatResponse.participants,
-                        chatType: "private",
-                      } as never
+                    // Navigate to chat
+                    navigateToChat(
+                      chatResponse.chatId,
+                      chatResponse.participants
                     );
+
+                    // Connect to chat after navigation
+                    setTimeout(() => {
+                      console.log("Connecting to chat store...");
+                      const { connect } = useChatStore.getState();
+                      connect(chatResponse.chatId, me.id);
+                    }, 100);
                   } catch (getError: any) {
                     // If we get a 500 error, the chat doesn't exist yet, so create it
                     if (getError?.response?.status === 500) {
@@ -326,7 +396,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
                       const newChatResponse =
                         await createPrivateChat.mutateAsync({
                           userA: me.id,
-                          userB: ownerId,
+                          userB: effectiveOwnerId,
                         });
 
                       // Ensure we have a valid chat ID
@@ -341,7 +411,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
                       // Extract participants from the response or use default
                       const participants = newChatResponse.participants
                         ? newChatResponse.participants.map((p) => p.userId)
-                        : [me.id, ownerId];
+                        : [me.id, effectiveOwnerId];
 
                       // Get the chat ID, ensuring it's a string
                       const chatId =
@@ -351,20 +421,28 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
                         throw new Error("Missing chat ID in response");
                       }
 
-                      navigation.navigate(
-                        "PrivateChat" as never,
-                        {
-                          chatId: chatId,
-                          participants: participants,
-                          chatType: "private",
-                        } as never
-                      );
+                      console.log("Navigating to new PrivateChat:", {
+                        chatId,
+                        participants,
+                      });
+
+                      // Navigate to new chat
+                      navigateToChat(chatId, participants);
+
+                      // Connect to chat after navigation
+                      setTimeout(() => {
+                        console.log("Connecting to new chat store...");
+                        const { connect } = useChatStore.getState();
+                        connect(chatId, me.id);
+                      }, 100);
                     } else {
                       throw getError;
                     }
                   }
                 } catch (error) {
                   console.error("Failed to handle chat navigation:", error);
+                  // Show some user feedback
+                  alert("Не удалось открыть чат. Попробуйте снова.");
                 }
               }}
               variant="custom"
@@ -392,7 +470,9 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
         <ModalWrapper
           storeKey="pointBio"
           isMini
-          className={`${ownerId === me?.id ? "-top-44" : "-top-40"} w-[80%]`}
+          className={`${
+            effectiveOwnerId === me?.id ? "-top-44" : "-top-40"
+          } w-[80%]`}
         >
           <View
             className="bg-[#313034] w-full py-5 rounded-[15px] flex flex-col items-center justify-center relative"
@@ -407,7 +487,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
               </Text>
               <RightArrowIcon />
             </Button>
-            {ownerId !== me?.id && (
+            {effectiveOwnerId !== me?.id && (
               <Button
                 activeOpacity={0.9}
                 onPress={() => {
@@ -440,7 +520,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
             </Button>
           </View>
         ))}
-        {ownerId === me?.id && (
+        {effectiveOwnerId === me?.id && (
           <TouchableOpacity
             onPress={() => setActive("post")}
             className="bg-[#2A292C] w-[40px] h-[40px] rounded-full flex items-center justify-center"
@@ -495,7 +575,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
               multiline
               onChangeText={setCaption}
               placeholder="Ваше сообщение..."
-              className="placeholder:text-[#5C5A5A] text-[#5C5A5A] text-[20px] px-6 mt-6 pt-6 border-[1px] h-[156px] border-[#999999] rounded-[15px] w-full"
+              className="text-white text-[20px] px-6 mt-6 pt-6 border-[1px] h-[156px] border-[#999999] rounded-[15px] w-full"
               onSubmitEditing={() => {
                 Keyboard.dismiss();
               }}

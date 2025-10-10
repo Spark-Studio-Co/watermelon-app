@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { MainLayout } from "../../layouts/main-layout";
 import { ScrollView, View } from "react-native";
 import { SavedPointTab } from "@/src/features/bookmarks/ui/saved-point-tab";
+import { EnhancedSavedPointTab } from "@/src/features/bookmarks/ui/enhanced-saved-point-tab";
 import { BookmarkTab } from "@/src/features/bookmarks/ui/bookmark-tab";
 
 import { useActiveStore } from "@/src/shared/model/use-active-store";
@@ -28,6 +29,7 @@ import { useSearchFriends } from "@/src/entities/users/api/use-search-friends";
 import { useSearchPoints } from "@/src/entities/markers/api/use-search-points";
 import { useSearchChats } from "@/src/features/chat/api/use-search-chats";
 import { useBookmarksSearchStore } from "@/src/features/bookmarks/model/use-bookmarks-search-store";
+import { useMyMarkersWithNewMessages } from "@/src/entities/markers/api/use-my-markers-with-new-messages";
 
 export const BookmarksScreen = () => {
   const { active } = useActiveStore("bookmarks", "Point");
@@ -61,6 +63,10 @@ export const BookmarksScreen = () => {
   const { data: friendSearchResults } = useSearchFriends(search);
   const { data: pointSearchResults } = useSearchPoints(search);
   const { data: chatSearchResults } = useSearchChats(search);
+  const {
+    data: myMarkersWithNewMessages,
+    refetch: refetchMyMarkersWithNewMessages,
+  } = useMyMarkersWithNewMessages();
 
   // Initial fetch when component mounts
   useEffect(() => {
@@ -70,11 +76,31 @@ export const BookmarksScreen = () => {
   // Refetch when screen comes into focus
   useFocusEffect(
     React.useCallback(() => {
-      console.log("BookmarksScreen focused - refetching chats");
+      console.log(
+        "BookmarksScreen focused - refetching chats and markers with new messages"
+      );
       chatFavRefetch();
+      if (active === "Chats") {
+        refetchMyMarkersWithNewMessages();
+      }
       return () => {};
-    }, [])
+    }, [active])
   );
+
+  // Refetch when "Chats" tab becomes active
+  useEffect(() => {
+    if (active === "Chats") {
+      console.log("Chats tab activated - refetching markers with new messages");
+      refetchMyMarkersWithNewMessages();
+    }
+  }, [active, refetchMyMarkersWithNewMessages]);
+
+  // Debug logging for myMarkersWithNewMessages
+  useEffect(() => {
+    if (myMarkersWithNewMessages) {
+      console.log("My markers with new messages:", myMarkersWithNewMessages);
+    }
+  }, [myMarkersWithNewMessages]);
 
   const handleChatNavigate = async (id: string | null) => {
     if (!id || !me?.id) return;
@@ -313,53 +339,120 @@ export const BookmarksScreen = () => {
               </Text>
             )
           ) : (
-            Array.isArray(chats) &&
-            chats.map((item: any, index: number) => {
-              const chat = item.chat;
-
-              if (!chat || !chat.isGroup) return null;
-
-              return (
-                <View key={chat.id || index} className="mb-4">
-                  <SavedPointTab
-                    //@ts-ignore
-                    onPress={() => {
-                      const chatId = chat?.id;
-                      if (!chatId || !me?.id) return;
-
-                      setName(
-                        chat?.title === null
-                          ? `ChatHub ${chat?.randomPointName}`
-                          : chat?.title
-                      );
-                      setAvatar(chat?.marker?.image ?? null);
-
-                      useChatStore.getState().connect(chatId, me.id, true);
-
-                      if (chat?.ownerId !== me.id && chat?.markerId) {
-                        console.log("Added to favorite", chat.markerId);
-                        addToFavorites.mutate(chat.markerId);
-                      }
-
+            <>
+              {/* My markers with new messages */}
+              {Array.isArray(myMarkersWithNewMessages) &&
+                myMarkersWithNewMessages.length > 0 && (
+                  <View className="mb-4">
+                    <Text
+                      weight="medium"
+                      className="text-white text-[18px] mb-3"
+                    >
+                      My Points with New Messages
+                    </Text>
+                  </View>
+                )}
+              {Array.isArray(myMarkersWithNewMessages) &&
+                myMarkersWithNewMessages.map((marker: any, index: number) => (
+                  <View
+                    key={`my-marker-${marker.id || index}`}
+                    className="mb-4"
+                  >
+                    <EnhancedSavedPointTab
                       //@ts-ignore
-                      navigation.navigate("PrivateChat", {
-                        chatId,
-                        participants: [me.id, chat?.ownerId],
-                        chatType: "group",
-                      });
-                    }}
-                    image={chat?.marker?.image}
-                    type="chat"
-                    name={
-                      chat?.title === null
-                        ? `ChatHub #${chat?.randomPointName}`
-                        : chat?.title
-                    }
-                    members={chat?.participants.length}
-                  />
+                      onPress={() => {
+                        // Navigate to the first chat with new messages or the first chat
+                        const chatWithNewMessages = marker.chats?.find(
+                          (chat: any) => chat.hasNewMessages
+                        );
+                        const targetChat =
+                          chatWithNewMessages || marker.chats?.[0];
+
+                        if (!targetChat?.id || !me?.id) return;
+
+                        setName(
+                          targetChat.title ||
+                            marker.name ||
+                            `Point #${marker.id}`
+                        );
+                        setAvatar(marker.image ?? null);
+
+                        useChatStore
+                          .getState()
+                          .connect(targetChat.id, me.id, true);
+
+                        //@ts-ignore
+                        navigation.navigate("PrivateChat", {
+                          chatId: targetChat.id,
+                          participants: [me.id, marker.ownerId],
+                          chatType: "group",
+                        });
+                      }}
+                      image={marker.image}
+                      type="chat"
+                      name={marker.name || `Point #${marker.id}`}
+                      members={marker.chats?.length || 0}
+                      newMessagesCount={marker.totalNewMessages}
+                    />
+                  </View>
+                ))}
+
+              {/* Favorite chats */}
+              {Array.isArray(chats) && chats.length > 0 && (
+                <View className="mb-4 mt-6">
+                  <Text weight="medium" className="text-white text-[18px] mb-3">
+                    Favorite Chats
+                  </Text>
                 </View>
-              );
-            })
+              )}
+              {Array.isArray(chats) &&
+                chats.map((item: any, index: number) => {
+                  const chat = item.chat;
+
+                  if (!chat || !chat.isGroup) return null;
+
+                  return (
+                    <View key={`fav-chat-${chat.id || index}`} className="mb-4">
+                      <SavedPointTab
+                        //@ts-ignore
+                        onPress={() => {
+                          const chatId = chat?.id;
+                          if (!chatId || !me?.id) return;
+
+                          setName(
+                            chat?.title === null
+                              ? `ChatHub ${chat?.randomPointName}`
+                              : chat?.title
+                          );
+                          setAvatar(chat?.marker?.image ?? null);
+
+                          useChatStore.getState().connect(chatId, me.id, true);
+
+                          if (chat?.ownerId !== me.id && chat?.markerId) {
+                            console.log("Added to favorite", chat.markerId);
+                            addToFavorites.mutate(chat.markerId);
+                          }
+
+                          //@ts-ignore
+                          navigation.navigate("PrivateChat", {
+                            chatId,
+                            participants: [me.id, chat?.ownerId],
+                            chatType: "group",
+                          });
+                        }}
+                        image={chat?.marker?.image}
+                        type="chat"
+                        name={
+                          chat?.title === null
+                            ? `ChatHub #${chat?.randomPointName}`
+                            : chat?.title
+                        }
+                        members={chat?.participants.length}
+                      />
+                    </View>
+                  );
+                })}
+            </>
           ))}
         {active === "Friends" && (
           <View className="mb-4">
