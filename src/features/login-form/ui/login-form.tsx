@@ -34,7 +34,7 @@ export const LoginForm = () => {
             console.log("There is an error with data");
           }
           clearForm();
-          navigate("SuccessSignUp" as never);
+          navigate("SuccessSignIn" as never);
         },
         onError: (error: any) => {
           console.log(error);

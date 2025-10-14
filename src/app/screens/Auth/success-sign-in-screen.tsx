@@ -9,12 +9,15 @@ import { useAuthStore } from "@/src/entities/registration/api/use-auth-store";
 
 export const SuccessSignInScreen = () => {
   const { navigate } = useNavigation();
-  const { setOnboardingComplete } = useAuthStore();
+  const { setOnboardingComplete, setRegistrationComplete } = useAuthStore();
 
   const handleContinue = async () => {
-    // Отмечаем onboarding как завершённый
+    // Отмечаем onboarding и регистрацию как завершённые
+    await setRegistrationComplete(true);
     await setOnboardingComplete(true);
-    console.log("Onboarding completed - navigating to dashboard");
+    console.log(
+      "Registration and onboarding completed - navigating to dashboard"
+    );
   };
 
   return (
