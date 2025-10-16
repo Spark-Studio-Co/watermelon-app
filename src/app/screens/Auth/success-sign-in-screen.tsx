@@ -9,15 +9,31 @@ import { useAuthStore } from "@/src/entities/registration/api/use-auth-store";
 
 export const SuccessSignInScreen = () => {
   const { navigate } = useNavigation();
-  const { setOnboardingComplete, setRegistrationComplete } = useAuthStore();
+  const {
+    completeAuthFlow,
+    token,
+    tempToken,
+    isRegistrationComplete,
+    isOnboardingComplete,
+  } = useAuthStore();
 
   const handleContinue = async () => {
-    // Отмечаем onboarding и регистрацию как завершённые
-    await setRegistrationComplete(true);
-    await setOnboardingComplete(true);
-    console.log(
-      "Registration and onboarding completed - navigating to dashboard"
-    );
+    console.log("🚀 handleContinue начал выполнение");
+    console.log("📊 Текущее состояние:");
+    console.log("  Token:", token);
+    console.log("  TempToken:", tempToken);
+    console.log("  Registration complete:", isRegistrationComplete);
+    console.log("  Onboarding complete:", isOnboardingComplete);
+
+    try {
+      // Завершаем весь флоу авторизации одной функцией
+      await completeAuthFlow();
+      console.log(
+        "✅ Флоу авторизации завершен, стеки должны переключиться автоматически"
+      );
+    } catch (error) {
+      console.error("❌ Ошибка в handleContinue:", error);
+    }
   };
 
   return (

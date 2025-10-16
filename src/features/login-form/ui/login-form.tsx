@@ -16,7 +16,7 @@ export const LoginForm = () => {
   const { navigate } = useNavigation();
   const { password, email, setPassword, setEmail, setResponseData, clearForm } =
     useLoginStore();
-  const { setId, id } = useAuthStore();
+  const { setId, setTempToken, id } = useAuthStore();
 
   const handleSubmit = () => {
     if (!email.trim() || !password.trim()) {
@@ -28,8 +28,13 @@ export const LoginForm = () => {
       {
         onSuccess: async (data: any) => {
           if (data?.token || data?.user) {
-            setId(data.user.id);
-            setResponseData(data.token);
+            console.log("🎯 Успешный логин, устанавливаем данные:");
+            console.log("  User ID:", data.user.id);
+            console.log("  Token:", data.token);
+
+            await setId(data.user.id);
+            setTempToken(data.token); // Сохраняем токен временно, пока не завершим флоу
+            setResponseData(data.token); // Оставляем для совместимости
           } else {
             console.log("There is an error with data");
           }

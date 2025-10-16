@@ -68,18 +68,18 @@ export const ChatTab = ({ isGlobal }: IChatTabProps) => {
           </Button>
         )}
         <Image
-          source={avatar === null ? fallback : avatar}
+          source={!avatar || avatar === null ? fallback : avatar}
           className={`w-[54px] h-full rounded-full ${
-            avatar === null && "-ml-3 mr-2"
+            (!avatar || avatar === null) && "-ml-3 mr-2"
           }`}
         />
         <View className="flex flex-col justify-between ml-2">
           <Text weight="regular" className="text-white text-[17.4px]">
-            {isGlobal && chatTitleData?.title
+            {name && name !== ""
+              ? name
+              : isGlobal && chatTitleData?.title
               ? chatTitleData.title
-              : name === ""
-              ? "User Name"
-              : name}
+              : "User Name"}
           </Text>
           {isGlobal ? (
             <Text weight="regular" className="text-[#8E8E8E] text-[14px]">

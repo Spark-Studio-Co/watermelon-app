@@ -16,6 +16,8 @@ export const RootNavigator = () => {
     id,
     isRegistrationComplete,
     isOnboardingComplete,
+    shouldNavigateToMain,
+    resetNavigationFlag,
     loadRegistrationStatus,
     loadOnboardingStatus,
   } = useAuthStore();
@@ -33,11 +35,36 @@ export const RootNavigator = () => {
   }, []);
 
   useEffect(() => {
-    console.log("Token updated:", token);
-    console.log("ID:", id);
-    console.log("Registration complete:", isRegistrationComplete);
-    console.log("Onboarding complete:", isOnboardingComplete);
-  }, [token, id, isRegistrationComplete, isOnboardingComplete]);
+    console.log("🔍 Состояние изменилось:");
+    console.log("  Token:", token);
+    console.log("  ID:", id);
+    console.log("  Registration complete:", isRegistrationComplete);
+    console.log("  Onboarding complete:", isOnboardingComplete);
+    console.log("  Should navigate to main:", shouldNavigateToMain);
+    console.log(
+      "  Должен показывать MainStack:",
+      !!(token && isRegistrationComplete && isOnboardingComplete)
+    );
+  }, [
+    token,
+    id,
+    isRegistrationComplete,
+    isOnboardingComplete,
+    shouldNavigateToMain,
+  ]);
+
+  // Отдельный useEffect для отслеживания флага навигации
+  useEffect(() => {
+    if (shouldNavigateToMain) {
+      console.log(
+        "🎯 shouldNavigateToMain = true, принудительно перерендериваем..."
+      );
+      // Сбрасываем флаг после обработки
+      setTimeout(() => {
+        resetNavigationFlag();
+      }, 1000);
+    }
+  }, [shouldNavigateToMain, resetNavigationFlag]);
 
   if (isLoading) {
     return (
@@ -47,14 +74,13 @@ export const RootNavigator = () => {
     );
   }
 
+  const shouldShowMainStack =
+    token && isRegistrationComplete && isOnboardingComplete;
+
   return (
     <NavigationContainer>
       <StatusBar translucent backgroundColor="transparent" />
-      {token && isRegistrationComplete && isOnboardingComplete ? (
-        <MainStack />
-      ) : (
-        <AuthStack />
-      )}
+      {shouldShowMainStack ? <MainStack /> : <AuthStack />}
     </NavigationContainer>
   );
 };

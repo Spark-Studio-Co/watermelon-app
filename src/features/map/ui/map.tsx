@@ -159,7 +159,7 @@ export const Map = () => {
       const participants = [me.id, markerById.ownerId];
 
       setName(markerById.name ?? "Chat");
-      setAvatar(markerById.image);
+      setAvatar(markerById.image ? { uri: markerById.image } : null);
 
       //@ts-ignore
       navigation.navigate("PrivateChat", {
@@ -517,7 +517,7 @@ export const Map = () => {
                       if (!chatId || !me?.id) return;
 
                       setName(marker.name ?? `Point #${marker?.map_id}`);
-                      setAvatar(marker.image ?? null);
+                      setAvatar(marker.image ? { uri: marker.image } : null);
                       setCurrentChatMarkerId(marker.id);
 
                       console.log(

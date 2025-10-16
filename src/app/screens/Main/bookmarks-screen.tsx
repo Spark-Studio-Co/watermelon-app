@@ -48,9 +48,6 @@ export const BookmarksScreen = () => {
   } = useGetUsers(undefined, true);
 
   // Debug logging
-  console.log("New friends data:", newFriends);
-  console.log("Is loading new friends:", isLoadingNewFriends);
-  console.log("New friends error:", newFriendsError);
   const { data: me } = useGetMe();
   const { data: incomingFriends } = useIncomingFriendsData();
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -75,11 +72,9 @@ export const BookmarksScreen = () => {
   // Refetch when screen comes into focus
   useFocusEffect(
     React.useCallback(() => {
-      console.log(
-        "BookmarksScreen focused - refetching chats and markers with new messages"
-      );
       chatFavRefetch();
       if (active === "Chats") {
+        console.log("CHATS SUKA", chats);
         refetchMyMarkersWithNewMessages();
       }
       return () => {};
