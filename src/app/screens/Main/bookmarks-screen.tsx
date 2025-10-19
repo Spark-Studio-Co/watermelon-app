@@ -361,65 +361,6 @@ export const BookmarksScreen = () => {
                     </View>
                   );
                 })}
-              {Array.isArray(chats) && chats.length > 0 && (
-                <View className="mb-4 mt-6">
-                  <Text weight="medium" className="text-white text-[18px] mb-3">
-                    Favorite Chats
-                  </Text>
-                </View>
-              )}
-              {Array.isArray(chats) &&
-                chats.map((item: any, index: number) => {
-                  const chat = item.chat;
-
-                  // Show all group chats here (including Global Chat)
-                  if (!chat || !chat.isGroup) return null;
-
-                  return (
-                    <View key={`fav-chat-${chat.id || index}`} className="mb-4">
-                      <SavedPointTab
-                        //@ts-ignore
-                        onPress={() => {
-                          const chatId = chat?.id;
-                          if (!chatId || !me?.id) return;
-
-                          setName(
-                            chat?.title === null || chat?.title === ""
-                              ? `ChatHub #${chat?.randomPointName}`
-                              : chat?.title
-                          );
-                          setAvatar(chat?.marker?.image ?? null);
-
-                          useChatStore.getState().connect(chatId, me.id, true);
-
-                          if (chat?.ownerId !== me.id && chat?.markerId) {
-                            console.log("Added to favorite", chat.markerId);
-                            addToFavorites.mutate(chat.markerId);
-                          }
-
-                          //@ts-ignore
-                          navigation.navigate("PrivateChat", {
-                            chatId,
-                            participants: [me.id, chat?.ownerId],
-                            chatType: "group",
-                          });
-                        }}
-                        image={chat?.marker?.image}
-                        type="chat"
-                        name={
-                          chat?.title === null || chat?.title === ""
-                            ? chat?.randomPointName === "global"
-                              ? "Global chat"
-                              : `ChatHub #${chat?.randomPointName}`
-                            : chat?.title
-                        }
-                        members={
-                          chat?.participants?.length ?? chat?.membersCount ?? 0
-                        }
-                      />
-                    </View>
-                  );
-                })}
             </>
           ))}
         {active === "Friends" && (

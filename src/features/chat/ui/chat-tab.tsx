@@ -60,10 +60,7 @@ export const ChatTab = ({ isGlobal }: IChatTabProps) => {
     >
       <View className="flex flex-row h-full items-center">
         {isGlobal && (
-          <Button
-            className="mr-3"
-            onPress={() => navigation.navigate("Dashboard" as never)}
-          >
+          <Button className="mr-3" onPress={() => navigation.goBack()}>
             <BackArrowIcon />
           </Button>
         )}

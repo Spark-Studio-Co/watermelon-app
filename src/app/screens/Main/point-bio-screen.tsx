@@ -307,7 +307,7 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
   ]);
 
   return (
-    <MainLayout>
+    <MainLayout isBack title={marker?.name ?? `Point #${marker?.map_id}`}>
       <View className="w-[80%] mx-auto mt-4">
         <PointBioTab
           isSettingsVisible={effectiveOwnerId === me?.id}
