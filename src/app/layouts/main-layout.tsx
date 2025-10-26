@@ -151,9 +151,6 @@ export const MainLayout = ({
                   >
                     <RightArrowIcon />
                   </Button>
-                  <Text weight="regular" className="text-white text-[16px]">
-                    {title}
-                  </Text>
                 </View>
               )}
               {isUserTab && <UserTab />}
@@ -188,9 +185,6 @@ export const MainLayout = ({
                   >
                     <RightArrowIcon />
                   </Button>
-                  <Text weight="regular" className="text-white text-[16px]">
-                    {title}
-                  </Text>
                 </View>
               )}
               {isUserTab && <UserTab />}

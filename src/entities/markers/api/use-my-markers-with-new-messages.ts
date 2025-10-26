@@ -21,12 +21,14 @@ export interface MarkerWithNewMessages {
   }[];
 }
 
-export const useMyMarkersWithNewMessages = () => {
+export const useMyMarkersWithNewMessages = (search?: string) => {
   return useQuery<MarkerWithNewMessages[]>({
-    queryKey: ["myMarkersWithNewMessages"],
+    queryKey: ["myMarkersWithNewMessages", search],
     queryFn: async () => {
+      const params = search ? { search } : {};
       const response = await apiClient.get(
-        "/markers/my-markers-with-new-messages"
+        "/markers/my-markers-with-new-messages",
+        { params }
       );
       return response.data;
     },

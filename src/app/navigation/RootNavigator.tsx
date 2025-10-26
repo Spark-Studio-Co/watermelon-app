@@ -53,7 +53,8 @@ export const RootNavigator = () => {
     shouldNavigateToMain,
   ]);
 
-  // Отдельный useEffect для отслеживания флага навигации
+  // Отдельный
+  //  useEffect для отслеживания флага навигации
   useEffect(() => {
     if (shouldNavigateToMain) {
       console.log(

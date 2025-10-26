@@ -63,7 +63,7 @@ export const BookmarksScreen = () => {
   const {
     data: myMarkersWithNewMessages,
     refetch: refetchMyMarkersWithNewMessages,
-  } = useMyMarkersWithNewMessages();
+  } = useMyMarkersWithNewMessages(active === "Chats" ? search : undefined);
 
   useEffect(() => {
     refetchMyMarkersWithNewMessages();
@@ -270,44 +270,12 @@ export const BookmarksScreen = () => {
               </View>
             ))
           ))}
-        {active === "Chats" &&
-          (search.length > 0 ? (
-            Array.isArray(chatSearchResults) && chatSearchResults.length > 0 ? (
-              chatSearchResults.map((chatItem: any, index: number) => {
-                const chat = chatItem.chat;
-                if (!chat || !chat.isGroup) return null;
-
-                return (
-                  <View
-                    key={`search-chat-${chat.id || index}`}
-                    className="mb-4"
-                  ></View>
-                );
-              })
-            ) : (
-              <Text
-                weight="regular"
-                className="text-white text-center text-[18px]"
-                style={{ textAlign: "center" }}
-              >
-                Ничего не найдено
-              </Text>
-            )
-          ) : (
-            <>
-              {/* My markers with new messages */}
-              {Array.isArray(myMarkersWithNewMessages) &&
-                myMarkersWithNewMessages.length > 0 && (
-                  <View className="mb-4">
-                    <Text
-                      weight="medium"
-                      className="text-white text-[18px] mb-3"
-                    >
-                      Point messages
-                    </Text>
-                  </View>
-                )}
-              {Array.isArray(myMarkersWithNewMessages) &&
+        {active === "Chats" && (
+          <>
+            {search.length > 0 ? (
+              // When searching, show results or "nothing found"
+              Array.isArray(myMarkersWithNewMessages) &&
+              myMarkersWithNewMessages.length > 0 ? (
                 myMarkersWithNewMessages.map((marker: any, index: number) => {
                   const totalNewMessages =
                     marker.chats?.reduce(
@@ -319,7 +287,7 @@ export const BookmarksScreen = () => {
 
                   return (
                     <View
-                      key={`my-marker-${marker.id || index}`}
+                      key={`search-marker-${marker.id || index}`}
                       className="mb-4"
                     >
                       <EnhancedSavedPointTab
@@ -352,7 +320,7 @@ export const BookmarksScreen = () => {
                           });
                         }}
                         image={marker.image}
-                        type={marker.type || "premium"} // Use the actual marker type instead of "chat"
+                        type={marker.type || "premium"}
                         name={marker.name || `Point #${marker.id}`}
                         newMessagesCount={totalNewMessages}
                         subscribers={marker.favoriteCount}
@@ -360,9 +328,90 @@ export const BookmarksScreen = () => {
                       />
                     </View>
                   );
-                })}
-            </>
-          ))}
+                })
+              ) : (
+                <Text
+                  weight="regular"
+                  className="text-white text-center text-[18px]"
+                  style={{ textAlign: "center" }}
+                >
+                  Ничего не найдено
+                </Text>
+              )
+            ) : (
+              // When not searching, show all markers with new messages
+              <>
+                {Array.isArray(myMarkersWithNewMessages) &&
+                  myMarkersWithNewMessages.length > 0 && (
+                    <View className="mb-4">
+                      <Text
+                        weight="medium"
+                        className="text-white text-[18px] mb-3"
+                      >
+                        Point messages
+                      </Text>
+                    </View>
+                  )}
+                {Array.isArray(myMarkersWithNewMessages) &&
+                  myMarkersWithNewMessages.map((marker: any, index: number) => {
+                    const totalNewMessages =
+                      marker.chats?.reduce(
+                        (total: number, chat: any) =>
+                          total +
+                          (chat.hasNewMessages
+                            ? chat.newMessagesCount || 1
+                            : 0),
+                        0
+                      ) || 0;
+
+                    return (
+                      <View
+                        key={`my-marker-${marker.id || index}`}
+                        className="mb-4"
+                      >
+                        <EnhancedSavedPointTab
+                          //@ts-ignore
+                          onPress={() => {
+                            const chatWithNewMessages = marker.chats?.find(
+                              (chat: any) => chat.hasNewMessages
+                            );
+                            const targetChat =
+                              chatWithNewMessages || marker.chats?.[0];
+
+                            if (!targetChat?.id || !me?.id) return;
+
+                            setName(
+                              targetChat.title ||
+                                marker.name ||
+                                `Point #${marker.id}`
+                            );
+                            setAvatar(marker.image ?? null);
+
+                            useChatStore
+                              .getState()
+                              .connect(targetChat.id, me.id, true);
+
+                            //@ts-ignore
+                            navigation.navigate("PrivateChat", {
+                              chatId: targetChat.id,
+                              participants: [me.id, marker.ownerId],
+                              chatType: "private",
+                            });
+                          }}
+                          image={marker.image}
+                          type={marker.type || "premium"}
+                          name={marker.name || `Point #${marker.id}`}
+                          newMessagesCount={totalNewMessages}
+                          subscribers={marker.favoriteCount}
+                          views={marker.views}
+                        />
+                      </View>
+                    );
+                  })}
+              </>
+            )}
+          </>
+        )}
         {active === "Friends" && (
           <View className="mb-4">
             {search.length > 0 ? (
@@ -431,42 +480,6 @@ export const BookmarksScreen = () => {
                       />
                     </View>
                   ))}
-                {isLoadingNewFriends ? (
-                  <Text
-                    weight="regular"
-                    className="text-white text-center text-[16px]"
-                    style={{ textAlign: "center" }}
-                  >
-                    Загрузка предложений...
-                  </Text>
-                ) : Array.isArray(formattedFriends) &&
-                  formattedFriends.length > 0 ? (
-                  formattedFriends.map((friend: IGetUsersRDO) => (
-                    <View key={`new-friend-${friend.id}`} className="mb-4">
-                      <FriendTab
-                        avatar={friend.avatar}
-                        username={friend.name || "User Name"}
-                        nickname={
-                          friend.username ? `@${friend.username}` : friend.email
-                        }
-                        onPress={() => {
-                          handleSendRequest(friend.id);
-                        }}
-                        isPremium={friend.isPremium}
-                        isAddToFriends
-                        isAdded={!!activeFriends[friend.id]}
-                      />
-                    </View>
-                  ))
-                ) : newFriendsError ? (
-                  <Text
-                    weight="regular"
-                    className="text-red-400 text-center text-[16px]"
-                    style={{ textAlign: "center" }}
-                  >
-                    Ошибка загрузки предложений
-                  </Text>
-                ) : null}
               </>
             )}
           </View>

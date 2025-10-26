@@ -27,6 +27,7 @@ import {
   RouteProp,
   useNavigation,
   NavigationProp,
+  useNavigationState,
 } from "@react-navigation/native";
 import { useEffect, useRef, useState } from "react";
 import { useCameraPermissions } from "expo-camera";
@@ -70,6 +71,7 @@ type RootStackParamList = {
 
 export const PointBioScreen = ({ route }: PointBioRouteProp) => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const navigationState = useNavigationState((state) => state);
   const bioInputRef = useRef(null);
   const queryClient = useQueryClient();
   const { id: markerId, ownerId, isPrivate } = route.params as RouteParams;
@@ -228,6 +230,54 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
 
   const isOwner = effectiveOwnerId === me?.id;
 
+  // Custom back handler for navigation from Auction
+  const handleCustomBack = () => {
+    console.log("🔙 handleCustomBack called");
+
+    const routes = navigationState?.routes || [];
+    const currentIndex = navigationState?.index || 0;
+
+    console.log(
+      "PointBioScreen back handler - routes:",
+      routes.map((r) => r.name)
+    );
+    console.log("Current index:", currentIndex);
+
+    if (currentIndex > 0) {
+      const previousRoute = routes[currentIndex - 1];
+      console.log("Previous route:", previousRoute?.name);
+
+      // If we came from Auction or AuctionInner, navigate to Dashboard instead
+      if (
+        previousRoute?.name === "Auction" ||
+        previousRoute?.name === "AuctionInner"
+      ) {
+        console.log(
+          "✅ Came from Auction/AuctionInner, resetting to Dashboard"
+        );
+        // Use reset to avoid navigation stack issues
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "Dashboard" as never }],
+        });
+        return;
+      }
+    }
+
+    // Default back navigation
+    console.log("Using default back navigation");
+    if (navigation.canGoBack()) {
+      console.log("✅ Can go back, using goBack()");
+      navigation.goBack();
+    } else {
+      console.log("⚠️ Cannot go back, resetting to Dashboard");
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Dashboard" as never }],
+      });
+    }
+  };
+
   // Navigation helper function
   const navigateToChat = (chatId: string, participants: string[]) => {
     console.log("Attempting navigation to PrivateChat with:", {
@@ -307,7 +357,11 @@ export const PointBioScreen = ({ route }: PointBioRouteProp) => {
   ]);
 
   return (
-    <MainLayout isBack title={marker?.name ?? `Point #${marker?.map_id}`}>
+    <MainLayout
+      isBack
+      title={marker?.name ?? `Point #${marker?.map_id}`}
+      customBackHandler={handleCustomBack}
+    >
       <View className="w-[80%] mx-auto mt-4">
         <PointBioTab
           isSettingsVisible={effectiveOwnerId === me?.id}
