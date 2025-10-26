@@ -8,15 +8,24 @@ export interface MarkerWithNewMessages {
   latitude: number;
   longitude: number;
   totalNewMessages: number;
+  ownerId?: string;
+  image?: string;
+  type?: string;
+  favoriteCount?: number;
+  views?: number;
   chats: {
     id: string;
     title: string;
     hasNewMessages: boolean;
     messageCount: number;
+    newMessagesCount?: number;
+    senderId?: string; // ID отправителя последнего сообщения
+    participants?: string[]; // Список участников чата
     lastMessage: {
       id: string;
       text: string;
       sentAt: string;
+      senderId?: string; // ID отправителя
     };
   }[];
 }

@@ -93,6 +93,21 @@ export const BookmarksScreen = () => {
   useEffect(() => {
     if (myMarkersWithNewMessages) {
       console.log("My markers with new messages:", myMarkersWithNewMessages);
+      // Детальный лог каждого маркера и его чатов
+      myMarkersWithNewMessages.forEach((marker: any, index: number) => {
+        console.log(`\n=== Marker ${index} ===`);
+        console.log("Marker ID:", marker.id);
+        console.log("Owner ID:", marker.ownerId);
+        console.log("Chats:", marker.chats);
+        marker.chats?.forEach((chat: any, chatIndex: number) => {
+          console.log(`  Chat ${chatIndex}:`, {
+            chatId: chat.id,
+            senderId: chat.senderId,
+            lastMessageSenderId: chat.lastMessage?.senderId,
+            hasNewMessages: chat.hasNewMessages,
+          });
+        });
+      });
     }
   }, [myMarkersWithNewMessages]);
 
@@ -299,7 +314,63 @@ export const BookmarksScreen = () => {
                           const targetChat =
                             chatWithNewMessages || marker.chats?.[0];
 
-                          if (!targetChat?.id || !me?.id) return;
+                          if (!targetChat?.id || !me?.id) {
+                            console.error(
+                              "[BookmarksScreen] Missing required data:",
+                              {
+                                chatId: targetChat?.id,
+                                userId: me?.id,
+                              }
+                            );
+                            return;
+                          }
+
+                          // Приоритет поиска второго участника:
+                          // 1. Из participants чата (исключаем себя)
+                          // 2. Из senderId последнего сообщения
+                          // 3. Из senderId чата
+                          let otherUserId = null;
+
+                          // Пробуем найти другого участника в participants
+                          if (
+                            targetChat.participants &&
+                            Array.isArray(targetChat.participants)
+                          ) {
+                            otherUserId = targetChat.participants.find(
+                              (id: string) => id !== me.id
+                            );
+                          }
+
+                          // Если не нашли, пробуем senderId
+                          if (!otherUserId) {
+                            const senderId =
+                              targetChat.lastMessage?.senderId ||
+                              targetChat.senderId;
+                            if (senderId && senderId !== me.id) {
+                              otherUserId = senderId;
+                            }
+                          }
+
+                          // Логируем для отладки
+                          console.log(
+                            "[BookmarksScreen] Chat navigation data:",
+                            {
+                              chatId: targetChat.id,
+                              myId: me.id,
+                              participants: targetChat.participants,
+                              senderId: targetChat.senderId,
+                              lastMessageSenderId:
+                                targetChat.lastMessage?.senderId,
+                              resolvedOtherUserId: otherUserId,
+                            }
+                          );
+
+                          if (!otherUserId) {
+                            console.error(
+                              "[BookmarksScreen] Could not find other user ID"
+                            );
+                            return;
+                          }
 
                           setName(
                             targetChat.title ||
@@ -315,7 +386,7 @@ export const BookmarksScreen = () => {
                           //@ts-ignore
                           navigation.navigate("PrivateChat", {
                             chatId: targetChat.id,
-                            participants: [me.id, marker.ownerId],
+                            participants: [me.id, otherUserId],
                             chatType: "private",
                           });
                         }}
@@ -378,7 +449,63 @@ export const BookmarksScreen = () => {
                             const targetChat =
                               chatWithNewMessages || marker.chats?.[0];
 
-                            if (!targetChat?.id || !me?.id) return;
+                            if (!targetChat?.id || !me?.id) {
+                              console.error(
+                                "[BookmarksScreen] Missing required data:",
+                                {
+                                  chatId: targetChat?.id,
+                                  userId: me?.id,
+                                }
+                              );
+                              return;
+                            }
+
+                            // Приоритет поиска второго участника:
+                            // 1. Из participants чата (исключаем себя)
+                            // 2. Из senderId последнего сообщения
+                            // 3. Из senderId чата
+                            let otherUserId = null;
+
+                            // Пробуем найти другого участника в participants
+                            if (
+                              targetChat.participants &&
+                              Array.isArray(targetChat.participants)
+                            ) {
+                              otherUserId = targetChat.participants.find(
+                                (id: string) => id !== me.id
+                              );
+                            }
+
+                            // Если не нашли, пробуем senderId
+                            if (!otherUserId) {
+                              const senderId =
+                                targetChat.lastMessage?.senderId ||
+                                targetChat.senderId;
+                              if (senderId && senderId !== me.id) {
+                                otherUserId = senderId;
+                              }
+                            }
+
+                            // Логируем для отладки
+                            console.log(
+                              "[BookmarksScreen] Chat navigation data (search):",
+                              {
+                                chatId: targetChat.id,
+                                myId: me.id,
+                                participants: targetChat.participants,
+                                senderId: targetChat.senderId,
+                                lastMessageSenderId:
+                                  targetChat.lastMessage?.senderId,
+                                resolvedOtherUserId: otherUserId,
+                              }
+                            );
+
+                            if (!otherUserId) {
+                              console.error(
+                                "[BookmarksScreen] Could not find other user ID"
+                              );
+                              return;
+                            }
 
                             setName(
                               targetChat.title ||
@@ -394,7 +521,7 @@ export const BookmarksScreen = () => {
                             //@ts-ignore
                             navigation.navigate("PrivateChat", {
                               chatId: targetChat.id,
-                              participants: [me.id, marker.ownerId],
+                              participants: [me.id, otherUserId],
                               chatType: "private",
                             });
                           }}

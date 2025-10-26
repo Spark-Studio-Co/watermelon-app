@@ -107,11 +107,18 @@ export const PrivateChatScreen = () => {
       if (chatType === "group") {
         sendGroupMessage(text, chatId, userId);
       } else {
-        const receiverId = participants.find((id) => id !== userId);
+        const receiverId = participants.find(
+          (id) => id !== userId && id !== undefined && id !== null
+        );
 
         if (!receiverId) {
           console.error(
-            "[PrivateChatScreen] Error: Could not determine receiverId!"
+            "[PrivateChatScreen] Error: Could not determine receiverId!",
+            {
+              participants,
+              userId,
+              chatType,
+            }
           );
           return;
         }
