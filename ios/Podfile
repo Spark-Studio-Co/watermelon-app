@@ -36,7 +36,7 @@ target 'pointapp' do
   use_frameworks! :linkage => podfile_properties['ios.useFrameworks'].to_sym if podfile_properties['ios.useFrameworks']
   use_frameworks! :linkage => ENV['USE_FRAMEWORKS'].to_sym if ENV['USE_FRAMEWORKS']
 
-  use_frameworks! :linkage => :static
+  use_frameworks! :linkage => :dynamic
 
   use_react_native!(
     :path => config[:reactNativePath],
@@ -50,21 +50,34 @@ target 'pointapp' do
   pod 'Firebase/Core'
   pod 'Firebase/Messaging'
 
-  post_install do |installer|
-    react_native_post_install(
-      installer,
-      config[:reactNativePath],
-      :mac_catalyst_enabled => false,
-      :ccache_enabled => podfile_properties['apple.ccacheEnabled'] == 'true',
-    )
+post_install do |installer|
+  react_native_post_install(
+    installer,
+    config[:reactNativePath],
+    :mac_catalyst_enabled => false,
+    :ccache_enabled => podfile_properties['apple.ccacheEnabled'] == 'true',
+  )
 
-    # This is necessary for Xcode 14, because it signs resource bundles by default
-    # when building for devices.
-    installer.target_installation_results.pod_target_installation_results
-      .each do |pod_name, target_installation_result|
-      target_installation_result.resource_bundle_targets.each do |resource_bundle_target|
-        resource_bundle_target.build_configurations.each do |config|
-          config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
+  # Xcode 14/15 resource signing fix
+  installer.target_installation_results.pod_target_installation_results
+    .each do |pod_name, target_installation_result|
+    target_installation_result.resource_bundle_targets.each do |resource_bundle_target|
+      resource_bundle_target.build_configurations.each do |config|
+        config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
+      end
+    end
+  end
+
+  # 🚑 FIX: remove duplicate AppIntents metadata
+  installer.pods_project.targets.each do |target|
+    if target.name == 'FirebaseCoreInternal'
+      target.build_phases.each do |phase|
+        if phase.respond_to?(:files)
+          phase.files.each do |file|
+            if file.display_name.include?('Metadata.appintents')
+              phase.remove_build_file(file)
+            end
+          end
         end
       end
     end
