@@ -1,3 +1,5 @@
+# Podfile — pointapp (Expo Bare / React Native + Firebase)
+
 require File.join(File.dirname(`node --print "require.resolve('expo/package.json')"`), "scripts/autolinking")
 require File.join(File.dirname(`node --print "require.resolve('react-native/package.json')"`), "scripts/react_native_pods")
 
@@ -8,18 +10,28 @@ ENV['RCT_NEW_ARCH_ENABLED'] = '0' if podfile_properties['newArchEnabled'] == 'fa
 ENV['EX_DEV_CLIENT_NETWORK_INSPECTOR'] = podfile_properties['EX_DEV_CLIENT_NETWORK_INSPECTOR']
 
 platform :ios, podfile_properties['ios.deploymentTarget'] || '15.1'
+
 install! 'cocoapods',
   :deterministic_uuids => false
 
 prepare_react_native_project!
 
+# Глобально включаем модульные заголовки (нужны для Swift-подов, зависящих от ObjC, напр. GoogleUtilities)
 use_modular_headers!
+
+# Патч на случай проблем с очисткой build-папок в Xcode 15+
+pre_install do |installer|
+  build_path = File.join(__dir__, 'build')
+  if Dir.exist?(build_path)
+    system("xattr -w com.apple.xcode.CreatedByBuildSystem true #{build_path}")
+  end
+end
 
 target 'pointapp' do
   use_expo_modules!
 
   if ENV['EXPO_USE_COMMUNITY_AUTOLINKING'] == '1'
-    config_command = ['node', '-e', "process.argv=['', '', 'config'];require('@react-native-community/cli').run()"];
+    config_command = ['node', '-e', "process.argv=['', '', 'config'];require('@react-native-community/cli').run()"]
   else
     config_command = [
       'npx',
@@ -33,50 +45,58 @@ target 'pointapp' do
 
   config = use_native_modules!(config_command)
 
-  use_frameworks! :linkage => podfile_properties['ios.useFrameworks'].to_sym if podfile_properties['ios.useFrameworks']
-  use_frameworks! :linkage => ENV['USE_FRAMEWORKS'].to_sym if ENV['USE_FRAMEWORKS']
-
-  use_frameworks! :linkage => :dynamic
+  # ЕДИНОРАЗОВО задаём linkage для use_frameworks!
+  # Приоритет: Podfile.properties.json -> ENV -> :dynamic (по умолчанию)
+  linkage =
+    if podfile_properties['ios.useFrameworks']
+      podfile_properties['ios.useFrameworks'].to_sym
+    elsif ENV['USE_FRAMEWORKS']
+      ENV['USE_FRAMEWORKS'].to_sym
+    else
+      :dynamic
+    end
+  use_frameworks! :linkage => linkage
 
   use_react_native!(
     :path => config[:reactNativePath],
     :hermes_enabled => podfile_properties['expo.jsEngine'] == nil || podfile_properties['expo.jsEngine'] == 'hermes',
-    # An absolute path to your application root.
     :app_path => "#{Pod::Config.instance.installation_root}/..",
     :privacy_file_aggregation_enabled => podfile_properties['apple.privacyManifestAggregationEnabled'] != 'false',
   )
 
+  # Firebase / GoogleUtilities фиксы
   pod 'GoogleUtilities', :modular_headers => true
   pod 'Firebase/Core'
   pod 'Firebase/Messaging'
 
-post_install do |installer|
-  react_native_post_install(
-    installer,
-    config[:reactNativePath],
-    :mac_catalyst_enabled => false,
-    :ccache_enabled => podfile_properties['apple.ccacheEnabled'] == 'true',
-  )
+  post_install do |installer|
+    react_native_post_install(
+      installer,
+      config[:reactNativePath],
+      :mac_catalyst_enabled => false,
+      :ccache_enabled => podfile_properties['apple.ccacheEnabled'] == 'true',
+    )
 
-  # Xcode 14/15 resource signing fix
-  installer.target_installation_results.pod_target_installation_results
-    .each do |pod_name, target_installation_result|
-    target_installation_result.resource_bundle_targets.each do |resource_bundle_target|
-      resource_bundle_target.build_configurations.each do |config|
-        config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
+    # Xcode 14+/15: не подписывать resource bundles
+    installer.target_installation_results.pod_target_installation_results
+      .each do |pod_name, target_installation_result|
+        target_installation_result.resource_bundle_targets.each do |resource_bundle_target|
+          resource_bundle_target.build_configurations.each do |cfg|
+            cfg.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
+          end
+        end
       end
-    end
-  end
 
-  # 🚑 FIX: remove duplicate AppIntents metadata
-  installer.pods_project.targets.each do |target|
-    if target.name == 'FirebaseCoreInternal'
-      target.build_phases.each do |phase|
-        if phase.respond_to?(:files)
-          phase.files.each do |file|
-            if file.display_name.include?('Metadata.appintents')
-              phase.remove_build_file(file)
-            end
+    # Удаляем дублируемые AppIntents metadata, которые приводят к
+    # "Multiple commands produce '.../Metadata.appintents'"
+    intents_offenders = ['FirebaseCoreInternal', 'FirebaseAppCheck']
+    installer.pods_project.targets.each do |t|
+      next unless intents_offenders.include?(t.name)
+      t.build_phases.each do |phase|
+        next unless phase.respond_to?(:files)
+        phase.files.dup.each do |bf|
+          if bf.display_name.include?('Metadata.appintents')
+            phase.remove_build_file(bf)
           end
         end
       end
